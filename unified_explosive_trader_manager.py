@@ -262,19 +262,25 @@ class UnifiedExplosiveManager:
 
     def sequential_execution_loop(self):
         """
-        순차 실행 루프
+        순차 실행 루프 (최적화)
 
         전략:
-        1. ETH 30분 실행
-        2. ETH 중지 + Ollama 메모리 해제
-        3. KIS 30분 실행
-        4. KIS 중지 + Ollama 메모리 해제
+        1. ETH 3분 실행
+        2. ETH 중지 + Ollama 메모리 해제 (3초)
+        3. KIS 3분 실행
+        4. KIS 중지 + Ollama 메모리 해제 (3초)
         5. 반복
 
-        이유: 14b × 2 병렬 실행 시 메모리 부족
+        이유:
+        - 3분 교대 → 각 봇이 6분마다 기회 포착 ⚡
+        - 신호 놓칠 확률 최소화
+        - 메모리 안전하게 관리
+        - 1시간에 각 봇이 10번 체크!
         """
-        print("\n[전략] 순차 실행 모드")
-        print("  ETH 30분 → KIS 30분 → 교대")
+        print("\n[전략] ⚡ 초고속 순차 실행 모드")
+        print("  ETH 3분 → KIS 3분 → 빠른 교대")
+        print("  각 봇이 6분마다 신호 체크")
+        print("  1시간에 각 봇 10회 기회!")
 
         # 연속 학습기 시작 (백그라운드)
         print("\n[백그라운드] 연속 학습기 시작")
@@ -282,20 +288,23 @@ class UnifiedExplosiveManager:
         time.sleep(3)
 
         cycle = 0
+        eth_runs = 0
+        kis_runs = 0
 
         while True:
             try:
                 cycle += 1
                 print(f"\n{'='*80}")
-                print(f"[사이클 {cycle}]")
+                print(f"[사이클 {cycle}] {datetime.now().strftime('%H:%M:%S')}")
                 print(f"{'='*80}")
 
-                # 1. ETH 30분
-                print(f"\n[{datetime.now()}] ETH 봇 실행 (30분)")
+                # 1. ETH 3분
+                print(f"\n[{datetime.now().strftime('%H:%M:%S')}] ⚡ ETH 봇 실행 (3분)")
                 self.start_eth_bot()
+                eth_runs += 1
 
-                # 30분 대기 (상태 체크하면서)
-                for i in range(30):
+                # 3분 대기 (1분마다 상태 체크)
+                for i in range(3):
                     time.sleep(60)  # 1분
 
                     # 프로세스 살아있는지 체크
@@ -303,45 +312,48 @@ class UnifiedExplosiveManager:
                         print(f"[WARNING] ETH 봇 종료됨 (재시작)")
                         self.start_eth_bot()
 
-                    if (i + 1) % 10 == 0:
-                        print(f"  ETH 실행 중... {i+1}/30분")
+                    print(f"  ETH 실행 중... {i+1}/3분")
 
                 # 2. ETH 중지
-                print(f"\n[{datetime.now()}] ETH 봇 중지 (메모리 해제)")
+                print(f"\n[{datetime.now().strftime('%H:%M:%S')}] ETH 중지")
                 self.stop_bot('eth')
 
-                # Ollama 메모리 해제 대기
-                time.sleep(10)
+                # Ollama 메모리 해제 대기 (짧게)
+                time.sleep(3)
 
-                # 3. KIS 30분
-                print(f"\n[{datetime.now()}] KIS 봇 실행 (30분)")
+                # 3. KIS 3분
+                print(f"\n[{datetime.now().strftime('%H:%M:%S')}] ⚡ KIS 봇 실행 (3분)")
                 self.start_kis_bot()
+                kis_runs += 1
 
-                # 30분 대기
-                for i in range(30):
+                # 3분 대기
+                for i in range(3):
                     time.sleep(60)
 
                     if self.kis_process and self.kis_process.poll() is not None:
                         print(f"[WARNING] KIS 봇 종료됨 (재시작)")
                         self.start_kis_bot()
 
-                    if (i + 1) % 10 == 0:
-                        print(f"  KIS 실행 중... {i+1}/30분")
+                    print(f"  KIS 실행 중... {i+1}/3분")
 
                 # 4. KIS 중지
-                print(f"\n[{datetime.now()}] KIS 봇 중지 (메모리 해제)")
+                print(f"\n[{datetime.now().strftime('%H:%M:%S')}] KIS 중지")
                 self.stop_bot('kis')
 
                 # 메모리 해제 대기
-                time.sleep(10)
+                time.sleep(3)
 
                 # 사이클 통계
-                print(f"\n[사이클 {cycle} 완료]")
-                self.telegram.send_message(
-                    f"🔄 사이클 {cycle} 완료\n"
-                    f"ETH: 30분 실행\n"
-                    f"KIS: 30분 실행"
-                )
+                print(f"\n[사이클 {cycle} 완료] ETH: {eth_runs}회, KIS: {kis_runs}회")
+
+                # 30분마다 텔레그램 알림 (10사이클 = 60분)
+                if cycle % 10 == 0:
+                    self.telegram.send_message(
+                        f"⚡ 1시간 완료\n"
+                        f"사이클: {cycle}\n"
+                        f"ETH: {eth_runs}회 (6분마다)\n"
+                        f"KIS: {kis_runs}회 (6분마다)"
+                    )
 
             except KeyboardInterrupt:
                 print("\n[종료] 사용자 중단")
