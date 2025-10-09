@@ -52,6 +52,7 @@ class UnifiedExplosiveManager:
         self.eth_process = None
         self.kis_process = None
         self.monitor_process = None
+        self.learner_process = None
 
         # 실행 전략
         self.strategy = "sequential"  # "sequential" or "time_split"
@@ -78,22 +79,21 @@ class UnifiedExplosiveManager:
         )
 
     def check_ollama_memory(self):
-        """Ollama 메모리 체크"""
+        """Ollama 메모리 체크 (비차단)"""
         print("\n[메모리 체크] Ollama 모델 확인...")
 
         try:
-            # Ollama 모델 리스트 확인
+            # Ollama 모델 리스트 확인 (짧은 타임아웃)
             result = subprocess.run(
                 ['C:/Users/user/AppData/Local/Programs/Ollama/ollama.exe', 'list'],
                 capture_output=True,
                 text=True,
                 encoding='utf-8',
-                timeout=10
+                timeout=3  # 3초로 단축
             )
 
             if result.returncode == 0:
                 print(f"[OK] Ollama 실행 중")
-                print(f"모델:\n{result.stdout}")
 
                 # 메모리 추정
                 if 'qwen2.5:7b' in result.stdout:
@@ -101,15 +101,21 @@ class UnifiedExplosiveManager:
                 if 'qwen2.5:14b' in result.stdout:
                     print("  - qwen2.5:14b: ~8GB (KIS용)")
 
-                print("\n[전략] 순차 실행 권장")
-                print("  이유: 14b × 2 병렬 = 16GB → 동시 실행 시 메모리 부족")
+                print("\n[전략] 순차 실행")
                 print("  방법: ETH 30분 → KIS 30분 → 교대 실행")
 
             else:
-                print(f"[WARNING] Ollama 확인 실패")
+                print(f"[WARNING] Ollama 확인 실패 (계속 진행)")
 
+        except subprocess.TimeoutExpired:
+            print(f"[WARNING] Ollama 응답 없음 (3초 초과) - 건너뜀")
+        except FileNotFoundError:
+            print(f"[WARNING] Ollama 실행파일 없음 - 건너뜀")
         except Exception as e:
-            print(f"[ERROR] 메모리 체크 실패: {e}")
+            print(f"[WARNING] 메모리 체크 건너뜀: {e}")
+
+        # 항상 계속 진행
+        print("[OK] 체크 완료, 시작합니다")
 
     def start_eth_bot(self):
         """ETH 봇 시작"""
@@ -201,6 +207,37 @@ class UnifiedExplosiveManager:
             print(f"[ERROR] 모니터 시작 실패: {e}")
             return False
 
+    def start_learner(self):
+        """연속 학습기 시작"""
+        print("\n[연속 학습기 시작]")
+
+        try:
+            self.learner_process = subprocess.Popen(
+                [
+                    sys.executable,
+                    'C:/Users/user/Documents/코드5/continuous_strategy_learner.py'
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding='utf-8'
+            )
+
+            print(f"[OK] 학습기 PID: {self.learner_process.pid}")
+            self.log(f"연속 학습기 시작 (PID: {self.learner_process.pid})")
+
+            self.telegram.send_message(
+                "🧠 연속 학습 시작\n\n"
+                "백그라운드에서 과거 데이터 분석\n"
+                "획기적 전략 발견 시 자동 교체"
+            )
+
+            return True
+
+        except Exception as e:
+            print(f"[ERROR] 학습기 시작 실패: {e}")
+            return False
+
     def stop_bot(self, bot_name: str):
         """봇 중지"""
         print(f"\n[{bot_name} 중지]")
@@ -238,6 +275,11 @@ class UnifiedExplosiveManager:
         """
         print("\n[전략] 순차 실행 모드")
         print("  ETH 30분 → KIS 30분 → 교대")
+
+        # 연속 학습기 시작 (백그라운드)
+        print("\n[백그라운드] 연속 학습기 시작")
+        self.start_learner()
+        time.sleep(3)
 
         cycle = 0
 
@@ -368,6 +410,14 @@ class UnifiedExplosiveManager:
             except:
                 pass
 
+        if self.learner_process:
+            try:
+                self.learner_process.terminate()
+                self.learner_process.wait(timeout=10)
+                print("[OK] 학습기 종료")
+            except:
+                pass
+
         print("[OK] 정리 완료")
         self.telegram.send_message("⚠️ 통합 매니저 종료")
 
@@ -380,24 +430,36 @@ class UnifiedExplosiveManager:
         except:
             pass
 
-    def run(self):
+    def run(self, auto_mode=False):
         """메인 실행"""
         print("\n[시작] 통합 매니저 실행")
 
-        # 실행 전략 선택
-        print("\n[전략 선택]")
-        print("1. 순차 실행 (권장) - ETH 30분 → KIS 30분 교대")
-        print("2. 병렬 실행 (RAM 32GB+) - 동시 실행")
-
-        choice = input("\n선택 (1/2, 기본=1): ").strip() or "1"
-
-        if choice == "1":
+        if auto_mode:
+            # 자동 모드: 순차 실행
+            print("\n[자동 모드] 순차 실행 시작")
+            print("  ETH 30분 → KIS 30분 → 교대")
             self.strategy = "sequential"
             self.sequential_execution_loop()
         else:
-            self.strategy = "parallel"
-            self.parallel_execution_loop()
+            # 수동 모드: 사용자 선택
+            print("\n[전략 선택]")
+            print("1. 순차 실행 (권장) - ETH 30분 → KIS 30분 교대")
+            print("2. 병렬 실행 (RAM 32GB+) - 동시 실행")
+
+            choice = input("\n선택 (1/2, 기본=1): ").strip() or "1"
+
+            if choice == "1":
+                self.strategy = "sequential"
+                self.sequential_execution_loop()
+            else:
+                self.strategy = "parallel"
+                self.parallel_execution_loop()
 
 if __name__ == "__main__":
+    import sys
+
+    # 커맨드 라인 인자 체크
+    auto_mode = "--auto" in sys.argv or "-a" in sys.argv
+
     manager = UnifiedExplosiveManager()
-    manager.run()
+    manager.run(auto_mode=auto_mode)
