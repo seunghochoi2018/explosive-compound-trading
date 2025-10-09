@@ -70,8 +70,8 @@ KIS_TRADER_SCRIPT = r"C:\Users\user\Documents\코드4\kis_llm_trader_v2_explosiv
 KIS_PYTHON = r"C:\Users\user\AppData\Local\Programs\Python\Python311\python.exe"
 
 # 모델 업그레이드 전략 (공평하게!)
-# 1단계: ETH 14b×1 + KIS 14b×1 = 16GB (현재)
-# 2단계: ETH (14b+7b) + KIS (14b+7b) = 24GB (메모리 여유시)
+# 1단계: ETH 14b×1 + KIS 14b×1 = 16GB (완료)
+# 2단계: ETH (14b+7b) + KIS (14b+7b) = 24GB (현재 ⭐)
 # 3단계: ETH 14b×2 + KIS 14b×2 = 32GB (메모리 충분시)
 
 # ===== 리소스 모니터링 설정 =====
