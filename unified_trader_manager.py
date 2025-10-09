@@ -22,8 +22,8 @@ import re
 # ===== 텔레그램 알림 =====
 class TelegramNotifier:
     def __init__(self):
-        self.bot_token = "7820488648:AAHHgBJPJhPJfTIV7nj7x6P11k-eFwZQZfA"
-        self.chat_id = "6872641637"
+        self.bot_token = "7819173403:AAEwBNh6etqyWvh-GivLDrTJb8b_ho2ju-U"
+        self.chat_id = "7805944420"
         self.base_url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
 
     def send_message(self, message: str):
@@ -425,7 +425,7 @@ def main():
             need_restart_eth, reason_eth = should_restart_ollama(health_eth, response_times_eth)
             if need_restart_eth:
                 colored_print(f"\n[SMART_RESTART] ETH Ollama 재시작 필요: {reason_eth}", "red")
-                telegram.notify_ollama_restart("ETH", reason_eth)
+                # telegram.notify_ollama_restart("ETH", reason_eth)  # 메모리 과다 알림 끔
                 colored_print("[SMART_RESTART] ETH Trader 종료 중...", "yellow")
                 stop_process(trader_eth, "ETH Trader", timeout=10)
 
@@ -450,7 +450,7 @@ def main():
             need_restart_kis, reason_kis = should_restart_ollama(health_kis, response_times_kis)
             if need_restart_kis:
                 colored_print(f"\n[SMART_RESTART] KIS Ollama 재시작 필요: {reason_kis}", "red")
-                telegram.notify_ollama_restart("KIS", reason_kis)
+                # telegram.notify_ollama_restart("KIS", reason_kis)  # 메모리 과다 알림 끔
                 colored_print("[SMART_RESTART] KIS Trader 종료 중...", "yellow")
                 stop_process(trader_kis, "KIS Trader", timeout=10)
 
