@@ -12,7 +12,7 @@ echo.
 
 cd /d "C:\Users\user\Documents\코드5"
 
-python unified_explosive_trader_manager.py --auto
+python unified_trader_manager.py
 
 if %errorlevel% neq 0 (
     echo.

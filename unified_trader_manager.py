@@ -62,12 +62,17 @@ OLLAMA_PORT_KIS = 11435  # 코드4 (KIS) 전용
 
 # 트레이더 설정
 ETH_TRADER_DIR = r"C:\Users\user\Documents\코드3"
-ETH_TRADER_SCRIPT = r"C:\Users\user\Documents\코드3\llm_eth_trader_v3_ensemble.py"
+ETH_TRADER_SCRIPT = r"C:\Users\user\Documents\코드3\llm_eth_trader_v3_explosive.py"  # 폭발 전략 (14b)
 ETH_PYTHON = r"C:\Users\user\PycharmProjects\PythonProject\.venv\Scripts\python.exe"
 
 KIS_TRADER_DIR = r"C:\Users\user\Documents\코드4"
-KIS_TRADER_SCRIPT = r"C:\Users\user\Documents\코드4\kis_llm_trader.py"
+KIS_TRADER_SCRIPT = r"C:\Users\user\Documents\코드4\kis_llm_trader_v2_explosive.py"  # 폭발 전략 (14b)
 KIS_PYTHON = r"C:\Users\user\AppData\Local\Programs\Python\Python311\python.exe"
+
+# 모델 업그레이드 전략 (공평하게!)
+# 1단계: ETH 14b×1 + KIS 14b×1 = 16GB (현재)
+# 2단계: ETH (14b+7b) + KIS (14b+7b) = 24GB (메모리 여유시)
+# 3단계: ETH 14b×2 + KIS 14b×2 = 32GB (메모리 충분시)
 
 # ===== 리소스 모니터링 설정 =====
 MAX_MEMORY_MB = 10 * 1024  # Ollama 메모리 상한: 10GB
