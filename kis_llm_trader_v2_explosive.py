@@ -266,9 +266,8 @@ class ExplosiveKISTrader:
         try:
             import requests
 
-            # ⭐ 정확한 PDNO 코드 사용! (SOXL → A980679, SOXS → A980680)
-            pdno = self.symbols.get(symbol, {}).get('pdno', symbol)
-
+            # ⭐ KIS API는 티커명(SOXL/SOXS)를 직접 사용!
+            # A980679/A980680은 내부 코드이지만 API에는 티커명 전달
             url = f"{self.base_url}/uapi/overseas-price/v1/quotations/price"
 
             # ⚠️  중요: custtype 헤더 누락 시 "EXCD 필드 없음" 오류 발생!
@@ -280,13 +279,12 @@ class ExplosiveKISTrader:
                 "custtype": "P"  # ⭐ 개인 투자자 (필수!)
             }
 
-            # ⭐ KIS API 정확한 파라미터 (soxl.txt 참고)
-            # ⚠️  이전 파라미터 (AUTH, EXCD, SYMB)는 작동하지 않음!
-            # FID_COND_MRKT_DIV_CODE: "N" = 해외주식
-            # FID_INPUT_ISCD: PDNO 코드 (A980679 등)
+            # ⭐ KIS API 정확한 파라미터 (soxl.txt 라인 393-396 참고)
+            # FID_COND_MRKT_DIV_CODE: "N" = 해외주식 (NASD)
+            # FID_INPUT_ISCD: 티커명 직접 입력 (SOXL, SOXS 등)
             params = {
                 "FID_COND_MRKT_DIV_CODE": "N",
-                "FID_INPUT_ISCD": pdno
+                "FID_INPUT_ISCD": symbol  # ⭐ 티커명 직접 사용 (SOXL/SOXS)
             }
 
             response = requests.get(url, headers=headers, params=params, timeout=10)
@@ -294,7 +292,7 @@ class ExplosiveKISTrader:
             if response.status_code == 200:
                 data = response.json()
                 print(f"[DEBUG] {symbol} API 응답: rt_cd={data.get('rt_cd')}, msg1={data.get('msg1')}")
-                print(f"[DEBUG] FID_INPUT_ISCD 파라미터: {pdno}")
+                print(f"[DEBUG] FID_INPUT_ISCD 파라미터: {symbol}")
 
                 if data.get('rt_cd') == '0':
                     # ⭐ KIS API 응답 필드: stck_prpr (현재가)
@@ -389,9 +387,7 @@ class ExplosiveKISTrader:
         try:
             import requests
 
-            # ⭐ 정확한 PDNO 코드 사용!
-            pdno = self.symbols[symbol]['pdno']
-
+            # ⭐ KIS API는 티커명 직접 사용 (SOXL/SOXS)
             url = f"{self.base_url}/uapi/overseas-stock/v1/trading/order"
 
             headers = {
@@ -405,7 +401,7 @@ class ExplosiveKISTrader:
                 "CANO": self.account_no.split('-')[0],
                 "ACNT_PRDT_CD": self.account_no.split('-')[1],
                 "OVRS_EXCG_CD": "NASD",
-                "PDNO": pdno,  # ⭐ A980679 (SOXL) or A980680 (SOXS)
+                "PDNO": symbol,  # ⭐ 티커명 직접 사용 (SOXL/SOXS)
                 "ORD_QTY": str(qty),
                 "OVRS_ORD_UNPR": "0",  # 시장가
                 "ORD_SVR_DVSN_CD": "0"
