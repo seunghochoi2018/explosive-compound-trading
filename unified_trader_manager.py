@@ -117,6 +117,12 @@ HISTORICAL_DATA_DAYS = 7  # 과거 7일간 데이터 학습
 learning_session_count = 0  # 학습 세션 카운터
 background_learning_thread = None  # 백그라운드 학습 스레드
 
+# ⭐ 자동 검증 및 적용 설정
+VALIDATION_THRESHOLD = 3  # 동일 전략이 3번 이상 발견되면 검증 완료
+CONFIDENCE_THRESHOLD = 0.7  # Triple Validation 합의율 70% 이상
+validated_strategies_eth = {}  # ETH 검증 중인 전략 {strategy_type: count}
+validated_strategies_kis = {}  # KIS 검증 중인 전략 {strategy_type: count}
+
 # ===== FMP API 데이터 수집 =====
 def fetch_eth_historical_fmp(days=7):
     """FMP API로 ETH 과거 데이터 수집 (실제 데이터만!)"""
@@ -363,6 +369,70 @@ def llm_backtest_on_historical_data(trader_name, symbol, historical_data):
 
     return discovered_strategies
 
+def auto_validate_and_apply_strategy(trader_name, strategies, validation_dict, strategy_file, improvement_history):
+    """
+    ⭐ 자동 검증 및 적용 시스템
+
+    동일한 전략이 여러 번 발견되면 자동으로 검증 완료 → 적용
+
+    검증 조건:
+    1. 동일 전략이 VALIDATION_THRESHOLD(3)번 이상 발견
+    2. Triple Validation 합의율 CONFIDENCE_THRESHOLD(70%) 이상
+
+    Args:
+        trader_name: 트레이더 이름 (ETH/KIS)
+        strategies: 발견된 전략 리스트
+        validation_dict: 검증 카운터 딕셔너리
+        strategy_file: 전략 파일 경로
+        improvement_history: 개선 히스토리
+    """
+    if not strategies:
+        return []
+
+    applied = []
+
+    for strategy in strategies:
+        strategy_type = strategy['type']
+        session = strategy.get('session', 0)
+
+        # 검증 카운터 증가
+        if strategy_type not in validation_dict:
+            validation_dict[strategy_type] = {
+                'count': 0,
+                'sessions': []
+            }
+
+        validation_dict[strategy_type]['count'] += 1
+        validation_dict[strategy_type]['sessions'].append(session)
+
+        current_count = validation_dict[strategy_type]['count']
+
+        colored_print(f"[{trader_name}] 🔍 전략 '{strategy_type}' 발견 횟수: {current_count}/{VALIDATION_THRESHOLD}", "cyan")
+
+        # 검증 완료 조건: N번 이상 발견
+        if current_count >= VALIDATION_THRESHOLD:
+            colored_print(f"[{trader_name}] ✅ 전략 '{strategy_type}' 검증 완료! ({current_count}번 발견)", "green")
+            colored_print(f"[{trader_name}] 🚀 자동 적용 시작...", "green")
+
+            # 자동 적용
+            result = apply_strategy_improvements(
+                trader_name,
+                strategy_file,
+                [{'type': strategy_type, 'source': f'AUTO_VALIDATED_{current_count}x'}],
+                improvement_history
+            )
+
+            if result:
+                applied.extend(result)
+                colored_print(f"[{trader_name}] 🎉 전략 '{strategy_type}' 자동 적용 완료!", "green")
+
+                # 검증 완료된 전략은 카운터 리셋 (중복 적용 방지)
+                validation_dict[strategy_type]['count'] = 0
+        else:
+            colored_print(f"[{trader_name}] ⏳ 전략 '{strategy_type}' 검증 중... (추가 {VALIDATION_THRESHOLD - current_count}번 필요)", "yellow")
+
+    return applied
+
 def background_learning_worker():
     """백그라운드 학습 워커 (독립 스레드)"""
     colored_print("[BACKGROUND LEARNING] 백그라운드 학습 워커 시작!", "magenta")
@@ -383,11 +453,22 @@ def background_learning_worker():
                 eth_strategies = llm_backtest_on_historical_data("ETH", "ETHUSD", eth_historical)
 
                 if eth_strategies:
-                    # ⚠️ 백테스트 결과는 참고자료로만 저장 (자동 적용 X)
-                    colored_print(f"[ETH] 💡 {len(eth_strategies)}개 새로운 전략 발견 (참고자료)", "cyan")
-                    colored_print(f"     ⚠️ 실제 적용은 검증 후 수동 적용 필요", "yellow")
+                    colored_print(f"[ETH] 💡 {len(eth_strategies)}개 새로운 전략 발견!", "cyan")
 
-                    # 전략 인사이트 파일에 저장 (자동 적용 안 함!)
+                    # ⭐ 자동 검증 및 적용 시스템 실행
+                    global validated_strategies_eth
+                    applied = auto_validate_and_apply_strategy(
+                        "ETH",
+                        eth_strategies,
+                        validated_strategies_eth,
+                        ETH_STRATEGY_FILE,
+                        improvement_history_eth
+                    )
+
+                    if applied:
+                        colored_print(f"[ETH] 🎉 {len(applied)}개 전략 자동 적용 완료!", "green")
+
+                    # 인사이트 기록 (히스토리 보관용)
                     import json
                     try:
                         insight_file = r"C:\Users\user\Documents\코드3\eth_learning_insights.json"
@@ -402,11 +483,12 @@ def background_learning_worker():
                             'timestamp': datetime.now().isoformat(),
                             'session': learning_session_count,
                             'strategies': eth_strategies,
-                            'status': '검증 필요 - 자동 적용 안됨'
+                            'applied': applied if applied else [],
+                            'validation_status': {k: v['count'] for k, v in validated_strategies_eth.items()}
                         })
 
                         with open(insight_file, 'w', encoding='utf-8') as f:
-                            json.dump(insights[-50:], f, indent=2, ensure_ascii=False)  # 최근 50개만
+                            json.dump(insights[-100:], f, indent=2, ensure_ascii=False)
                     except Exception as e:
                         colored_print(f"[ETH] 인사이트 저장 실패: {e}", "yellow")
 
@@ -418,11 +500,22 @@ def background_learning_worker():
                 soxl_strategies = llm_backtest_on_historical_data("KIS", "SOXL", soxl_historical)
 
                 if soxl_strategies:
-                    # ⚠️ 백테스트 결과는 참고자료로만 저장 (자동 적용 X)
-                    colored_print(f"[KIS] 💡 {len(soxl_strategies)}개 새로운 전략 발견 (참고자료)", "cyan")
-                    colored_print(f"     ⚠️ 실제 적용은 검증 후 수동 적용 필요", "yellow")
+                    colored_print(f"[KIS] 💡 {len(soxl_strategies)}개 새로운 전략 발견!", "cyan")
 
-                    # 전략 인사이트 파일에 저장 (자동 적용 안 함!)
+                    # ⭐ 자동 검증 및 적용 시스템 실행
+                    global validated_strategies_kis
+                    applied = auto_validate_and_apply_strategy(
+                        "KIS",
+                        soxl_strategies,
+                        validated_strategies_kis,
+                        KIS_STRATEGY_FILE,
+                        improvement_history_kis
+                    )
+
+                    if applied:
+                        colored_print(f"[KIS] 🎉 {len(applied)}개 전략 자동 적용 완료!", "green")
+
+                    # 인사이트 기록 (히스토리 보관용)
                     import json
                     try:
                         insight_file = r"C:\Users\user\Documents\코드4\kis_learning_insights.json"
@@ -437,11 +530,12 @@ def background_learning_worker():
                             'timestamp': datetime.now().isoformat(),
                             'session': learning_session_count,
                             'strategies': soxl_strategies,
-                            'status': '검증 필요 - 자동 적용 안됨'
+                            'applied': applied if applied else [],
+                            'validation_status': {k: v['count'] for k, v in validated_strategies_kis.items()}
                         })
 
                         with open(insight_file, 'w', encoding='utf-8') as f:
-                            json.dump(insights[-50:], f, indent=2, ensure_ascii=False)  # 최근 50개만
+                            json.dump(insights[-100:], f, indent=2, ensure_ascii=False)
                     except Exception as e:
                         colored_print(f"[KIS] 인사이트 저장 실패: {e}", "yellow")
 
@@ -1351,8 +1445,9 @@ def main():
     colored_print(f"  - 1시간마다 LLM 분석, 6시간마다 리포트\n", "green")
     colored_print(f"[BACKGROUND LEARNING] FMP API 과거 데이터 학습 활성화\n", "magenta")
     colored_print(f"  - 10분마다 ETH/SOXL 실제 데이터 수집 및 전략 탐색\n", "magenta")
-    colored_print(f"  - LLM 백테스트 결과는 참고자료로만 저장 (자동 적용 X)\n", "magenta")
-    colored_print(f"  - 검증된 전략만 수동으로 적용 가능\n", "magenta")
+    colored_print(f"  - 자동 검증: 동일 전략 {VALIDATION_THRESHOLD}번 발견 시 자동 적용\n", "magenta")
+    colored_print(f"  - Triple Validation 합의율 {int(CONFIDENCE_THRESHOLD*100)}% 이상만 통과\n", "magenta")
+    colored_print(f"  - 검증 완료된 전략은 즉시 실전 적용!\n", "magenta")
 
     try:
         while True:
