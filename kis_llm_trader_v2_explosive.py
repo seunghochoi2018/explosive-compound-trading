@@ -43,10 +43,9 @@ class ExplosiveKISTrader:
         # KIS API 설정
         self.load_kis_config()
 
-        # LLM 분석기 (2단계: 16b + 7b 듀얼!)
+        # LLM 분석기 (16b 단독 - 메모리 최적화)
         self.llm_analyzers = [
-            LLMMarketAnalyzer(model_name="deepseek-coder-v2:16b"),
-            LLMMarketAnalyzer(model_name="qwen2.5:7b")
+            LLMMarketAnalyzer(model_name="deepseek-coder-v2:16b")
         ]
 
         # 텔레그램
