@@ -17,6 +17,11 @@ from typing import Dict, List, Tuple
 import statistics
 import requests
 
+# ⭐ Ollama LLM 설정 (11436 포트 - 자기개선 엔진 전용)
+OLLAMA_HOST = "http://127.0.0.1:11436"
+OLLAMA_MODEL = "qwen2.5:14b"
+OLLAMA_TIMEOUT = 60  # LLM 응답 타임아웃 60초
+
 
 class SelfImprovementEngine:
     """자기 개선 엔진 - 각 봇이 스스로 학습하고 개선"""
@@ -123,13 +128,119 @@ class SelfImprovementEngine:
             'total_return': round(total_return, 2)
         }
 
+    def ask_llm(self, prompt: str) -> str:
+        """⭐ LLM에게 분석 요청 (11436 포트)"""
+        try:
+            response = requests.post(
+                f"{OLLAMA_HOST}/api/generate",
+                json={
+                    "model": OLLAMA_MODEL,
+                    "prompt": prompt,
+                    "stream": False
+                },
+                timeout=OLLAMA_TIMEOUT
+            )
+
+            if response.status_code == 200:
+                return response.json().get('response', '')
+            else:
+                print(f"[{self.bot_name}] LLM 응답 오류: {response.status_code}")
+                return ""
+
+        except requests.Timeout:
+            print(f"[{self.bot_name}] LLM 타임아웃 (60초 초과)")
+            return ""
+        except Exception as e:
+            print(f"[{self.bot_name}] LLM 오류: {e}")
+            return ""
+
+    def llm_analyze_trades(self, trades: List[Dict], performance: Dict) -> List[Dict]:
+        """⭐ LLM이 거래 패턴을 분석하고 개선안 제시"""
+        if len(trades) < 5:
+            return []  # 데이터 부족
+
+        # 최근 20건만 분석 (너무 많으면 LLM 과부하)
+        recent_trades = trades[-20:]
+
+        # 거래 요약
+        trades_summary = []
+        for t in recent_trades:
+            summary = f"- {t.get('action', '?')}: {t.get('profit_pct', 0):+.2f}%, 보유 {t.get('hold_minutes', 0):.0f}분, 트렌드 {t.get('trend', '?')}"
+            trades_summary.append(summary)
+
+        trades_text = "\n".join(trades_summary)
+
+        # LLM 프롬프트
+        prompt = f"""당신은 암호화폐/주식 트레이딩 전문가입니다. 다음 거래 데이터를 분석하고 문제점과 개선 방안을 제시하세요.
+
+## 전체 성과
+- 총 거래: {performance['total_trades']}건
+- 승률: {performance['win_rate']}%
+- 평균 수익: {performance['avg_profit']}%
+- 평균 손실: {performance['avg_loss']}%
+- 총 수익률: {performance['total_return']}%
+
+## 최근 20건 거래
+{trades_text}
+
+## 분석 요청
+1. 가장 큰 문제점 1-2개 (예: 횡보장 손실, 손절 지연, 과도한 보유시간 등)
+2. 각 문제에 대한 구체적 개선안 (예: 횡보장 차단, 손절 -2.5% → -2.0%, 최대 보유 60분 → 45분)
+
+답변은 간결하게 핵심만 2-3문장으로 작성하세요."""
+
+        llm_response = self.ask_llm(prompt)
+
+        if not llm_response:
+            return []
+
+        # LLM 응답 파싱 (간단하게)
+        llm_issues = []
+
+        # "횡보장" 키워드 감지
+        if "횡보" in llm_response or "neutral" in llm_response.lower():
+            llm_issues.append({
+                'type': 'LLM_SIDEWAYS',
+                'severity': 'B',
+                'description': f'LLM 분석: 횡보장 거래 문제 감지',
+                'improvement': 'sideways_block',
+                'llm_insight': llm_response[:200]  # 처음 200자만
+            })
+
+        # "손절" 또는 "stop loss" 키워드 감지
+        if ("손절" in llm_response or "stop" in llm_response.lower()) and "늦" in llm_response:
+            llm_issues.append({
+                'type': 'LLM_STOP_LOSS',
+                'severity': 'A',
+                'description': f'LLM 분석: 손절 타이밍 문제',
+                'improvement': 'tighten_stop_loss',
+                'llm_insight': llm_response[:200]
+            })
+
+        # "보유시간" 또는 "hold" 키워드 감지
+        if "보유" in llm_response or "hold" in llm_response.lower():
+            llm_issues.append({
+                'type': 'LLM_HOLD_TIME',
+                'severity': 'B',
+                'description': f'LLM 분석: 보유시간 문제',
+                'improvement': 'reduce_hold_time',
+                'llm_insight': llm_response[:200]
+            })
+
+        print(f"[{self.bot_name}] [LLM 분석] {len(llm_issues)}개 인사이트 발견")
+        if llm_response:
+            print(f"[{self.bot_name}] [LLM] {llm_response[:300]}...")
+
+        return llm_issues
+
     def find_issues(self, trades: List[Dict]) -> List[Dict]:
-        """문제점 자동 탐지"""
+        """문제점 자동 탐지 (통계 + LLM 분석)"""
         issues = []
 
         if not trades:
             return issues
 
+        # === 통계 기반 분석 ===
         # 1. 횡보장 손실 체크
         sideways_trades = [t for t in trades if t.get('trend') == 'NEUTRAL']
         if sideways_trades:
@@ -397,23 +508,29 @@ class SelfImprovementEngine:
         performance = self.analyze_performance(hours=24)
         print(f"[분석] 거래 {performance['total_trades']}건, 승률 {performance['win_rate']}%")
 
-        # 2. 문제점 탐지
+        # 2. 문제점 탐지 (통계)
         trades = self.load_trading_history(hours=24)
         issues = self.find_issues(trades)
-        print(f"[탐지] 문제점 {len(issues)}개 발견")
+        print(f"[통계] 문제점 {len(issues)}개 발견")
 
-        # 3. 개선 방안 생성
+        # 3. ⭐ LLM 추가 분석 (더 똑똑한 패턴 인식)
+        llm_issues = self.llm_analyze_trades(trades, performance)
+        issues.extend(llm_issues)  # 통계 + LLM 결과 합치기
+        print(f"[LLM] 추가 인사이트 {len(llm_issues)}개 발견")
+        print(f"[종합] 총 {len(issues)}개 문제점 탐지")
+
+        # 4. 개선 방안 생성
         improvements = self.generate_improvements(issues)
         print(f"[개선] 개선 방안 {len(improvements)}개 생성")
 
-        # 4. 개선 적용
+        # 5. 개선 적용
         applied = self.apply_improvements(improvements)
         print(f"[적용] {len(applied)}개 개선 적용 완료")
 
-        # 5. 메타 학습
+        # 6. 메타 학습
         meta = self.meta_learning()
 
-        # 6. 텔레그램 리포트 (6시간마다)
+        # 7. 텔레그램 리포트 (6시간마다)
         if current_time - self.last_report_time >= self.report_interval:
             self.send_telegram_report(performance, issues, applied, meta)
             self.last_report_time = current_time
