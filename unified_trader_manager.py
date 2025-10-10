@@ -111,7 +111,7 @@ ERROR_PATTERN_FILE_ETH = r"C:\Users\user\Documents\코드3\eth_error_patterns.js
 ERROR_PATTERN_FILE_KIS = r"C:\Users\user\Documents\코드4\kis_error_patterns.json"
 
 # ⭐ 백그라운드 학습 설정
-FMP_API_KEY = "nHAiLOvKvXWmNdRl3D94s5qNmjLJdkqO"  # FMP API 키
+FMP_API_KEY = "5j69XWnoSpoBvEY0gKSUTB0zXcr0z2KI"  # FMP API 키
 BACKGROUND_LEARNING_INTERVAL = 10 * 60  # 10분마다 백그라운드 학습
 HISTORICAL_DATA_DAYS = 7  # 과거 7일간 데이터 학습
 learning_session_count = 0  # 학습 세션 카운터
