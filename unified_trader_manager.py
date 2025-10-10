@@ -104,6 +104,12 @@ improvement_history_kis = []
 ETH_STRATEGY_FILE = r"C:\Users\user\Documents\코드3\eth_current_strategy.json"
 KIS_STRATEGY_FILE = r"C:\Users\user\Documents\코드4\kis_current_strategy.json"
 
+# ⭐ Option 4: Self-Improving Feedback Loop - 오류 패턴 학습
+error_patterns_eth = []  # ETH 봇의 실패 패턴 (최근 100건)
+error_patterns_kis = []  # KIS 봇의 실패 패턴 (최근 100건)
+ERROR_PATTERN_FILE_ETH = r"C:\Users\user\Documents\코드3\eth_error_patterns.json"
+ERROR_PATTERN_FILE_KIS = r"C:\Users\user\Documents\코드4\kis_error_patterns.json"
+
 # ===== 색상 출력 =====
 def colored_print(message, color="white"):
     """색상 출력"""
@@ -354,12 +360,184 @@ def ask_llm_for_analysis(prompt: str) -> str:
         colored_print(f"[LLM] 오류: {e}", "yellow")
         return ""
 
-def llm_analyze_trades_for_improvement(trader_name, trades, performance):
-    """⭐ LLM이 거래 패턴 분석 및 개선안 제시"""
+def ask_llm_triple_validation(primary_prompt: str, validator1_prompt: str, validator2_prompt: str) -> dict:
+    """
+    ⭐ Option 1: Triple Validation System
+
+    3개의 다른 관점에서 분석하여 오판 확률 대폭 감소
+    - Primary: 주 분석기 (일반적 관점)
+    - Validator 1: 검증기 #1 (비판적 관점 - "왜 이게 틀릴 수 있는가?")
+    - Validator 2: 검증기 #2 (반대 입장 - "정반대로 해석하면?")
+
+    Returns:
+        {
+            'primary_response': str,
+            'validator1_response': str,
+            'validator2_response': str,
+            'consensus': bool,  # 3개 중 2개 이상 동의 여부
+            'final_decision': str  # 최종 결정
+        }
+    """
+    import time
+
+    colored_print("[TRIPLE VALIDATION] 3중 검증 시작...", "cyan")
+
+    # 1. Primary 분석 (주 분석기)
+    colored_print("  [1/3] Primary 분석 중...", "cyan")
+    primary_start = time.time()
+    primary_response = ask_llm_for_analysis(primary_prompt)
+    primary_time = time.time() - primary_start
+    colored_print(f"  [1/3] Primary 완료 ({primary_time:.1f}초)", "green")
+
+    # 2. Validator 1 분석 (비판적 검증)
+    colored_print("  [2/3] Validator #1 (비판적 검증) 분석 중...", "cyan")
+    val1_start = time.time()
+    validator1_response = ask_llm_for_analysis(validator1_prompt)
+    val1_time = time.time() - val1_start
+    colored_print(f"  [2/3] Validator #1 완료 ({val1_time:.1f}초)", "green")
+
+    # 3. Validator 2 분석 (반대 입장)
+    colored_print("  [3/3] Validator #2 (반대 입장) 분석 중...", "cyan")
+    val2_start = time.time()
+    validator2_response = ask_llm_for_analysis(validator2_prompt)
+    val2_time = time.time() - val2_start
+    colored_print(f"  [3/3] Validator #2 완료 ({val2_time:.1f}초)", "green")
+
+    # 4. 합의 체크 (간단한 키워드 기반)
+    # Primary에서 핵심 키워드 추출
+    primary_keywords = set()
+    for keyword in ['손절', '익절', '횡보', '추세', '진입', '청산', '보유']:
+        if keyword in primary_response:
+            primary_keywords.add(keyword)
+
+    # Validator들도 동일 키워드 언급하는지 체크
+    val1_agree = any(kw in validator1_response for kw in primary_keywords) if primary_keywords else False
+    val2_agree = any(kw in validator2_response for kw in primary_keywords) if primary_keywords else False
+
+    # 3개 중 2개 이상 동의?
+    agreement_count = sum([True, val1_agree, val2_agree])  # Primary는 항상 True
+    consensus = agreement_count >= 2
+
+    colored_print(f"[TRIPLE VALIDATION] 합의 여부: {'✅ 동의 {}/3'.format(agreement_count) if consensus else '❌ 불일치'}",
+                  "green" if consensus else "yellow")
+
+    total_time = time.time() - primary_start
+    colored_print(f"[TRIPLE VALIDATION] 총 소요 시간: {total_time:.1f}초", "cyan")
+
+    return {
+        'primary_response': primary_response,
+        'validator1_response': validator1_response,
+        'validator2_response': validator2_response,
+        'consensus': consensus,
+        'agreement_count': agreement_count,
+        'final_decision': primary_response if consensus else "불확실 - 추가 검토 필요"
+    }
+
+def load_error_patterns(error_file: str) -> list:
+    """⭐ Option 4: 저장된 오류 패턴 로드"""
+    import json
+    try:
+        with open(error_file, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except:
+        return []
+
+def save_error_patterns(error_file: str, patterns: list):
+    """⭐ Option 4: 오류 패턴 저장 (최근 100건만)"""
+    import json
+    try:
+        # 최근 100건만 유지
+        recent_patterns = patterns[-100:] if len(patterns) > 100 else patterns
+        with open(error_file, 'w', encoding='utf-8') as f:
+            json.dump(recent_patterns, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        colored_print(f"[ERROR PATTERN] 저장 실패: {e}", "yellow")
+
+def analyze_losing_trades_for_patterns(trader_name: str, trades: list, error_patterns: list) -> list:
+    """
+    ⭐ Option 4: Self-Improving Feedback Loop - 손실 거래에서 패턴 학습
+
+    손실 거래를 분석하여 반복되는 실수 패턴을 찾아냅니다.
+    예: "상승 추세인데 숏 진입 → 3번 연속 손실" 같은 패턴
+
+    Returns:
+        새로 발견된 오류 패턴 리스트
+    """
+    from datetime import datetime
+
+    if len(trades) < 10:
+        return []
+
+    # 손실 거래만 필터링
+    losing_trades = [t for t in trades if t.get('pnl_pct', 0) < 0 or t.get('profit_pct', 0) < 0]
+
+    if len(losing_trades) < 3:
+        return []
+
+    # 최근 20건 손실 거래만 분석
+    recent_losses = losing_trades[-20:]
+
+    new_patterns = []
+
+    # 패턴 1: 추세 역행 (상승장에서 숏, 하락장에서 롱)
+    trend_reverse_count = 0
+    for loss in recent_losses:
+        trend = loss.get('trend', '')
+        side = loss.get('side', '')
+        if (trend == 'BULL' and side == 'SELL') or (trend == 'BEAR' and side == 'BUY'):
+            trend_reverse_count += 1
+
+    if trend_reverse_count >= 3:  # 3번 이상 반복
+        pattern = {
+            'type': 'trend_reverse',
+            'count': trend_reverse_count,
+            'description': f'추세 역행 진입 {trend_reverse_count}번 → 손실',
+            'timestamp': datetime.now().isoformat()
+        }
+        new_patterns.append(pattern)
+        colored_print(f"[{trader_name}] 🔍 패턴 발견: {pattern['description']}", "yellow")
+
+    # 패턴 2: 긴 보유 시간 (60분 이상 보유 후 손실)
+    long_hold_losses = [l for l in recent_losses if l.get('holding_time_sec', 0) > 3600]  # 60분 = 3600초
+    if len(long_hold_losses) >= 3:
+        pattern = {
+            'type': 'long_hold_loss',
+            'count': len(long_hold_losses),
+            'description': f'60분 이상 보유 {len(long_hold_losses)}번 → 손실',
+            'timestamp': datetime.now().isoformat()
+        }
+        new_patterns.append(pattern)
+        colored_print(f"[{trader_name}] 🔍 패턴 발견: {pattern['description']}", "yellow")
+
+    # 패턴 3: 낮은 신뢰도 진입 (신뢰도 < 70%)
+    low_conf_losses = [l for l in recent_losses if l.get('confidence', 100) < 70]
+    if len(low_conf_losses) >= 3:
+        pattern = {
+            'type': 'low_confidence_entry',
+            'count': len(low_conf_losses),
+            'description': f'신뢰도 70% 미만 진입 {len(low_conf_losses)}번 → 손실',
+            'timestamp': datetime.now().isoformat()
+        }
+        new_patterns.append(pattern)
+        colored_print(f"[{trader_name}] 🔍 패턴 발견: {pattern['description']}", "yellow")
+
+    # 기존 패턴에 추가
+    error_patterns.extend(new_patterns)
+
+    return new_patterns
+
+def llm_analyze_trades_for_improvement(trader_name, trades, performance, error_patterns=None):
+    """⭐ LLM이 거래 패턴 분석 및 개선안 제시 (Option 1 + Option 4 통합)"""
     import json
 
     if len(trades) < 5:
         return []
+
+    # ⭐ Option 4: 먼저 오류 패턴 자동 학습
+    if error_patterns is not None:
+        new_patterns = analyze_losing_trades_for_patterns(trader_name, trades, error_patterns)
+        if new_patterns:
+            colored_print(f"[{trader_name}] 📚 새로운 오류 패턴 {len(new_patterns)}개 학습 완료", "cyan")
 
     # 최근 20건만 분석
     recent_trades = trades[-20:]
@@ -372,8 +550,20 @@ def llm_analyze_trades_for_improvement(trader_name, trades, performance):
 
     trades_text = "\n".join(trades_summary)
 
-    # LLM 프롬프트
-    prompt = f"""당신은 트레이딩 전문가입니다. {trader_name} 봇의 거래 데이터를 분석하고 개선 방안을 제시하세요.
+    # ⭐ Option 4: 오류 패턴을 프롬프트에 포함
+    error_context = ""
+    if error_patterns and len(error_patterns) > 0:
+        recent_errors = error_patterns[-5:]  # 최근 5개만
+        error_lines = []
+        for err in recent_errors:
+            error_lines.append(f"- {err.get('description', '알 수 없음')}")
+        error_context = "\n\n## ⚠️ 최근 발견된 실패 패턴\n" + "\n".join(error_lines)
+        error_context += "\n\n위 패턴을 고려하여 개선안을 제시하세요."
+
+    # ⭐ Option 1: Triple Validation - 3가지 프롬프트 생성
+
+    # Primary Prompt (주 분석)
+    primary_prompt = f"""당신은 트레이딩 전문가입니다. {trader_name} 봇의 거래 데이터를 분석하고 개선 방안을 제시하세요.
 
 ## 전체 성과
 - 총 거래: {performance['total_trades']}건
@@ -381,7 +571,7 @@ def llm_analyze_trades_for_improvement(trader_name, trades, performance):
 - 총 수익률: {performance['total_return']}%
 
 ## 최근 20건 거래
-{trades_text}
+{trades_text}{error_context}
 
 ## 분석 요청
 1. 가장 큰 문제점 1-2개만 간결하게
@@ -389,24 +579,72 @@ def llm_analyze_trades_for_improvement(trader_name, trades, performance):
 
 답변은 2-3문장으로 작성하세요."""
 
-    llm_response = ask_llm_for_analysis(prompt)
+    # Validator 1 Prompt (비판적 검증 - "왜 틀릴 수 있는가?")
+    validator1_prompt = f"""당신은 비판적 분석가입니다. {trader_name} 봇의 성과를 회의적으로 검토하세요.
 
-    if not llm_response:
+## 성과
+- 승률: {performance['win_rate']}% | 총 수익: {performance['total_return']}%
+
+## 최근 거래
+{trades_text}
+
+## 비판적 질문
+1. 이 승률/수익이 **운**일 가능성은?
+2. 가장 큰 위험 요소는 무엇인가?
+
+2문장으로 답하세요."""
+
+    # Validator 2 Prompt (반대 입장 - "정반대로 해석하면?")
+    validator2_prompt = f"""당신은 역발상 분석가입니다. {trader_name} 봇의 데이터를 **반대 관점**으로 해석하세요.
+
+## 성과
+- 승률: {performance['win_rate']}% | 총 수익: {performance['total_return']}%
+
+## 최근 거래
+{trades_text}
+
+## 역발상 질문
+1. 만약 "손실을 늘려야" 한다면 어떻게 할까? (현재 전략의 반대)
+2. 그 반대가 실제로 더 나을 가능성은?
+
+2문장으로 답하세요."""
+
+    # ⭐ Triple Validation 실행
+    validation_result = ask_llm_triple_validation(primary_prompt, validator1_prompt, validator2_prompt)
+
+    if not validation_result['primary_response']:
         return []
 
-    colored_print(f"[{trader_name}] [LLM 인사이트] {llm_response[:150]}...", "magenta")
+    # 합의가 있을 때만 분석 결과 사용
+    if validation_result['consensus']:
+        llm_response = validation_result['final_decision']
+        colored_print(f"[{trader_name}] ✅ 3중 검증 합의 ({validation_result['agreement_count']}/3)", "green")
+        colored_print(f"[{trader_name}] [LLM 인사이트] {llm_response[:150]}...", "magenta")
+    else:
+        colored_print(f"[{trader_name}] ⚠️ 3중 검증 불일치 - 개선안 보류", "yellow")
+        return []  # 합의 없으면 개선 안 함 (안전)
 
     # 간단한 키워드 기반 개선안 추출
     improvements = []
 
     if "횡보" in llm_response or "neutral" in llm_response.lower():
-        improvements.append({'type': 'sideways_block', 'source': 'LLM'})
+        improvements.append({'type': 'sideways_block', 'source': 'LLM_TRIPLE'})
 
     if ("손절" in llm_response or "stop" in llm_response.lower()) and ("늦" in llm_response or "tight" in llm_response.lower()):
-        improvements.append({'type': 'tighten_stop_loss', 'source': 'LLM'})
+        improvements.append({'type': 'tighten_stop_loss', 'source': 'LLM_TRIPLE'})
 
     if "보유" in llm_response or "hold" in llm_response.lower():
-        improvements.append({'type': 'reduce_hold_time', 'source': 'LLM'})
+        improvements.append({'type': 'reduce_hold_time', 'source': 'LLM_TRIPLE'})
+
+    # ⭐ Option 4: 오류 패턴 기반 개선안 추가
+    if error_patterns:
+        for pattern in error_patterns[-5:]:  # 최근 5개 패턴만
+            if pattern['type'] == 'trend_reverse' and pattern['count'] >= 3:
+                improvements.append({'type': 'enforce_trend_following', 'source': 'ERROR_PATTERN'})
+            elif pattern['type'] == 'long_hold_loss' and pattern['count'] >= 3:
+                improvements.append({'type': 'reduce_hold_time', 'source': 'ERROR_PATTERN'})
+            elif pattern['type'] == 'low_confidence_entry' and pattern['count'] >= 3:
+                improvements.append({'type': 'increase_min_confidence', 'source': 'ERROR_PATTERN'})
 
     return improvements
 
@@ -539,6 +777,20 @@ def apply_strategy_improvements(trader_name, strategy_file, improvements, improv
                 strategy['max_hold_minutes'] = new_hold
                 applied.append(f"보유시간 {old_hold}분 → {new_hold}분 ({source})")
                 colored_print(f"[{trader_name}] [개선 적용] 보유시간 {old_hold}분 → {new_hold}분 (출처: {source})", "green")
+
+            # ⭐ Option 4: 오류 패턴 기반 개선안
+            elif imp_type == 'enforce_trend_following':
+                strategy['trend_check_enabled'] = True
+                strategy['block_counter_trend'] = True  # 추세 역행 완전 차단
+                applied.append(f"추세 역행 진입 차단 ({source})")
+                colored_print(f"[{trader_name}] [개선 적용] 추세 역행 진입 차단 (출처: {source})", "green")
+
+            elif imp_type == 'increase_min_confidence':
+                old_conf = strategy.get('min_confidence', 75)
+                new_conf = min(85, old_conf + 5)  # 최대 85%까지
+                strategy['min_confidence'] = new_conf
+                applied.append(f"최소 신뢰도 {old_conf}% → {new_conf}% ({source})")
+                colored_print(f"[{trader_name}] [개선 적용] 최소 신뢰도 {old_conf}% → {new_conf}% (출처: {source})", "green")
 
         if applied:
             # 전략 저장
@@ -732,10 +984,20 @@ def main():
     last_improvement_check = time.time()  # ⭐ 자기개선 체크
     last_improvement_report = time.time()  # ⭐ 개선 리포트
 
+    # ⭐ Option 4: 오류 패턴 로드
+    global error_patterns_eth, error_patterns_kis
+    error_patterns_eth = load_error_patterns(ERROR_PATTERN_FILE_ETH)
+    error_patterns_kis = load_error_patterns(ERROR_PATTERN_FILE_KIS)
+    colored_print(f"[SELF-IMPROVE] ETH 오류 패턴 {len(error_patterns_eth)}개 로드", "cyan")
+    colored_print(f"[SELF-IMPROVE] KIS 오류 패턴 {len(error_patterns_kis)}개 로드\n", "cyan")
+
     colored_print("\n[MONITOR] 모니터링 시작 (Ctrl+C로 종료)\n", "green")
     colored_print(f"[GUARDIAN] 실시간 Ollama 관리 활성화 ({GUARDIAN_CHECK_INTERVAL}초마다)\n", "green")
     colored_print(f"[TRADING] 거래/수익 모니터링 활성화 (1시간마다)\n", "green")
-    colored_print(f"[SELF-IMPROVE] 자기개선 엔진 활성화 (1시간마다 LLM 분석, 6시간마다 리포트)\n", "green")
+    colored_print(f"[SELF-IMPROVE] 자기개선 엔진 활성화\n", "green")
+    colored_print(f"  - Option 1: Triple Validation (3중 검증)\n", "green")
+    colored_print(f"  - Option 4: Self-Improving Feedback Loop (오류 패턴 학습)\n", "green")
+    colored_print(f"  - 1시간마다 LLM 분석, 6시간마다 리포트\n", "green")
 
     try:
         while True:
@@ -812,9 +1074,12 @@ def main():
                             'total_return': sum([t.get('profit_pct', 0) for t in eth_trades])
                         }
 
-                        # LLM 분석
-                        colored_print("[ETH] LLM 분석 중...", "cyan")
-                        eth_improvements = llm_analyze_trades_for_improvement("ETH", eth_trades, eth_perf)
+                        # ⭐ Option 1 + 4: LLM 분석 (Triple Validation + Error Pattern Learning)
+                        colored_print("[ETH] LLM 분석 중 (Option 1: 3중 검증 + Option 4: 오류 학습)...", "cyan")
+                        eth_improvements = llm_analyze_trades_for_improvement("ETH", eth_trades, eth_perf, error_patterns_eth)
+
+                        # 오류 패턴 저장
+                        save_error_patterns(ERROR_PATTERN_FILE_ETH, error_patterns_eth)
 
                         # 개선안 적용
                         if eth_improvements:
@@ -835,9 +1100,12 @@ def main():
                             'total_return': sum([t.get('profit_pct', 0) for t in kis_trades])
                         }
 
-                        # LLM 분석
-                        colored_print("[KIS] LLM 분석 중...", "cyan")
-                        kis_improvements = llm_analyze_trades_for_improvement("KIS", kis_trades, kis_perf)
+                        # ⭐ Option 1 + 4: LLM 분석 (Triple Validation + Error Pattern Learning)
+                        colored_print("[KIS] LLM 분석 중 (Option 1: 3중 검증 + Option 4: 오류 학습)...", "cyan")
+                        kis_improvements = llm_analyze_trades_for_improvement("KIS", kis_trades, kis_perf, error_patterns_kis)
+
+                        # 오류 패턴 저장
+                        save_error_patterns(ERROR_PATTERN_FILE_KIS, error_patterns_kis)
 
                         # 개선안 적용
                         if kis_improvements:
