@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="10">
+    <title>트레이딩 시스템 상태</title>
+    <style>
+        body {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background: #0d1117;
+            color: #c9d1d9;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #58a6ff;
+            border-bottom: 3px solid #58a6ff;
+            padding-bottom: 15px;
+            font-size: 28px;
+        }
+        .status-box {
+            background: #161b22;
+            border-left: 5px solid #238636;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .status-box h2 {
+            margin: 0 0 15px 0;
+            color: #58a6ff;
+            font-size: 20px;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #21262d;
+        }
+        .metric:last-child {
+            border-bottom: none;
+        }
+        .metric-label {
+            color: #8b949e;
+            font-weight: 500;
+        }
+        .metric-value {
+            color: #79c0ff;
+            font-weight: bold;
+        }
+        .ok { color: #3fb950 !important; }
+        .warn { color: #d29922 !important; }
+        .error { color: #f85149 !important; }
+        .countdown {
+            background: linear-gradient(135deg, #1f6feb 0%, #0969da 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 6px 12px rgba(31, 111, 235, 0.4);
+        }
+        .countdown-small {
+            font-size: 14px;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .trade-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .refresh-info {
+            text-align: center;
+            color: #8b949e;
+            margin-top: 30px;
+            font-size: 13px;
+            padding: 15px;
+            background: #161b22;
+            border-radius: 6px;
+        }
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 트레이딩 시스템 대시보드</h1>
+
+        <div class="countdown">
+            <div id="analysis-countdown">⏰ 다음 분석: 계산 중...</div>
+            <div class="countdown-small" id="telegram-countdown">다음 텔레그램: 계산 중...</div>
+        </div>
+
+        <div class="grid">
+            <!-- ETH Trader -->
+            <div class="status-box">
+                <h2>📈 ETH Trader</h2>
+                <div class="metric">
+                    <span class="metric-label">총 거래</span>
+                    <span class="metric-value ok">3606건</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">누적 수익률</span>
+                    <span class="metric-value error">+0.00%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">승률</span>
+                    <span class="metric-value">0.0%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">학습 세션</span>
+                    <span class="metric-value">0건</span>
+                </div>
+
+                <h3 style="color: #58a6ff; margin-top: 20px; font-size: 18px;">💼 현재 포지션</h3>
+                <div style="color: #8b949e; padding: 10px;">포지션 없음</div>
+
+                <h3 style="color: #8b949e; margin-top: 20px; font-size: 16px;">최근 10건 거래</h3>
+                <div class="trade-list">
+                    
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>2025-10-10T00:45</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>2025-10-09T23:35</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>2025-10-09T18:43</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>2025-10-09T18:15</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>2025-10-09T18:11</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>2025-10-08T08:53</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>2025-10-01T06:31</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>2025-10-01T04:27</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>2025-10-01T02:26</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>2025-10-01T00:21</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+                </div>
+
+                <h3 style="color: #8b949e; margin-top: 20px; font-size: 16px;">최근 학습 인사이트</h3>
+                <div>
+                    <div style="color: #8b949e; padding: 10px;">대기 중</div>
+                </div>
+            </div>
+
+            <!-- KIS Trader -->
+            <div class="status-box">
+                <h2>📊 KIS Trader (SOXL/TQQQ)</h2>
+                <div class="metric">
+                    <span class="metric-label">총 거래</span>
+                    <span class="metric-value ok">415건</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">누적 수익률</span>
+                    <span class="metric-value error">+0.00%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">승률</span>
+                    <span class="metric-value">0.0%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">학습 세션</span>
+                    <span class="metric-value">5건</span>
+                </div>
+
+                <h3 style="color: #58a6ff; margin-top: 20px; font-size: 18px;">💼 현재 포지션</h3>
+                
+            <div style="padding: 15px; background: #0d1117; border-radius: 6px; border: 2px solid #f85149;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #8b949e;">포지션:</span>
+                    <span style="color: #79c0ff; font-weight: bold;">LONG SOXL</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #8b949e;">진입가:</span>
+                    <span style="color: #c9d1d9;">$42.08</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #8b949e;">현재가:</span>
+                    <span style="color: #c9d1d9;">$41.83</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px solid #21262d;">
+                    <span style="color: #8b949e;">미실현 손익:</span>
+                    <span style="color: #f85149; font-weight: bold; font-size: 18px;">-0.59%</span>
+                </div>
+            </div>
+            
+
+                <h3 style="color: #8b949e; margin-top: 20px; font-size: 16px;">최근 10건 거래</h3>
+                <div class="trade-list">
+                    
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>N/A</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>N/A</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>N/A</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>N/A</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>N/A</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>N/A</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>N/A</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>N/A</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>N/A</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between;">
+            <span>N/A</span>
+            <span style="color: #f85149; font-weight: bold;">+0.00%</span>
+        </div>
+        
+                </div>
+
+                <h3 style="color: #8b949e; margin-top: 20px; font-size: 16px;">최근 학습 인사이트</h3>
+                <div>
+                    
+        <div style="padding: 8px; border-bottom: 1px solid #21262d;">
+            <div style="color: #8b949e; font-size: 12px;">2025-10-10T22:39</div>
+            <div style="color: #79c0ff;">발견: 2개 | 적용: 0개</div>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d;">
+            <div style="color: #8b949e; font-size: 12px;">2025-10-10T22:55</div>
+            <div style="color: #79c0ff;">발견: 1개 | 적용: 0개</div>
+        </div>
+        
+        <div style="padding: 8px; border-bottom: 1px solid #21262d;">
+            <div style="color: #8b949e; font-size: 12px;">2025-10-10T23:10</div>
+            <div style="color: #79c0ff;">발견: 1개 | 적용: 0개</div>
+        </div>
+        
+                </div>
+            </div>
+        </div>
+
+        <div class="status-box">
+            <h2>⚙️ 시스템 설정</h2>
+            <div class="metric">
+                <span class="metric-label">거래 모니터링</span>
+                <span class="metric-value">15분 주기</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">자기개선 분석</span>
+                <span class="metric-value">15분 주기 (Triple Validation)</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">백그라운드 학습</span>
+                <span class="metric-value">10분 주기 (FMP API)</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">텔레그램 알림</span>
+                <span class="metric-value">6시간 주기</span>
+            </div>
+        </div>
+
+        <div class="status-box">
+            <h2>🔧 프로세스 상태</h2>
+            <div class="metric">
+                <span class="metric-label">Python 프로세스</span>
+                <span class="metric-value warn">6개 (예상: 3개)</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Ollama 프로세스</span>
+                <span class="metric-value ok">6개</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">마지막 업데이트</span>
+                <span class="metric-value">23:20:18</span>
+            </div>
+        </div>
+
+        <div class="refresh-info">
+            ✨ 자동 새로고침: 10초마다 | 수동: F5<br>
+            📍 파일 위치: C:\Users\user\Documents\코드5\status.html
+        </div>
+    </div>
+
+    <script>
+        
+        let nextAnalysis = 205;
+        let nextTelegram = 18205;
+        
+
+        function updateCountdown() {
+            if (nextAnalysis > 0) {
+                nextAnalysis--;
+                const minutes = Math.floor(nextAnalysis / 60);
+                const seconds = nextAnalysis % 60;
+                document.getElementById('analysis-countdown').textContent =
+                    `⏰ 다음 분석: ${minutes}분 ${seconds}초`;
+            }
+
+            if (nextTelegram > 0) {
+                nextTelegram--;
+                const hours = Math.floor(nextTelegram / 3600);
+                const minutes = Math.floor((nextTelegram % 3600) / 60);
+                document.getElementById('telegram-countdown').textContent =
+                    `다음 텔레그램: ${hours}시간 ${minutes}분`;
+            }
+        }
+
+        // 1초마다 카운트다운 업데이트
+        setInterval(updateCountdown, 1000);
+        updateCountdown(); // 즉시 실행
+    </script>
+</body>
+</html>

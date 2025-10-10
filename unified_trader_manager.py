@@ -1228,6 +1228,34 @@ def apply_strategy_improvements(trader_name, strategy_file, improvements, improv
                 applied.append(f"최소 신뢰도 {old_conf}% → {new_conf}% ({source})")
                 colored_print(f"[{trader_name}] [개선 적용] 최소 신뢰도 {old_conf}% → {new_conf}% (출처: {source})", "green")
 
+            # ⭐ 백그라운드 학습 발견 전략 (자동 검증 완료)
+            elif imp_type == 'rsi_based_entry':
+                strategy['rsi_filter_enabled'] = True
+                strategy['rsi_oversold'] = 30  # RSI < 30 = 과매도 (매수 기회)
+                strategy['rsi_overbought'] = 70  # RSI > 70 = 과매수 (매수 차단)
+                strategy['require_rsi_confirmation'] = True  # RSI 확인 필수
+                applied.append(f"RSI 기반 진입 필터 활성화 ({source})")
+                colored_print(f"[{trader_name}] [개선 적용] RSI 기반 진입 필터 (30/70) (출처: {source})", "green")
+
+            elif imp_type == 'conservative_entry':
+                old_conf = strategy.get('min_confidence', 75)
+                new_conf = min(85, old_conf + 5)
+                strategy['min_confidence'] = new_conf
+                strategy['require_double_confirmation'] = True  # 이중 확인 필요
+                strategy['min_volume_ratio'] = 1.2  # 거래량 20% 이상 증가 확인
+                applied.append(f"보수적 진입 강화 (신뢰도 {new_conf}%, 이중확인) ({source})")
+                colored_print(f"[{trader_name}] [개선 적용] 보수적 진입 강화 (출처: {source})", "green")
+
+            elif imp_type == 'stop_loss_adjustment':
+                # 기존 tighten_stop_loss와 다르게, 동적 손절 조정
+                strategy['dynamic_stop_loss_enabled'] = True
+                strategy['stop_loss_step'] = 0.5  # 0.5% 단위로 조정
+                old_sl = strategy.get('stop_loss_pct', -2.5)
+                new_sl = max(-4.0, old_sl - 0.5)  # 최대 -4%까지만
+                strategy['stop_loss_pct'] = new_sl
+                applied.append(f"동적 손절 조정 활성화 ({old_sl}% → {new_sl:.1f}%) ({source})")
+                colored_print(f"[{trader_name}] [개선 적용] 동적 손절 조정 (출처: {source})", "green")
+
         if applied:
             # 전략 저장
             with open(strategy_file, 'w', encoding='utf-8') as f:
