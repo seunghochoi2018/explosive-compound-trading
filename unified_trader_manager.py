@@ -74,8 +74,8 @@ KIS_PYTHON = r"C:\Users\user\AppData\Local\Programs\Python\Python311\python.exe"
 
 # 모델 업그레이드 전략 (공평하게!)
 # 1단계: ETH 14b×1 + KIS 14b×1 = 16GB (완료)
-# 2단계: ETH (14b+7b) + KIS (14b+7b) = 24GB (현재 ⭐)
-# 3단계: ETH 14b×2 + KIS 14b×2 = 32GB (메모리 충분시)
+# 2단계: ETH (16b+7b) + KIS (16b+7b) = 24GB (현재 ⭐ deepseek-coder-v2:16b)
+# 3단계: ETH 16b×2 + KIS 16b×2 = 32GB (메모리 충분시)
 
 # ===== 리소스 모니터링 설정 =====
 MAX_MEMORY_MB = 10 * 1024  # Ollama 메모리 상한: 10GB
@@ -96,7 +96,7 @@ KIS_TRADE_HISTORY = r"C:\Users\user\Documents\코드4\kis_trade_history.json"
 SELF_IMPROVEMENT_INTERVAL = 60 * 60  # 1시간마다 자기 분석
 IMPROVEMENT_REPORT_INTERVAL = 6 * 60 * 60  # 6시간마다 텔레그램 리포트
 OLLAMA_IMPROVEMENT_HOST = f"http://127.0.0.1:{OLLAMA_PORT_IMPROVEMENT}"
-OLLAMA_IMPROVEMENT_MODEL = "qwen2.5:14b"
+OLLAMA_IMPROVEMENT_MODEL = "deepseek-coder-v2:16b"
 OLLAMA_IMPROVEMENT_TIMEOUT = 60
 
 # 자기개선 상태 추적
