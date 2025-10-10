@@ -77,7 +77,10 @@
       "Bash(git pull:*)",
       "Bash(git fetch:*)",
       "Bash(git checkout:*)",
-      "Bash(del nul)"
+      "Bash(del nul)",
+      "Bash(find:*)",
+      "Bash(\"C:\\Users\\user\\PycharmProjects\\PythonProject\\.venv\\Scripts\\python.exe\" -c \"import requests; r = requests.get(''http://127.0.0.1:11434/api/tags'', timeout=30); print(f''Status: {r.status_code}'')\")",
+      "Bash(\"C:\\Users\\user\\PycharmProjects\\PythonProject\\.venv\\Scripts\\python.exe\" -c \"import requests; print(''requests OK'')\")"
     ],
     "deny": [],
     "ask": []
