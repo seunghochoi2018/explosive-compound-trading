@@ -54,11 +54,14 @@ telegram = TelegramNotifier()
 
 # ===== 설정 =====
 RESTART_INTERVAL = 4 * 60 * 60  # 4시간 (초 단위)
+GUARDIAN_CHECK_INTERVAL = 10  # ⭐ 실시간 Ollama 체크: 10초마다
 
 # Ollama 설정
 OLLAMA_EXE = r"C:\Users\user\AppData\Local\Programs\Ollama\ollama.exe"
 OLLAMA_PORT_ETH = 11434  # 코드3 (ETH) 전용
 OLLAMA_PORT_KIS = 11435  # 코드4 (KIS) 전용
+OLLAMA_PORT_IMPROVEMENT = 11436  # ⭐ 자기개선 엔진 전용
+ALLOWED_PORTS = [OLLAMA_PORT_ETH, OLLAMA_PORT_KIS, OLLAMA_PORT_IMPROVEMENT]  # 허가된 포트
 
 # 트레이더 설정
 ETH_TRADER_DIR = r"C:\Users\user\Documents\코드3"
@@ -83,6 +86,11 @@ QUEUE_DETECT_THRESHOLD = 60  # 큐잉 감지: 60초 이상 CPU 0%
 # 응답 시간 추적 (최근 10개)
 response_times_eth = deque(maxlen=10)
 response_times_kis = deque(maxlen=10)
+
+# ⭐ 거래/수익 모니터링 설정
+TRADING_CHECK_INTERVAL = 60 * 60  # 1시간마다 거래 현황 체크
+ETH_TRADE_HISTORY = r"C:\Users\user\Documents\코드3\eth_trade_history.json"
+KIS_TRADE_HISTORY = r"C:\Users\user\Documents\코드4\kis_trade_history.json"
 
 # ===== 색상 출력 =====
 def colored_print(message, color="white"):
@@ -242,16 +250,170 @@ Start-Process -FilePath "{OLLAMA_EXE}" -ArgumentList "serve" -WindowStyle Hidden
         colored_print(f"Ollama 포트 {port} 시작 오류: {e}", "red")
         return None
 
+def get_port_by_pid(pid):
+    """PID로 사용 중인 포트 찾기"""
+    try:
+        for conn in psutil.net_connections(kind='inet'):
+            if conn.pid == pid and conn.status == 'LISTEN':
+                return conn.laddr.port
+    except:
+        pass
+    return None
+
 def get_ollama_processes():
-    """실행 중인 Ollama 프로세스 목록"""
+    """실행 중인 Ollama 프로세스 목록 (상세 정보 포함)"""
     processes = []
     for proc in psutil.process_iter(['pid', 'name', 'cmdline', 'cpu_percent', 'memory_info']):
         try:
-            if proc.info['name'] == 'ollama.exe':
-                processes.append(proc)
+            if proc.info['name'] and 'ollama.exe' in proc.info['name'].lower():
+                pid = proc.info['pid']
+                memory_mb = proc.info['memory_info'].rss / 1024 / 1024
+                port = get_port_by_pid(pid)
+                processes.append({
+                    'pid': pid,
+                    'port': port,
+                    'memory_mb': memory_mb,
+                    'proc': proc
+                })
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
     return processes
+
+def guardian_cleanup_rogue_ollama():
+    """⭐ 불필요한 Ollama 프로세스 자동 정리 (실시간)"""
+    procs = get_ollama_processes()
+    if not procs:
+        return
+
+    killed = []
+    for p in procs:
+        pid = p['pid']
+        port = p['port']
+        memory_mb = p['memory_mb']
+
+        # 1. app.exe는 항상 유지
+        try:
+            if 'app.exe' in str(p['proc'].name()):
+                continue
+        except:
+            pass
+
+        # 2. 포트 없는 프로세스 중 메모리 1GB 이상
+        if port is None and memory_mb > 1024:
+            try:
+                p['proc'].kill()
+                killed.append(f"PID {pid} (포트없음, {memory_mb:.0f}MB)")
+                colored_print(f"[GUARDIAN] 정리: PID {pid} (포트없음, 메모리 {memory_mb:.0f}MB)", "red")
+            except:
+                pass
+            continue
+
+        # 3. 허가되지 않은 포트
+        if port and port not in ALLOWED_PORTS:
+            try:
+                p['proc'].kill()
+                killed.append(f"PID {pid} (포트 {port}, {memory_mb:.0f}MB)")
+                colored_print(f"[GUARDIAN] 정리: PID {pid} (미허가 포트 {port}, {memory_mb:.0f}MB)", "red")
+            except:
+                pass
+            continue
+
+        # 4. 메모리 폭주 (8GB 초과)
+        if memory_mb > 8 * 1024:
+            try:
+                p['proc'].kill()
+                killed.append(f"PID {pid} (포트 {port}, 메모리폭주 {memory_mb:.0f}MB)")
+                colored_print(f"[GUARDIAN] 정리: PID {pid} (메모리폭주 {memory_mb:.0f}MB)", "red")
+            except:
+                pass
+
+    if killed:
+        telegram.notify_system_error(f"불필요한 Ollama 정리: {', '.join(killed)}")
+        time.sleep(2)  # 정리 후 대기
+
+def check_trading_health(trader_name, history_file):
+    """⭐ 거래 현황 및 수익 체크 (1시간마다)"""
+    import json
+    from datetime import datetime, timedelta
+
+    try:
+        # 거래 히스토리 로드
+        with open(history_file, 'r', encoding='utf-8') as f:
+            trades = json.load(f)
+
+        if not trades:
+            return {
+                'status': 'no_trades',
+                'message': f'{trader_name}: 거래 없음',
+                'alert': True
+            }
+
+        # 최근 1시간 거래
+        one_hour_ago = datetime.now() - timedelta(hours=1)
+        recent_trades = []
+        for t in trades:
+            try:
+                trade_time = datetime.fromisoformat(t.get('timestamp', ''))
+                if trade_time >= one_hour_ago:
+                    recent_trades.append(t)
+            except:
+                continue
+
+        # 전체 수익률 계산
+        total_return = sum([t.get('profit_pct', 0) for t in trades])
+        total_trades = len(trades)
+        wins = len([t for t in trades if t.get('profit_pct', 0) > 0])
+        win_rate = wins / total_trades * 100 if total_trades > 0 else 0
+
+        # 최근 1시간 거래 분석
+        recent_count = len(recent_trades)
+        recent_return = sum([t.get('profit_pct', 0) for t in recent_trades]) if recent_trades else 0
+
+        # 경고 조건
+        alert = False
+        warnings = []
+
+        # 1. 1시간 동안 거래 없음 (ETH는 1분, KIS는 2분 주기라 최소 30건 이상 예상)
+        if recent_count == 0:
+            warnings.append("1시간 동안 거래 없음")
+            alert = True
+
+        # 2. 총 수익률이 음수 (손실 누적)
+        if total_return < -5:
+            warnings.append(f"누적 손실 {total_return:.1f}%")
+            alert = True
+
+        # 3. 승률이 40% 미만
+        if win_rate < 40 and total_trades >= 10:
+            warnings.append(f"승률 {win_rate:.0f}%")
+            alert = True
+
+        message = f"{trader_name}: 거래 {total_trades}건, 수익 {total_return:+.2f}%, 승률 {win_rate:.0f}%, 최근1h {recent_count}건"
+
+        return {
+            'status': 'healthy' if not alert else 'warning',
+            'total_trades': total_trades,
+            'total_return': total_return,
+            'win_rate': win_rate,
+            'recent_count': recent_count,
+            'recent_return': recent_return,
+            'message': message,
+            'warnings': warnings,
+            'alert': alert
+        }
+
+    except FileNotFoundError:
+        return {
+            'status': 'no_file',
+            'message': f'{trader_name}: 거래 파일 없음',
+            'alert': True
+        }
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'{trader_name}: 오류 {e}',
+            'alert': False
+        }
 
 # ===== 로그 파서 =====
 def parse_trader_log(line, trader_name):
@@ -366,24 +528,33 @@ def main():
     kill_all_ollama()
     time.sleep(3)
 
-    colored_print("\n[OLLAMA] 독립 인스턴스 2개 시작 중...", "blue")
+    colored_print("\n[OLLAMA] 독립 인스턴스 3개 시작 중...", "blue")
 
     # ETH Ollama (11434)
-    colored_print(f"[OLLAMA] 포트 {OLLAMA_PORT_ETH} 시작 중...", "blue")
+    colored_print(f"[OLLAMA] 포트 {OLLAMA_PORT_ETH} 시작 중 (ETH Trader용)...", "blue")
     ollama_eth = start_ollama(OLLAMA_PORT_ETH)
     if not ollama_eth:
         colored_print(f"\n[ERROR] Ollama 포트 {OLLAMA_PORT_ETH} 시작 실패!", "red")
         return
 
     # KIS Ollama (11435)
-    colored_print(f"[OLLAMA] 포트 {OLLAMA_PORT_KIS} 시작 중...", "blue")
+    colored_print(f"[OLLAMA] 포트 {OLLAMA_PORT_KIS} 시작 중 (KIS Trader용)...", "blue")
     ollama_kis = start_ollama(OLLAMA_PORT_KIS)
     if not ollama_kis:
         colored_print(f"\n[ERROR] Ollama 포트 {OLLAMA_PORT_KIS} 시작 실패!", "red")
         kill_all_ollama()
         return
 
-    colored_print("[OLLAMA] 두 인스턴스 모두 시작 완료!", "green")
+    # ⭐ Self-Improvement Ollama (11436)
+    colored_print(f"[OLLAMA] 포트 {OLLAMA_PORT_IMPROVEMENT} 시작 중 (자기개선 엔진용)...", "blue")
+    ollama_improvement = start_ollama(OLLAMA_PORT_IMPROVEMENT)
+    if not ollama_improvement:
+        colored_print(f"\n[WARNING] Ollama 포트 {OLLAMA_PORT_IMPROVEMENT} 시작 실패 (자기개선 엔진 비활성화)", "yellow")
+        # 자기개선은 선택사항이므로 실패해도 계속 진행
+    else:
+        colored_print(f"[OLLAMA] 자기개선 엔진용 Ollama 활성화 완료!", "green")
+
+    colored_print("[OLLAMA] 모든 인스턴스 시작 완료!", "green")
 
     # 트레이더 시작
     colored_print("\n[TRADER] 시작 중...", "blue")
@@ -409,17 +580,76 @@ def main():
 
     # 재시작 타이머
     last_restart_time = time.time()
-    check_interval = 60  # 1분마다 상태 체크
+    last_guardian_check = time.time()
+    last_status_print = time.time()
+    last_trading_check = time.time()  # ⭐ 거래 현황 체크
 
     colored_print("\n[MONITOR] 모니터링 시작 (Ctrl+C로 종료)\n", "green")
+    colored_print(f"[GUARDIAN] 실시간 Ollama 관리 활성화 ({GUARDIAN_CHECK_INTERVAL}초마다)\n", "green")
+    colored_print(f"[TRADING] 거래/수익 모니터링 활성화 (1시간마다)\n", "green")
 
     try:
         while True:
-            time.sleep(check_interval)
+            time.sleep(GUARDIAN_CHECK_INTERVAL)  # ⭐ 10초마다 체크
             current_time = time.time()
             elapsed = current_time - last_restart_time
 
-            # 상태 체크
+            # ⭐ Guardian: 불필요한 Ollama 정리 (10초마다)
+            guardian_cleanup_rogue_ollama()
+
+            # ⭐ 거래 현황 및 수익 체크 (1시간마다)
+            if (current_time - last_trading_check) >= TRADING_CHECK_INTERVAL:
+                colored_print("\n" + "="*70, "cyan")
+                colored_print("[거래 현황 체크] 시작", "cyan")
+                colored_print("="*70, "cyan")
+
+                eth_health = check_trading_health("ETH", ETH_TRADE_HISTORY)
+                kis_health = check_trading_health("KIS", KIS_TRADE_HISTORY)
+
+                # ETH 상태
+                if eth_health['alert']:
+                    colored_print(f"⚠️  [ETH] {eth_health['message']}", "red")
+                    if eth_health.get('warnings'):
+                        for w in eth_health['warnings']:
+                            colored_print(f"    - {w}", "yellow")
+                    telegram.notify_system_error(f"ETH 거래 경고: {', '.join(eth_health.get('warnings', []))}")
+                else:
+                    colored_print(f"✅ [ETH] {eth_health['message']}", "green")
+
+                # KIS 상태
+                if kis_health['alert']:
+                    colored_print(f"⚠️  [KIS] {kis_health['message']}", "red")
+                    if kis_health.get('warnings'):
+                        for w in kis_health['warnings']:
+                            colored_print(f"    - {w}", "yellow")
+                    telegram.notify_system_error(f"KIS 거래 경고: {', '.join(kis_health.get('warnings', []))}")
+                else:
+                    colored_print(f"✅ [KIS] {kis_health['message']}", "green")
+
+                # 종합 리포트 텔레그램 전송
+                report = f"📊 <b>거래 현황 리포트</b>\n\n"
+                report += f"<b>ETH:</b> {eth_health['message']}\n"
+                report += f"<b>KIS:</b> {kis_health['message']}\n\n"
+
+                if eth_health['alert'] or kis_health['alert']:
+                    report += "⚠️ 문제 감지 - 자기개선 엔진이 분석 중입니다"
+                else:
+                    report += "✅ 모든 봇 정상 작동 중"
+
+                telegram.send_message(report)
+
+                colored_print("="*70 + "\n", "cyan")
+                last_trading_check = current_time
+
+            # 상태 체크 (1분마다만)
+            should_check_status = (current_time - last_status_print) >= 60
+
+            if not should_check_status:
+                continue
+
+            last_status_print = current_time
+
+            # 트레이더 상태 체크
             eth_alive = trader_eth and trader_eth.poll() is None
             kis_alive = trader_kis and trader_kis.poll() is None
 
@@ -451,6 +681,7 @@ def main():
 
                 ollama_eth = start_ollama(OLLAMA_PORT_ETH)
                 ollama_kis = start_ollama(OLLAMA_PORT_KIS)
+                ollama_improvement = start_ollama(OLLAMA_PORT_IMPROVEMENT)
 
                 if not ollama_eth or not ollama_kis:
                     colored_print("[ERROR] Ollama 재시작 실패!", "red")
@@ -516,6 +747,7 @@ def main():
 
                 ollama_eth = start_ollama(OLLAMA_PORT_ETH)
                 ollama_kis = start_ollama(OLLAMA_PORT_KIS)
+                ollama_improvement = start_ollama(OLLAMA_PORT_IMPROVEMENT)
 
                 # 3. 트레이더 재시작
                 colored_print("[RESTART 3/3] 트레이더 재시작 중...", "green")
