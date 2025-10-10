@@ -1,0 +1,1435 @@
+{
+  "initial_balance": 10000,
+  "final_balance": 15359.77759615274,
+  "total_return_pct": 53.597775961527404,
+  "total_trades": 44,
+  "wins": 17,
+  "win_rate": 38.63636363636363,
+  "avg_pnl": -0.14183035312692038,
+  "trades": [
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 21.1,
+      "size": 10000.0,
+      "date": "2024-10-23"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 21.1,
+      "exit_price": 20.78,
+      "entry_date": "2024-10-23",
+      "exit_date": "2024-10-24",
+      "pnl_pct": -1.5165876777251197,
+      "pnl_amount": -151.65876777251196,
+      "balance": 9848.341232227489,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 35.35,
+      "size": 9848.341232227489,
+      "date": "2024-10-28"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 37.98,
+      "size": 1477.2511848341233,
+      "date": "2024-10-29",
+      "pnl_pct": 7.439886845827427
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 37.98,
+      "size": 1477.2511848341233,
+      "date": "2024-10-29",
+      "pnl_pct": 7.439886845827427
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 37.98,
+      "size": 1477.2511848341233,
+      "date": "2024-10-29",
+      "pnl_pct": 7.439886845827427
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 37.98,
+      "size": 1477.2511848341233,
+      "date": "2024-10-29",
+      "pnl_pct": 7.439886845827427
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 35.35,
+      "exit_price": 37.98,
+      "entry_date": "2024-10-28",
+      "exit_date": "2024-10-29",
+      "pnl_pct": 7.439886845827427,
+      "pnl_amount": 1172.3287101899068,
+      "balance": 11020.669942417397,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 36.21,
+      "size": 11020.669942417397,
+      "date": "2024-11-07"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 36.21,
+      "exit_price": 35.41,
+      "entry_date": "2024-11-07",
+      "exit_date": "2024-11-08",
+      "pnl_pct": -2.209334438000564,
+      "pnl_amount": -243.48345633620445,
+      "balance": 10777.186486081193,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 21.43,
+      "size": 10777.186486081193,
+      "date": "2024-11-12"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 22.84,
+      "size": 1616.577972912179,
+      "date": "2024-11-13",
+      "pnl_pct": 6.57956136257583
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 22.84,
+      "size": 1616.577972912179,
+      "date": "2024-11-13",
+      "pnl_pct": 6.57956136257583
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 22.84,
+      "size": 1616.577972912179,
+      "date": "2024-11-13",
+      "pnl_pct": 6.57956136257583
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 22.84,
+      "size": 1616.577972912179,
+      "date": "2024-11-13",
+      "pnl_pct": 6.57956136257583
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 21.43,
+      "exit_price": 22.84,
+      "entry_date": "2024-11-12",
+      "exit_date": "2024-11-13",
+      "pnl_pct": 6.57956136257583,
+      "pnl_amount": 1134.546556817507,
+      "balance": 11911.7330428987,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 22.85,
+      "size": 11911.7330428987,
+      "date": "2024-11-14"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 25.13,
+      "size": 1786.759956434805,
+      "date": "2024-11-15",
+      "pnl_pct": 9.978118161925591
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 25.13,
+      "size": 1786.759956434805,
+      "date": "2024-11-15",
+      "pnl_pct": 9.978118161925591
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 25.13,
+      "size": 1786.759956434805,
+      "date": "2024-11-15",
+      "pnl_pct": 9.978118161925591
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 25.13,
+      "size": 1786.759956434805,
+      "date": "2024-11-15",
+      "pnl_pct": 9.978118161925591
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 22.85,
+      "exit_price": 25.13,
+      "entry_date": "2024-11-14",
+      "exit_date": "2024-11-15",
+      "pnl_pct": 9.978118161925591,
+      "pnl_amount": 1901.7068770457074,
+      "balance": 13813.439919944409,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 24.08,
+      "size": 13813.439919944409,
+      "date": "2024-12-19"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 24.08,
+      "exit_price": 23.11,
+      "entry_date": "2024-12-19",
+      "exit_date": "2024-12-20",
+      "pnl_pct": -4.0282392026578036,
+      "pnl_amount": -556.4384020907834,
+      "balance": 13257.001517853625,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 30.48,
+      "size": 13257.001517853625,
+      "date": "2024-12-24"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 30.48,
+      "exit_price": 29.69,
+      "entry_date": "2024-12-24",
+      "exit_date": "2024-12-27",
+      "pnl_pct": -2.5918635170603643,
+      "pnl_amount": -343.60338579738686,
+      "balance": 12913.398132056238,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 22.47,
+      "size": 12913.398132056238,
+      "date": "2024-12-31"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 22.47,
+      "exit_price": 22.12,
+      "entry_date": "2024-12-31",
+      "exit_date": "2025-01-02",
+      "pnl_pct": -1.5576323987538847,
+      "pnl_amount": -201.14327308498693,
+      "balance": 12712.254858971251,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 32.49,
+      "size": 12712.254858971251,
+      "date": "2025-01-06"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 32.49,
+      "exit_price": 31.15,
+      "entry_date": "2025-01-06",
+      "exit_date": "2025-01-07",
+      "pnl_pct": -4.124345952600811,
+      "pnl_amount": -524.2973687602807,
+      "balance": 12187.95749021097,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 21.45,
+      "size": 12187.95749021097,
+      "date": "2025-01-10"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 21.59,
+      "size": 1828.1936235316455,
+      "date": "2025-01-13",
+      "pnl_pct": 0.6526806526806553
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 21.45,
+      "exit_price": 21.29,
+      "entry_date": "2025-01-10",
+      "exit_date": "2025-01-14",
+      "pnl_pct": -0.7459207459207466,
+      "pnl_amount": -104.54937893700796,
+      "balance": 12083.408111273962,
+      "pyramid_levels": 1,
+      "reason": "TIME_LIMIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 29.99,
+      "size": 12083.408111273962,
+      "date": "2025-01-16"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 32.49,
+      "size": 1812.5112166910942,
+      "date": "2025-01-17",
+      "pnl_pct": 8.336112037345794
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 32.49,
+      "size": 1812.5112166910942,
+      "date": "2025-01-17",
+      "pnl_pct": 8.336112037345794
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 32.49,
+      "size": 1812.5112166910942,
+      "date": "2025-01-17",
+      "pnl_pct": 8.336112037345794
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 32.49,
+      "size": 1812.5112166910942,
+      "date": "2025-01-17",
+      "pnl_pct": 8.336112037345794
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 29.99,
+      "exit_price": 32.49,
+      "entry_date": "2025-01-16",
+      "exit_date": "2025-01-17",
+      "pnl_pct": 8.336112037345794,
+      "pnl_amount": 1611.658300936843,
+      "balance": 13695.066412210805,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 33.69,
+      "size": 13695.066412210805,
+      "date": "2025-01-21"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 35.15,
+      "size": 2054.259961831621,
+      "date": "2025-01-22",
+      "pnl_pct": 4.333630157316714
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 35.15,
+      "size": 2054.259961831621,
+      "date": "2025-01-22",
+      "pnl_pct": 4.333630157316714
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 35.15,
+      "size": 2054.259961831621,
+      "date": "2025-01-22",
+      "pnl_pct": 4.333630157316714
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 35.15,
+      "size": 2054.259961831621,
+      "date": "2025-01-22",
+      "pnl_pct": 4.333630157316714
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 33.69,
+      "exit_price": 35.15,
+      "entry_date": "2025-01-21",
+      "exit_date": "2025-01-22",
+      "pnl_pct": 4.333630157316714,
+      "pnl_amount": 949.5896449665912,
+      "balance": 14644.656057177395,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 22.22,
+      "size": 14644.656057177395,
+      "date": "2025-01-27"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 22.22,
+      "exit_price": 21.78,
+      "entry_date": "2025-01-27",
+      "exit_date": "2025-01-29",
+      "pnl_pct": -1.9801980198019702,
+      "pnl_amount": -289.9931892510361,
+      "balance": 14354.66286792636,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 27.15,
+      "size": 14354.66286792636,
+      "date": "2025-01-30"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 27.15,
+      "exit_price": 25.61,
+      "entry_date": "2025-01-30",
+      "exit_date": "2025-02-03",
+      "pnl_pct": -5.672191528545117,
+      "pnl_amount": -814.2239711457305,
+      "balance": 13540.43889678063,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 27.54,
+      "size": 13540.43889678063,
+      "date": "2025-02-12"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 28.47,
+      "size": 2031.0658345170943,
+      "date": "2025-02-13",
+      "pnl_pct": 3.3769063180827876
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 28.47,
+      "size": 2031.0658345170943,
+      "date": "2025-02-13",
+      "pnl_pct": 3.3769063180827876
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 28.47,
+      "size": 2031.0658345170943,
+      "date": "2025-02-13",
+      "pnl_pct": 3.3769063180827876
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 28.47,
+      "size": 2031.0658345170943,
+      "date": "2025-02-13",
+      "pnl_pct": 3.3769063180827876
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 27.54,
+      "exit_price": 28.47,
+      "entry_date": "2025-02-12",
+      "exit_date": "2025-02-13",
+      "pnl_pct": 3.3769063180827876,
+      "pnl_amount": 731.5966985624391,
+      "balance": 14272.03559534307,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 28.55,
+      "size": 14272.03559534307,
+      "date": "2025-02-14"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 29.99,
+      "size": 2140.80533930146,
+      "date": "2025-02-18",
+      "pnl_pct": 5.043782837127838
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 29.99,
+      "size": 2140.80533930146,
+      "date": "2025-02-18",
+      "pnl_pct": 5.043782837127838
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 29.99,
+      "size": 2140.80533930146,
+      "date": "2025-02-18",
+      "pnl_pct": 5.043782837127838
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 29.99,
+      "size": 2140.80533930146,
+      "date": "2025-02-18",
+      "pnl_pct": 5.043782837127838
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 28.55,
+      "exit_price": 29.99,
+      "entry_date": "2025-02-14",
+      "exit_date": "2025-02-18",
+      "pnl_pct": 5.043782837127838,
+      "pnl_amount": 1151.7607709867032,
+      "balance": 15423.796366329772,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 31.47,
+      "size": 15423.796366329772,
+      "date": "2025-02-19"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 31.7,
+      "size": 2313.5694549494656,
+      "date": "2025-02-20",
+      "pnl_pct": 0.7308547823323814
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 31.47,
+      "exit_price": 28.81,
+      "entry_date": "2025-02-19",
+      "exit_date": "2025-02-21",
+      "pnl_pct": -8.452494439148396,
+      "pnl_amount": -1499.2498596950356,
+      "balance": 13924.546506634737,
+      "pyramid_levels": 1,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 21.48,
+      "size": 13924.546506634737,
+      "date": "2025-02-25"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 21.48,
+      "exit_price": 20.37,
+      "entry_date": "2025-02-25",
+      "exit_date": "2025-02-26",
+      "pnl_pct": -5.1675977653631255,
+      "pnl_amount": -719.5645541138059,
+      "balance": 13204.981952520931,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 26.28,
+      "size": 13204.981952520931,
+      "date": "2025-03-27"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 28.79,
+      "size": 1980.7472928781397,
+      "date": "2025-03-28",
+      "pnl_pct": 9.550989345509887
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 28.79,
+      "size": 1980.7472928781397,
+      "date": "2025-03-28",
+      "pnl_pct": 9.550989345509887
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 28.79,
+      "size": 1980.7472928781397,
+      "date": "2025-03-28",
+      "pnl_pct": 9.550989345509887
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 28.79,
+      "size": 1980.7472928781397,
+      "date": "2025-03-28",
+      "pnl_pct": 9.550989345509887
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 26.28,
+      "exit_price": 28.79,
+      "entry_date": "2025-03-27",
+      "exit_date": "2025-03-28",
+      "pnl_pct": 9.550989345509887,
+      "pnl_amount": 2017.9302709788437,
+      "balance": 15222.912223499776,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 28.99,
+      "size": 15222.912223499776,
+      "date": "2025-03-31"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 28.99,
+      "exit_price": 28.36,
+      "entry_date": "2025-03-31",
+      "exit_date": "2025-04-02",
+      "pnl_pct": -2.1731631597102417,
+      "pnl_amount": -330.81872027612434,
+      "balance": 14892.093503223652,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 10.6,
+      "size": 14892.093503223652,
+      "date": "2025-04-15"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 10.6,
+      "exit_price": 9.34,
+      "entry_date": "2025-04-15",
+      "exit_date": "2025-04-16",
+      "pnl_pct": -11.886792452830187,
+      "pnl_amount": -1770.1922466096037,
+      "balance": 13121.901256614048,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 27.66,
+      "size": 13121.901256614048,
+      "date": "2025-04-21"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 27.66,
+      "exit_price": 26.09,
+      "entry_date": "2025-04-21",
+      "exit_date": "2025-04-22",
+      "pnl_pct": -5.676066522053508,
+      "pnl_amount": -744.8078442835886,
+      "balance": 12377.09341233046,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 12,
+      "size": 12377.09341233046,
+      "date": "2025-04-24"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 12.34,
+      "size": 1856.564011849569,
+      "date": "2025-04-25",
+      "pnl_pct": 2.833333333333332
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 12.34,
+      "size": 1856.564011849569,
+      "date": "2025-04-25",
+      "pnl_pct": 2.833333333333332
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 12.34,
+      "size": 1856.564011849569,
+      "date": "2025-04-25",
+      "pnl_pct": 2.833333333333332
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 12.34,
+      "size": 1856.564011849569,
+      "date": "2025-04-25",
+      "pnl_pct": 2.833333333333332
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 12,
+      "exit_price": 12.34,
+      "entry_date": "2025-04-24",
+      "exit_date": "2025-04-25",
+      "pnl_pct": 2.833333333333332,
+      "pnl_amount": 561.0949013589806,
+      "balance": 12938.18831368944,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 14.11,
+      "size": 12938.18831368944,
+      "date": "2025-05-09"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 17.13,
+      "size": 1940.7282470534158,
+      "date": "2025-05-12",
+      "pnl_pct": 21.403260099220407
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 17.13,
+      "size": 1940.7282470534158,
+      "date": "2025-05-12",
+      "pnl_pct": 21.403260099220407
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 17.13,
+      "size": 1940.7282470534158,
+      "date": "2025-05-12",
+      "pnl_pct": 21.403260099220407
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 17.13,
+      "size": 1940.7282470534158,
+      "date": "2025-05-12",
+      "pnl_pct": 21.403260099220407
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 14.11,
+      "exit_price": 17.13,
+      "entry_date": "2025-05-09",
+      "exit_date": "2025-05-12",
+      "pnl_pct": 21.403260099220407,
+      "pnl_amount": 4430.710555049423,
+      "balance": 17368.898868738863,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 18.6,
+      "size": 17368.898868738863,
+      "date": "2025-05-13"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 18.84,
+      "size": 2605.334830310829,
+      "date": "2025-05-14",
+      "pnl_pct": 1.2903225806451528
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 18.84,
+      "size": 2605.334830310829,
+      "date": "2025-05-14",
+      "pnl_pct": 1.2903225806451528
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 18.6,
+      "exit_price": 18.84,
+      "entry_date": "2025-05-13",
+      "exit_date": "2025-05-14",
+      "pnl_pct": 1.2903225806451528,
+      "pnl_amount": 291.34927134658545,
+      "balance": 17660.24814008545,
+      "pyramid_levels": 2,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 11.82,
+      "size": 17660.24814008545,
+      "date": "2025-05-19"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 11.88,
+      "size": 2649.037221012817,
+      "date": "2025-05-20",
+      "pnl_pct": 0.5076142131979737
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 12.54,
+      "size": 2649.037221012817,
+      "date": "2025-05-21",
+      "pnl_pct": 6.091370558375625
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 12.54,
+      "size": 2649.037221012817,
+      "date": "2025-05-21",
+      "pnl_pct": 6.091370558375625
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 12.54,
+      "size": 2649.037221012817,
+      "date": "2025-05-21",
+      "pnl_pct": 6.091370558375625
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 11.82,
+      "exit_price": 12.54,
+      "entry_date": "2025-05-19",
+      "exit_date": "2025-05-21",
+      "pnl_pct": 6.091370558375625,
+      "pnl_amount": 1721.2018491859903,
+      "balance": 19381.449989271438,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 12.89,
+      "size": 19381.449989271438,
+      "date": "2025-05-22"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 13.49,
+      "size": 2907.2174983907157,
+      "date": "2025-05-23",
+      "pnl_pct": 4.6547711404189265
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 13.49,
+      "size": 2907.2174983907157,
+      "date": "2025-05-23",
+      "pnl_pct": 4.6547711404189265
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 13.49,
+      "size": 2907.2174983907157,
+      "date": "2025-05-23",
+      "pnl_pct": 4.6547711404189265
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXS",
+      "price": 13.49,
+      "size": 2907.2174983907157,
+      "date": "2025-05-23",
+      "pnl_pct": 4.6547711404189265
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 12.89,
+      "exit_price": 13.49,
+      "entry_date": "2025-05-22",
+      "exit_date": "2025-05-23",
+      "pnl_pct": 4.6547711404189265,
+      "pnl_amount": 1443.4594251125347,
+      "balance": 20824.909414383972,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 19.09,
+      "size": 20824.909414383972,
+      "date": "2025-06-04"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 19.09,
+      "exit_price": 18.81,
+      "entry_date": "2025-06-04",
+      "exit_date": "2025-06-05",
+      "pnl_pct": -1.466736511262447,
+      "pnl_amount": -305.4465498181004,
+      "balance": 20519.46286456587,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 21.89,
+      "size": 20519.46286456587,
+      "date": "2025-06-10"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 21.89,
+      "exit_price": 21.64,
+      "entry_date": "2025-06-10",
+      "exit_date": "2025-06-11",
+      "pnl_pct": -1.1420740063956145,
+      "pnl_amount": -234.34745162820775,
+      "balance": 20285.115412937663,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 24.58,
+      "size": 20285.115412937663,
+      "date": "2025-06-25"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 25.2,
+      "size": 3042.7673119406495,
+      "date": "2025-06-26",
+      "pnl_pct": 2.5223759153783605
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 25.2,
+      "size": 3042.7673119406495,
+      "date": "2025-06-26",
+      "pnl_pct": 2.5223759153783605
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 25.2,
+      "size": 3042.7673119406495,
+      "date": "2025-06-26",
+      "pnl_pct": 2.5223759153783605
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 25.2,
+      "size": 3042.7673119406495,
+      "date": "2025-06-26",
+      "pnl_pct": 2.5223759153783605
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 24.58,
+      "exit_price": 25.2,
+      "entry_date": "2025-06-25",
+      "exit_date": "2025-06-26",
+      "pnl_pct": 2.5223759153783605,
+      "pnl_amount": 818.6669849322293,
+      "balance": 21103.78239786989,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 8,
+      "size": 21103.78239786989,
+      "date": "2025-07-01"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 8,
+      "exit_price": 7.55,
+      "entry_date": "2025-07-01",
+      "exit_date": "2025-07-02",
+      "pnl_pct": -5.625000000000002,
+      "pnl_amount": -1187.087759880182,
+      "balance": 19916.69463798971,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 27.37,
+      "size": 19916.69463798971,
+      "date": "2025-07-10"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 27.37,
+      "exit_price": 26.5,
+      "entry_date": "2025-07-10",
+      "exit_date": "2025-07-14",
+      "pnl_pct": -3.1786627694556118,
+      "pnl_amount": -633.084557363941,
+      "balance": 19283.610080625767,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 27.5,
+      "size": 19283.610080625767,
+      "date": "2025-07-21"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 27.5,
+      "exit_price": 26.32,
+      "entry_date": "2025-07-21",
+      "exit_date": "2025-07-22",
+      "pnl_pct": -4.290909090909089,
+      "pnl_amount": -827.4421780050327,
+      "balance": 18456.167902620735,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 7.63,
+      "size": 18456.167902620735,
+      "date": "2025-07-24"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 7.63,
+      "exit_price": 7.23,
+      "entry_date": "2025-07-24",
+      "exit_date": "2025-07-28",
+      "pnl_pct": -5.242463958060281,
+      "pnl_amount": -967.5579503339821,
+      "balance": 17488.60995228675,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 27.61,
+      "size": 17488.60995228675,
+      "date": "2025-07-30"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 27.61,
+      "exit_price": 24.98,
+      "entry_date": "2025-07-30",
+      "exit_date": "2025-07-31",
+      "pnl_pct": -9.525534226729443,
+      "pnl_amount": -1665.8835267842862,
+      "balance": 15822.726425502466,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 29.42,
+      "size": 15822.726425502466,
+      "date": "2025-08-14"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 29.42,
+      "exit_price": 27.37,
+      "entry_date": "2025-08-14",
+      "exit_date": "2025-08-15",
+      "pnl_pct": -6.96804894629504,
+      "pnl_amount": -1102.5353219673714,
+      "balance": 14720.191103535095,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 7.44,
+      "size": 14720.191103535095,
+      "date": "2025-08-21"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 7.44,
+      "exit_price": 6.81,
+      "entry_date": "2025-08-21",
+      "exit_date": "2025-08-22",
+      "pnl_pct": -8.46774193548388,
+      "pnl_amount": -1246.4677950574087,
+      "balance": 13473.723308477685,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 28.53,
+      "size": 13473.723308477685,
+      "date": "2025-08-28"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 28.53,
+      "exit_price": 26.04,
+      "entry_date": "2025-08-28",
+      "exit_date": "2025-08-29",
+      "pnl_pct": -8.727655099894854,
+      "pnl_amount": -1175.9400994780744,
+      "balance": 12297.783208999612,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 7.47,
+      "size": 12297.783208999612,
+      "date": "2025-09-03"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 7.47,
+      "exit_price": 7.22,
+      "entry_date": "2025-09-03",
+      "exit_date": "2025-09-04",
+      "pnl_pct": -3.3467202141900936,
+      "pnl_amount": -411.5723965528652,
+      "balance": 11886.210812446747,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 27.08,
+      "size": 11886.210812446747,
+      "date": "2025-09-08"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 28.6,
+      "size": 1782.931621867012,
+      "date": "2025-09-10",
+      "pnl_pct": 5.612998522895137
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 28.6,
+      "size": 1782.931621867012,
+      "date": "2025-09-10",
+      "pnl_pct": 5.612998522895137
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 28.6,
+      "size": 1782.931621867012,
+      "date": "2025-09-10",
+      "pnl_pct": 5.612998522895137
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 28.6,
+      "size": 1782.931621867012,
+      "date": "2025-09-10",
+      "pnl_pct": 5.612998522895137
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 27.08,
+      "exit_price": 28.6,
+      "entry_date": "2025-09-08",
+      "exit_date": "2025-09-10",
+      "pnl_pct": 5.612998522895137,
+      "pnl_amount": 1067.4765397293409,
+      "balance": 12953.687352176088,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 29.17,
+      "size": 12953.687352176088,
+      "date": "2025-09-11"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 30,
+      "size": 1943.0531028264131,
+      "date": "2025-09-15",
+      "pnl_pct": 2.8453890983887495
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 30,
+      "size": 1943.0531028264131,
+      "date": "2025-09-15",
+      "pnl_pct": 2.8453890983887495
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 30,
+      "size": 1943.0531028264131,
+      "date": "2025-09-15",
+      "pnl_pct": 2.8453890983887495
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 30,
+      "size": 1943.0531028264131,
+      "date": "2025-09-15",
+      "pnl_pct": 2.8453890983887495
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 29.17,
+      "exit_price": 30,
+      "entry_date": "2025-09-11",
+      "exit_date": "2025-09-15",
+      "pnl_pct": 2.8453890983887495,
+      "pnl_amount": 589.7324924130891,
+      "balance": 13543.419844589178,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 30.48,
+      "size": 13543.419844589178,
+      "date": "2025-09-16"
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 33.64,
+      "size": 2031.5129766883765,
+      "date": "2025-09-18",
+      "pnl_pct": 10.36745406824147
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 33.64,
+      "size": 2031.5129766883765,
+      "date": "2025-09-18",
+      "pnl_pct": 10.36745406824147
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 33.64,
+      "size": 2031.5129766883765,
+      "date": "2025-09-18",
+      "pnl_pct": 10.36745406824147
+    },
+    {
+      "type": "PYRAMID",
+      "symbol": "SOXL",
+      "price": 33.64,
+      "size": 2031.5129766883765,
+      "date": "2025-09-18",
+      "pnl_pct": 10.36745406824147
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 30.48,
+      "exit_price": 33.64,
+      "entry_date": "2025-09-16",
+      "exit_date": "2025-09-18",
+      "pnl_pct": 10.36745406824147,
+      "pnl_amount": 2246.5725306510135,
+      "balance": 15789.992375240192,
+      "pyramid_levels": 4,
+      "reason": "TAKE_PROFIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXS",
+      "price": 5.34,
+      "size": 15789.992375240192,
+      "date": "2025-09-25"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXS",
+      "entry_price": 5.34,
+      "exit_price": 5.31,
+      "entry_date": "2025-09-25",
+      "exit_date": "2025-09-29",
+      "pnl_pct": -0.5617977528089935,
+      "pnl_amount": -88.7078223328108,
+      "balance": 15701.28455290738,
+      "pyramid_levels": 0,
+      "reason": "TIME_LIMIT"
+    },
+    {
+      "type": "ENTRY",
+      "symbol": "SOXL",
+      "price": 39.08,
+      "size": 15701.28455290738,
+      "date": "2025-10-02"
+    },
+    {
+      "type": "EXIT",
+      "symbol": "SOXL",
+      "entry_price": 39.08,
+      "exit_price": 38.23,
+      "entry_date": "2025-10-02",
+      "exit_date": "2025-10-03",
+      "pnl_pct": -2.1750255885363394,
+      "pnl_amount": -341.5069567546391,
+      "balance": 15359.77759615274,
+      "pyramid_levels": 0,
+      "reason": "STOP_LOSS"
+    }
+  ]
+}

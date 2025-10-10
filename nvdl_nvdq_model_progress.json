@@ -1,0 +1,1086 @@
+{
+  "model_performance": {
+    "15m_1x_momentum_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "15m_2x_momentum_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "15m_3x_momentum_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "15m_1x_counter_trend_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "15m_2x_counter_trend_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "15m_3x_counter_trend_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "15m_1x_breakout_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "15m_2x_breakout_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "15m_3x_breakout_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "15m_1x_mean_reversion_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "15m_2x_mean_reversion_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "15m_3x_mean_reversion_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1h_1x_momentum_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1h_2x_momentum_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1h_3x_momentum_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1h_1x_counter_trend_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1h_2x_counter_trend_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1h_3x_counter_trend_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1h_1x_breakout_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1h_2x_breakout_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1h_3x_breakout_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1h_1x_mean_reversion_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1h_2x_mean_reversion_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1h_3x_mean_reversion_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "4h_1x_momentum_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "4h_2x_momentum_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "4h_3x_momentum_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "4h_1x_counter_trend_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "4h_2x_counter_trend_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "4h_3x_counter_trend_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "4h_1x_breakout_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "4h_2x_breakout_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "4h_3x_breakout_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "4h_1x_mean_reversion_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "4h_2x_mean_reversion_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "4h_3x_mean_reversion_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "12h_1x_momentum_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "12h_2x_momentum_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "12h_3x_momentum_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "12h_1x_counter_trend_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "12h_2x_counter_trend_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "12h_3x_counter_trend_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "12h_1x_breakout_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "12h_2x_breakout_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "12h_3x_breakout_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "12h_1x_mean_reversion_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "12h_2x_mean_reversion_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "12h_3x_mean_reversion_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1d_1x_momentum_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1d_2x_momentum_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1d_3x_momentum_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1d_1x_counter_trend_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1d_2x_counter_trend_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1d_3x_counter_trend_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1d_1x_breakout_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1d_2x_breakout_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1d_3x_breakout_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1d_1x_mean_reversion_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1d_2x_mean_reversion_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "1d_3x_mean_reversion_NVDL": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDL"
+    },
+    "15m_1x_momentum_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "15m_2x_momentum_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "15m_3x_momentum_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "15m_1x_counter_trend_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "15m_2x_counter_trend_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "15m_3x_counter_trend_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "15m_1x_breakout_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "15m_2x_breakout_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "15m_3x_breakout_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "15m_1x_mean_reversion_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "15m_2x_mean_reversion_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "15m_3x_mean_reversion_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1h_1x_momentum_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1h_2x_momentum_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1h_3x_momentum_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1h_1x_counter_trend_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1h_2x_counter_trend_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1h_3x_counter_trend_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1h_1x_breakout_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1h_2x_breakout_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1h_3x_breakout_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1h_1x_mean_reversion_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1h_2x_mean_reversion_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1h_3x_mean_reversion_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "4h_1x_momentum_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "4h_2x_momentum_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "4h_3x_momentum_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "4h_1x_counter_trend_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "4h_2x_counter_trend_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "4h_3x_counter_trend_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "4h_1x_breakout_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "4h_2x_breakout_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "4h_3x_breakout_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "4h_1x_mean_reversion_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "4h_2x_mean_reversion_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "4h_3x_mean_reversion_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "12h_1x_momentum_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "12h_2x_momentum_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "12h_3x_momentum_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "12h_1x_counter_trend_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "12h_2x_counter_trend_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "12h_3x_counter_trend_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "12h_1x_breakout_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "12h_2x_breakout_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "12h_3x_breakout_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "12h_1x_mean_reversion_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "12h_2x_mean_reversion_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "12h_3x_mean_reversion_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1d_1x_momentum_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1d_2x_momentum_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1d_3x_momentum_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1d_1x_counter_trend_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1d_2x_counter_trend_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1d_3x_counter_trend_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1d_1x_breakout_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1d_2x_breakout_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1d_3x_breakout_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1d_1x_mean_reversion_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1d_2x_mean_reversion_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    },
+    "1d_3x_mean_reversion_NVDQ": {
+      "trades": 0,
+      "wins": 0,
+      "win_rate": 0.5,
+      "total_profit": 0.0,
+      "avg_profit": 0.0,
+      "weight": 1.0,
+      "symbol": "NVDQ"
+    }
+  },
+  "timestamp": "2025-09-24T00:44:11.909042",
+  "balance": 10000.0
+}

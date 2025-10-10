@@ -1,0 +1,24 @@
+ 1. 가장 최근 대화 이어가기
+
+  claude -c
+  # 또는
+  claude --continue
+
+  2. 과거 세션 선택해서 불러오기
+
+  claude -r
+  # 또는
+  claude --resume
+  이렇게 하면 대화식으로 과거 세션 목록이 나타나고 선택할 수 있습니다.
+
+  특정 세션 ID를 알고 있다면:
+  claude --resume <sessionId>
+
+  추가 옵션
+
+  claude --resume --fork-session
+  이전 대화를 불러오되, 새 세션 ID로 분기해서 원본은 그대로 보존
+
+  ---
+  현재 세션 내에서 특정 메시지를 선택하는 UI 기능은 CLI 특성상 없는 것 같고, 대신 /help 같은 슬래시 명령어나
+  /memory 명령어로 컨텍스트를 관리할 수 있습니다.

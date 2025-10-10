@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-09-28T15:24:38.753674",
+  "balance": 10000.0,
+  "total_trades": 0,
+  "winning_trades": 0,
+  "total_profit": 0.0,
+  "win_rate": 0.0,
+  "trade_history": [],
+  "current_positions": {},
+  "learning_patterns": {},
+  "pattern_weights": {}
+}
