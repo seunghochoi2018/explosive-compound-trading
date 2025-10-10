@@ -22,9 +22,11 @@ warnings.filterwarnings('ignore')
 # 한국투자증권 API (기존 코드 활용)
 import sys
 sys.path.append('C:/Users/user/Documents/코드4')
+sys.path.append(r'C:\Users\user\Documents\코드5')
 
 from llm_market_analyzer import LLMMarketAnalyzer
 from telegram_notifier import TelegramNotifier
+from self_improvement_engine import SelfImprovementEngine
 
 class ExplosiveKISTrader:
     """SOXL/SOXS 복리 폭발 전략"""
@@ -124,6 +126,19 @@ class ExplosiveKISTrader:
             f"동적 손절: {self.DYNAMIC_STOP_LOSS}%\n"
             f"목표: 연 2,634%"
         )
+
+        # ⭐ 자기 개선 엔진 (Phase 1, 2)
+        telegram_config = {
+            'bot_token': '7819173403:AAEwBNh6etqyWvh-GivLDrTJb8b_ho2ju-U',
+            'chat_id': '7805944420'
+        }
+        self.improvement_engine = SelfImprovementEngine(
+            bot_name="KIS",
+            trading_history_file=self.learning_file,
+            strategy_file="kis_current_strategy.json",
+            telegram_config=telegram_config
+        )
+        print(f"[자기 개선] 엔진 활성화 완료")
 
     def load_kis_config(self):
         """KIS API 설정 로드"""
@@ -517,6 +532,9 @@ class ExplosiveKISTrader:
                 # 장 마감 체크
                 if soxl_price == 0:
                     print(f"[{datetime.now().strftime('%H:%M:%S')}] ⏸️  미국 장 마감, 대기 중...")
+
+                # ⭐ 자기 개선 엔진 실행 (1시간마다 자동)
+                self.improvement_engine.check_and_run()
 
                 time.sleep(300)  # 5분 간격
 
