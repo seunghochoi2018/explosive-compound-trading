@@ -110,6 +110,347 @@ error_patterns_kis = []  # KIS 봇의 실패 패턴 (최근 100건)
 ERROR_PATTERN_FILE_ETH = r"C:\Users\user\Documents\코드3\eth_error_patterns.json"
 ERROR_PATTERN_FILE_KIS = r"C:\Users\user\Documents\코드4\kis_error_patterns.json"
 
+# ⭐ 백그라운드 학습 설정
+FMP_API_KEY = "nHAiLOvKvXWmNdRl3D94s5qNmjLJdkqO"  # FMP API 키
+BACKGROUND_LEARNING_INTERVAL = 10 * 60  # 10분마다 백그라운드 학습
+HISTORICAL_DATA_DAYS = 7  # 과거 7일간 데이터 학습
+learning_session_count = 0  # 학습 세션 카운터
+background_learning_thread = None  # 백그라운드 학습 스레드
+
+# ===== FMP API 데이터 수집 =====
+def fetch_eth_historical_fmp(days=7):
+    """FMP API로 ETH 과거 데이터 수집 (실제 데이터만!)"""
+    try:
+        # FMP API: Crypto Historical (실제 시장 데이터)
+        from datetime import datetime, timedelta
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days)
+
+        # ETH/USD 1시간 캔들 데이터
+        url = f"https://financialmodelingprep.com/api/v3/historical-chart/1hour/ETHUSD?apikey={FMP_API_KEY}"
+
+        response = requests.get(url, timeout=30)
+        if response.status_code != 200:
+            colored_print(f"[FMP] ETH 데이터 수집 실패: HTTP {response.status_code}", "yellow")
+            return []
+
+        data = response.json()
+
+        # 최근 N일 데이터만 필터링
+        filtered_data = []
+        for candle in data:
+            try:
+                candle_time = datetime.fromisoformat(candle['date'].replace('Z', '+00:00'))
+                if candle_time >= start_date:
+                    filtered_data.append({
+                        'timestamp': candle['date'],
+                        'open': candle['open'],
+                        'high': candle['high'],
+                        'low': candle['low'],
+                        'close': candle['close'],
+                        'volume': candle['volume']
+                    })
+            except:
+                continue
+
+        colored_print(f"[FMP] ETH 과거 데이터 {len(filtered_data)}개 수집 완료 (최근 {days}일)", "green")
+        return filtered_data[::-1]  # 오래된 것부터 정렬
+
+    except Exception as e:
+        colored_print(f"[FMP] ETH 데이터 수집 오류: {e}", "yellow")
+        return []
+
+def fetch_soxl_historical_fmp(days=7):
+    """FMP API로 SOXL 과거 데이터 수집 (실제 데이터만!)"""
+    try:
+        # FMP API: Stock Historical (실제 시장 데이터)
+        from datetime import datetime, timedelta
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days)
+
+        # SOXL 1시간 캔들 데이터
+        url = f"https://financialmodelingprep.com/api/v3/historical-chart/1hour/SOXL?apikey={FMP_API_KEY}"
+
+        response = requests.get(url, timeout=30)
+        if response.status_code != 200:
+            colored_print(f"[FMP] SOXL 데이터 수집 실패: HTTP {response.status_code}", "yellow")
+            return []
+
+        data = response.json()
+
+        # 최근 N일 데이터만 필터링
+        filtered_data = []
+        for candle in data:
+            try:
+                candle_time = datetime.fromisoformat(candle['date'].replace('Z', '+00:00'))
+                if candle_time >= start_date:
+                    filtered_data.append({
+                        'timestamp': candle['date'],
+                        'open': candle['open'],
+                        'high': candle['high'],
+                        'low': candle['low'],
+                        'close': candle['close'],
+                        'volume': candle['volume']
+                    })
+            except:
+                continue
+
+        colored_print(f"[FMP] SOXL 과거 데이터 {len(filtered_data)}개 수집 완료 (최근 {days}일)", "green")
+        return filtered_data[::-1]  # 오래된 것부터 정렬
+
+    except Exception as e:
+        colored_print(f"[FMP] SOXL 데이터 수집 오류: {e}", "yellow")
+        return []
+
+def calculate_technical_indicators(candles):
+    """기술적 지표 계산 (간단 버전)"""
+    if len(candles) < 20:
+        return {}
+
+    closes = [c['close'] for c in candles]
+
+    # RSI (14)
+    changes = [closes[i] - closes[i-1] for i in range(1, len(closes))]
+    gains = [c if c > 0 else 0 for c in changes]
+    losses = [-c if c < 0 else 0 for c in changes]
+
+    avg_gain = sum(gains[-14:]) / 14 if len(gains) >= 14 else 0
+    avg_loss = sum(losses[-14:]) / 14 if len(losses) >= 14 else 0
+
+    rs = avg_gain / avg_loss if avg_loss != 0 else 0
+    rsi = 100 - (100 / (1 + rs))
+
+    # 이동평균
+    ma_20 = sum(closes[-20:]) / 20 if len(closes) >= 20 else closes[-1]
+    current_price = closes[-1]
+
+    # 추세 (MA 대비 가격 위치)
+    trend = "BULL" if current_price > ma_20 else "BEAR"
+
+    return {
+        'rsi': rsi,
+        'ma_20': ma_20,
+        'current_price': current_price,
+        'trend': trend,
+        'price_change_pct': ((current_price - closes[-20]) / closes[-20] * 100) if len(closes) >= 20 else 0
+    }
+
+def llm_backtest_on_historical_data(trader_name, symbol, historical_data):
+    """LLM이 과거 데이터를 분석하여 새로운 전략 발견"""
+    global learning_session_count
+
+    if len(historical_data) < 50:
+        colored_print(f"[{trader_name}] 데이터 부족 (최소 50개 필요, 현재 {len(historical_data)}개)", "yellow")
+        return []
+
+    learning_session_count += 1
+
+    # 최근 100개 캔들만 분석 (LLM 프롬프트 길이 제한)
+    recent_candles = historical_data[-100:]
+
+    # 기술적 지표 계산
+    indicators = calculate_technical_indicators(recent_candles)
+
+    # 가상 시나리오 생성 (최근 데이터 기반)
+    scenarios = []
+
+    # 시나리오 1: 급등 후 조정
+    if indicators.get('price_change_pct', 0) > 5:
+        scenarios.append({
+            'type': '급등 후 조정',
+            'description': f"{symbol} 최근 +{indicators['price_change_pct']:.1f}% 급등 → 조정 가능성",
+            'question': '급등 후 진입 타이밍은? 조정을 기다려야 하나?'
+        })
+
+    # 시나리오 2: RSI 과매수/과매도
+    rsi = indicators.get('rsi', 50)
+    if rsi > 70:
+        scenarios.append({
+            'type': 'RSI 과매수',
+            'description': f"{symbol} RSI {rsi:.0f} 과매수 구간",
+            'question': 'RSI 70 이상일 때 진입해도 안전한가? 손절은?'
+        })
+    elif rsi < 30:
+        scenarios.append({
+            'type': 'RSI 과매도',
+            'description': f"{symbol} RSI {rsi:.0f} 과매도 구간",
+            'question': 'RSI 30 이하 = 저점 매수 기회? 반등 확률은?'
+        })
+
+    # 시나리오 3: 추세 전환
+    if len(recent_candles) >= 20:
+        first_half_avg = sum([c['close'] for c in recent_candles[:10]]) / 10
+        second_half_avg = sum([c['close'] for c in recent_candles[-10:]]) / 10
+
+        if second_half_avg > first_half_avg * 1.02:
+            scenarios.append({
+                'type': '상승 추세 전환',
+                'description': f"{symbol} 하락 → 상승 전환 신호",
+                'question': '추세 전환 초기에 진입? 확인 후 진입?'
+            })
+
+    if not scenarios:
+        return []
+
+    # LLM에게 분석 요청 (Triple Validation)
+    colored_print(f"\n[BACKGROUND LEARNING #{learning_session_count}] {trader_name} - {symbol} 전략 탐색 시작...", "magenta")
+
+    # 시나리오 텍스트
+    scenario_text = "\n".join([f"{i+1}. {s['type']}: {s['description']}\n   질문: {s['question']}"
+                                for i, s in enumerate(scenarios)])
+
+    primary_prompt = f"""당신은 트레이딩 전략 연구자입니다. {symbol}의 실제 과거 데이터를 분석하여 새로운 전략을 제안하세요.
+
+## 현재 시장 상황 (실제 데이터)
+- 현재가: ${indicators['current_price']:.2f}
+- RSI: {indicators['rsi']:.0f}
+- 20일 MA: ${indicators['ma_20']:.2f}
+- 추세: {indicators['trend']}
+- 가격 변화: {indicators['price_change_pct']:+.1f}%
+
+## 발견된 시나리오
+{scenario_text}
+
+## 질문
+위 시나리오에서 가장 수익성 높은 전략은? 2-3문장으로 구체적으로 답하세요."""
+
+    validator1_prompt = f"""비판적 분석가로서 {symbol}의 시나리오를 검토하세요.
+
+{scenario_text}
+
+질문: 위 전략의 가장 큰 위험은? 실패 확률은? 2문장으로."""
+
+    validator2_prompt = f"""역발상 분석가로서 {symbol}의 정반대 전략을 제안하세요.
+
+{scenario_text}
+
+질문: 만약 위 시나리오와 정반대로 해석한다면? 2문장으로."""
+
+    # Triple Validation 실행
+    validation = ask_llm_triple_validation(primary_prompt, validator1_prompt, validator2_prompt)
+
+    if not validation['consensus']:
+        colored_print(f"[BACKGROUND LEARNING #{learning_session_count}] 합의 실패 - 전략 탐색 보류", "yellow")
+        return []
+
+    colored_print(f"[BACKGROUND LEARNING #{learning_session_count}] ✅ 새로운 인사이트 발견!", "green")
+    colored_print(f"  {validation['final_decision'][:200]}...", "cyan")
+
+    # 간단한 전략 추출
+    response = validation['final_decision']
+    discovered_strategies = []
+
+    if "손절" in response or "stop" in response.lower():
+        discovered_strategies.append({
+            'type': 'stop_loss_adjustment',
+            'source': 'BACKGROUND_LEARNING',
+            'session': learning_session_count
+        })
+
+    if "진입" in response and ("보수" in response or "확인" in response):
+        discovered_strategies.append({
+            'type': 'conservative_entry',
+            'source': 'BACKGROUND_LEARNING',
+            'session': learning_session_count
+        })
+
+    if "과매" in response or "RSI" in response:
+        discovered_strategies.append({
+            'type': 'rsi_based_entry',
+            'source': 'BACKGROUND_LEARNING',
+            'session': learning_session_count
+        })
+
+    return discovered_strategies
+
+def background_learning_worker():
+    """백그라운드 학습 워커 (독립 스레드)"""
+    colored_print("[BACKGROUND LEARNING] 백그라운드 학습 워커 시작!", "magenta")
+
+    while True:
+        try:
+            time.sleep(BACKGROUND_LEARNING_INTERVAL)
+
+            colored_print("\n" + "="*70, "magenta")
+            colored_print(f"[BACKGROUND LEARNING] 세션 시작 (학습 주기: {BACKGROUND_LEARNING_INTERVAL // 60}분)", "magenta")
+            colored_print("="*70, "magenta")
+
+            # ETH 과거 데이터 수집 및 학습
+            colored_print("[ETH] FMP API 데이터 수집 중...", "cyan")
+            eth_historical = fetch_eth_historical_fmp(HISTORICAL_DATA_DAYS)
+
+            if len(eth_historical) >= 50:
+                eth_strategies = llm_backtest_on_historical_data("ETH", "ETHUSD", eth_historical)
+
+                if eth_strategies:
+                    # ⚠️ 백테스트 결과는 참고자료로만 저장 (자동 적용 X)
+                    colored_print(f"[ETH] 💡 {len(eth_strategies)}개 새로운 전략 발견 (참고자료)", "cyan")
+                    colored_print(f"     ⚠️ 실제 적용은 검증 후 수동 적용 필요", "yellow")
+
+                    # 전략 인사이트 파일에 저장 (자동 적용 안 함!)
+                    import json
+                    try:
+                        insight_file = r"C:\Users\user\Documents\코드3\eth_learning_insights.json"
+                        try:
+                            with open(insight_file, 'r', encoding='utf-8') as f:
+                                insights = json.load(f)
+                        except:
+                            insights = []
+
+                        from datetime import datetime
+                        insights.append({
+                            'timestamp': datetime.now().isoformat(),
+                            'session': learning_session_count,
+                            'strategies': eth_strategies,
+                            'status': '검증 필요 - 자동 적용 안됨'
+                        })
+
+                        with open(insight_file, 'w', encoding='utf-8') as f:
+                            json.dump(insights[-50:], f, indent=2, ensure_ascii=False)  # 최근 50개만
+                    except Exception as e:
+                        colored_print(f"[ETH] 인사이트 저장 실패: {e}", "yellow")
+
+            # SOXL 과거 데이터 수집 및 학습
+            colored_print("[KIS] FMP API 데이터 수집 중...", "cyan")
+            soxl_historical = fetch_soxl_historical_fmp(HISTORICAL_DATA_DAYS)
+
+            if len(soxl_historical) >= 50:
+                soxl_strategies = llm_backtest_on_historical_data("KIS", "SOXL", soxl_historical)
+
+                if soxl_strategies:
+                    # ⚠️ 백테스트 결과는 참고자료로만 저장 (자동 적용 X)
+                    colored_print(f"[KIS] 💡 {len(soxl_strategies)}개 새로운 전략 발견 (참고자료)", "cyan")
+                    colored_print(f"     ⚠️ 실제 적용은 검증 후 수동 적용 필요", "yellow")
+
+                    # 전략 인사이트 파일에 저장 (자동 적용 안 함!)
+                    import json
+                    try:
+                        insight_file = r"C:\Users\user\Documents\코드4\kis_learning_insights.json"
+                        try:
+                            with open(insight_file, 'r', encoding='utf-8') as f:
+                                insights = json.load(f)
+                        except:
+                            insights = []
+
+                        from datetime import datetime
+                        insights.append({
+                            'timestamp': datetime.now().isoformat(),
+                            'session': learning_session_count,
+                            'strategies': soxl_strategies,
+                            'status': '검증 필요 - 자동 적용 안됨'
+                        })
+
+                        with open(insight_file, 'w', encoding='utf-8') as f:
+                            json.dump(insights[-50:], f, indent=2, ensure_ascii=False)  # 최근 50개만
+                    except Exception as e:
+                        colored_print(f"[KIS] 인사이트 저장 실패: {e}", "yellow")
+
+            colored_print("="*70 + "\n", "magenta")
+
+        except Exception as e:
+            colored_print(f"[BACKGROUND LEARNING] 오류: {e}", "red")
+            time.sleep(60)  # 오류 시 1분 대기 후 재시도
+
 # ===== 색상 출력 =====
 def colored_print(message, color="white"):
     """색상 출력"""
@@ -991,6 +1332,16 @@ def main():
     colored_print(f"[SELF-IMPROVE] ETH 오류 패턴 {len(error_patterns_eth)}개 로드", "cyan")
     colored_print(f"[SELF-IMPROVE] KIS 오류 패턴 {len(error_patterns_kis)}개 로드\n", "cyan")
 
+    # ⭐ 백그라운드 학습 스레드 시작
+    global background_learning_thread
+    background_learning_thread = threading.Thread(
+        target=background_learning_worker,
+        daemon=True,
+        name="BackgroundLearning"
+    )
+    background_learning_thread.start()
+    colored_print(f"[BACKGROUND LEARNING] 백그라운드 학습 시작! ({BACKGROUND_LEARNING_INTERVAL // 60}분 주기)\n", "magenta")
+
     colored_print("\n[MONITOR] 모니터링 시작 (Ctrl+C로 종료)\n", "green")
     colored_print(f"[GUARDIAN] 실시간 Ollama 관리 활성화 ({GUARDIAN_CHECK_INTERVAL}초마다)\n", "green")
     colored_print(f"[TRADING] 거래/수익 모니터링 활성화 (1시간마다)\n", "green")
@@ -998,6 +1349,10 @@ def main():
     colored_print(f"  - Option 1: Triple Validation (3중 검증)\n", "green")
     colored_print(f"  - Option 4: Self-Improving Feedback Loop (오류 패턴 학습)\n", "green")
     colored_print(f"  - 1시간마다 LLM 분석, 6시간마다 리포트\n", "green")
+    colored_print(f"[BACKGROUND LEARNING] FMP API 과거 데이터 학습 활성화\n", "magenta")
+    colored_print(f"  - 10분마다 ETH/SOXL 실제 데이터 수집 및 전략 탐색\n", "magenta")
+    colored_print(f"  - LLM 백테스트 결과는 참고자료로만 저장 (자동 적용 X)\n", "magenta")
+    colored_print(f"  - 검증된 전략만 수동으로 적용 가능\n", "magenta")
 
     try:
         while True:
