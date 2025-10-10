@@ -92,6 +92,19 @@ TRADING_CHECK_INTERVAL = 60 * 60  # 1시간마다 거래 현황 체크
 ETH_TRADE_HISTORY = r"C:\Users\user\Documents\코드3\eth_trade_history.json"
 KIS_TRADE_HISTORY = r"C:\Users\user\Documents\코드4\kis_trade_history.json"
 
+# ⭐ 자기개선 엔진 설정 (통합)
+SELF_IMPROVEMENT_INTERVAL = 60 * 60  # 1시간마다 자기 분석
+IMPROVEMENT_REPORT_INTERVAL = 6 * 60 * 60  # 6시간마다 텔레그램 리포트
+OLLAMA_IMPROVEMENT_HOST = f"http://127.0.0.1:{OLLAMA_PORT_IMPROVEMENT}"
+OLLAMA_IMPROVEMENT_MODEL = "qwen2.5:14b"
+OLLAMA_IMPROVEMENT_TIMEOUT = 60
+
+# 자기개선 상태 추적
+improvement_history_eth = []
+improvement_history_kis = []
+ETH_STRATEGY_FILE = r"C:\Users\user\Documents\코드3\eth_current_strategy.json"
+KIS_STRATEGY_FILE = r"C:\Users\user\Documents\코드4\kis_current_strategy.json"
+
 # ===== 색상 출력 =====
 def colored_print(message, color="white"):
     """색상 출력"""
@@ -331,6 +344,88 @@ def guardian_cleanup_rogue_ollama():
         telegram.notify_system_error(f"불필요한 Ollama 정리: {', '.join(killed)}")
         time.sleep(2)  # 정리 후 대기
 
+def ask_llm_for_analysis(prompt: str) -> str:
+    """⭐ LLM에게 분석 요청 (11436 포트)"""
+    try:
+        response = requests.post(
+            f"{OLLAMA_IMPROVEMENT_HOST}/api/generate",
+            json={
+                "model": OLLAMA_IMPROVEMENT_MODEL,
+                "prompt": prompt,
+                "stream": False
+            },
+            timeout=OLLAMA_IMPROVEMENT_TIMEOUT
+        )
+
+        if response.status_code == 200:
+            return response.json().get('response', '')
+        else:
+            colored_print(f"[LLM] 응답 오류: {response.status_code}", "yellow")
+            return ""
+
+    except requests.Timeout:
+        colored_print(f"[LLM] 타임아웃 (60초 초과)", "yellow")
+        return ""
+    except Exception as e:
+        colored_print(f"[LLM] 오류: {e}", "yellow")
+        return ""
+
+def llm_analyze_trades_for_improvement(trader_name, trades, performance):
+    """⭐ LLM이 거래 패턴 분석 및 개선안 제시"""
+    import json
+
+    if len(trades) < 5:
+        return []
+
+    # 최근 20건만 분석
+    recent_trades = trades[-20:]
+
+    # 거래 요약
+    trades_summary = []
+    for t in recent_trades:
+        summary = f"- {t.get('action', '?')}: {t.get('profit_pct', 0):+.2f}%, 보유 {t.get('hold_minutes', 0):.0f}분, 트렌드 {t.get('trend', '?')}"
+        trades_summary.append(summary)
+
+    trades_text = "\n".join(trades_summary)
+
+    # LLM 프롬프트
+    prompt = f"""당신은 트레이딩 전문가입니다. {trader_name} 봇의 거래 데이터를 분석하고 개선 방안을 제시하세요.
+
+## 전체 성과
+- 총 거래: {performance['total_trades']}건
+- 승률: {performance['win_rate']}%
+- 총 수익률: {performance['total_return']}%
+
+## 최근 20건 거래
+{trades_text}
+
+## 분석 요청
+1. 가장 큰 문제점 1-2개만 간결하게
+2. 각 문제에 대한 구체적 개선안
+
+답변은 2-3문장으로 작성하세요."""
+
+    llm_response = ask_llm_for_analysis(prompt)
+
+    if not llm_response:
+        return []
+
+    colored_print(f"[{trader_name}] [LLM 인사이트] {llm_response[:150]}...", "magenta")
+
+    # 간단한 키워드 기반 개선안 추출
+    improvements = []
+
+    if "횡보" in llm_response or "neutral" in llm_response.lower():
+        improvements.append({'type': 'sideways_block', 'source': 'LLM'})
+
+    if ("손절" in llm_response or "stop" in llm_response.lower()) and ("늦" in llm_response or "tight" in llm_response.lower()):
+        improvements.append({'type': 'tighten_stop_loss', 'source': 'LLM'})
+
+    if "보유" in llm_response or "hold" in llm_response.lower():
+        improvements.append({'type': 'reduce_hold_time', 'source': 'LLM'})
+
+    return improvements
+
 def check_trading_health(trader_name, history_file):
     """⭐ 거래 현황 및 수익 체크 (1시간마다)"""
     import json
@@ -414,6 +509,73 @@ def check_trading_health(trader_name, history_file):
             'message': f'{trader_name}: 오류 {e}',
             'alert': False
         }
+
+def apply_strategy_improvements(trader_name, strategy_file, improvements, improvement_history):
+    """⭐ 전략 개선안 적용 (자동)"""
+    import json
+
+    if not improvements:
+        return []
+
+    try:
+        # 현재 전략 로드
+        try:
+            with open(strategy_file, 'r', encoding='utf-8') as f:
+                strategy = json.load(f)
+        except:
+            strategy = {
+                'stop_loss_pct': -2.5,
+                'max_hold_minutes': 60,
+                'min_confidence': 75,
+                'trend_check_enabled': True
+            }
+
+        applied = []
+
+        for imp in improvements:
+            imp_type = imp['type']
+            source = imp.get('source', 'STAT')
+
+            if imp_type == 'sideways_block':
+                strategy['trend_check_enabled'] = True
+                strategy['min_trend_strength'] = 0.3
+                applied.append(f"횡보장 차단 활성화 ({source})")
+                colored_print(f"[{trader_name}] [개선 적용] 횡보장 차단 (출처: {source})", "green")
+
+            elif imp_type == 'tighten_stop_loss':
+                old_sl = strategy.get('stop_loss_pct', -2.5)
+                new_sl = min(-1.5, old_sl + 0.3)
+                strategy['stop_loss_pct'] = new_sl
+                applied.append(f"손절 {old_sl}% → {new_sl:.1f}% ({source})")
+                colored_print(f"[{trader_name}] [개선 적용] 손절 {old_sl}% → {new_sl:.1f}% (출처: {source})", "green")
+
+            elif imp_type == 'reduce_hold_time':
+                old_hold = strategy.get('max_hold_minutes', 60)
+                new_hold = max(20, old_hold - 10)
+                strategy['max_hold_minutes'] = new_hold
+                applied.append(f"보유시간 {old_hold}분 → {new_hold}분 ({source})")
+                colored_print(f"[{trader_name}] [개선 적용] 보유시간 {old_hold}분 → {new_hold}분 (출처: {source})", "green")
+
+        if applied:
+            # 전략 저장
+            with open(strategy_file, 'w', encoding='utf-8') as f:
+                json.dump(strategy, f, indent=2, ensure_ascii=False)
+
+            # 개선 히스토리 기록
+            from datetime import datetime
+            improvement_history.append({
+                'timestamp': datetime.now().isoformat(),
+                'trader': trader_name,
+                'applied': applied
+            })
+
+            colored_print(f"[{trader_name}] ✅ {len(applied)}개 개선사항 적용 완료", "green")
+
+        return applied
+
+    except Exception as e:
+        colored_print(f"[{trader_name}] 전략 적용 실패: {e}", "red")
+        return []
 
 # ===== 로그 파서 =====
 def parse_trader_log(line, trader_name):
@@ -583,10 +745,13 @@ def main():
     last_guardian_check = time.time()
     last_status_print = time.time()
     last_trading_check = time.time()  # ⭐ 거래 현황 체크
+    last_improvement_check = time.time()  # ⭐ 자기개선 체크
+    last_improvement_report = time.time()  # ⭐ 개선 리포트
 
     colored_print("\n[MONITOR] 모니터링 시작 (Ctrl+C로 종료)\n", "green")
     colored_print(f"[GUARDIAN] 실시간 Ollama 관리 활성화 ({GUARDIAN_CHECK_INTERVAL}초마다)\n", "green")
     colored_print(f"[TRADING] 거래/수익 모니터링 활성화 (1시간마다)\n", "green")
+    colored_print(f"[SELF-IMPROVE] 자기개선 엔진 활성화 (1시간마다 LLM 분석, 6시간마다 리포트)\n", "green")
 
     try:
         while True:
@@ -640,6 +805,77 @@ def main():
 
                 colored_print("="*70 + "\n", "cyan")
                 last_trading_check = current_time
+
+            # ⭐ 자기개선 엔진 (1시간마다 LLM 분석)
+            if (current_time - last_improvement_check) >= SELF_IMPROVEMENT_INTERVAL:
+                import json
+                import statistics
+
+                colored_print("\n" + "="*70, "magenta")
+                colored_print("[자기개선 엔진] LLM 분석 시작", "magenta")
+                colored_print("="*70, "magenta")
+
+                # ETH 분석 및 개선
+                try:
+                    with open(ETH_TRADE_HISTORY, 'r', encoding='utf-8') as f:
+                        eth_trades = json.load(f)
+
+                    if len(eth_trades) >= 10:
+                        # 성과 계산
+                        eth_perf = {
+                            'total_trades': len(eth_trades),
+                            'win_rate': len([t for t in eth_trades if t.get('profit_pct', 0) > 0]) / len(eth_trades) * 100,
+                            'total_return': sum([t.get('profit_pct', 0) for t in eth_trades])
+                        }
+
+                        # LLM 분석
+                        colored_print("[ETH] LLM 분석 중...", "cyan")
+                        eth_improvements = llm_analyze_trades_for_improvement("ETH", eth_trades, eth_perf)
+
+                        # 개선안 적용
+                        if eth_improvements:
+                            apply_strategy_improvements("ETH", ETH_STRATEGY_FILE, eth_improvements, improvement_history_eth)
+                except Exception as e:
+                    colored_print(f"[ETH] 자기개선 오류: {e}", "yellow")
+
+                # KIS 분석 및 개선
+                try:
+                    with open(KIS_TRADE_HISTORY, 'r', encoding='utf-8') as f:
+                        kis_trades = json.load(f)
+
+                    if len(kis_trades) >= 10:
+                        # 성과 계산
+                        kis_perf = {
+                            'total_trades': len(kis_trades),
+                            'win_rate': len([t for t in kis_trades if t.get('profit_pct', 0) > 0]) / len(kis_trades) * 100,
+                            'total_return': sum([t.get('profit_pct', 0) for t in kis_trades])
+                        }
+
+                        # LLM 분석
+                        colored_print("[KIS] LLM 분석 중...", "cyan")
+                        kis_improvements = llm_analyze_trades_for_improvement("KIS", kis_trades, kis_perf)
+
+                        # 개선안 적용
+                        if kis_improvements:
+                            apply_strategy_improvements("KIS", KIS_STRATEGY_FILE, kis_improvements, improvement_history_kis)
+                except Exception as e:
+                    colored_print(f"[KIS] 자기개선 오류: {e}", "yellow")
+
+                # 개선 리포트 (6시간마다)
+                if (current_time - last_improvement_report) >= IMPROVEMENT_REPORT_INTERVAL:
+                    total_improvements = len(improvement_history_eth) + len(improvement_history_kis)
+                    if total_improvements > 0:
+                        report = f"🧠 <b>자기개선 리포트</b>\n\n"
+                        report += f"총 개선 횟수: {total_improvements}회\n"
+                        report += f"ETH: {len(improvement_history_eth)}회\n"
+                        report += f"KIS: {len(improvement_history_kis)}회\n\n"
+                        report += "최근 적용된 개선사항은 전략 파일에 자동 반영되었습니다."
+                        telegram.send_message(report)
+
+                    last_improvement_report = current_time
+
+                colored_print("="*70 + "\n", "magenta")
+                last_improvement_check = current_time
 
             # 상태 체크 (1분마다만)
             should_check_status = (current_time - last_status_print) >= 60
