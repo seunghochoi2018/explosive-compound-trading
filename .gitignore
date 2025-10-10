@@ -1,0 +1,40 @@
+# API Keys & Credentials
+*.yaml
+*.yml
+*.env
+.env
+*.key
+*.pem
+credentials.json
+config.json
+kis_devlp.yaml
+
+# Trading Data (Personal)
+*_history.json
+*_insights.json
+*.db
+*.sqlite
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
