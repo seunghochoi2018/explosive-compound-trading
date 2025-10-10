@@ -132,10 +132,10 @@ def check_ollama_health(port):
         # 3. CPU 체크 (0%인데 요청 있으면 큐잉 의심)
         cpu_percent = ollama_proc.cpu_percent(interval=1)
 
-        # 4. API 응답 체크
+        # 4. API 응답 체크 (⭐ 타임아웃 증가: 30초)
         start_time = time.time()
         try:
-            response = requests.get(f"http://127.0.0.1:{port}/api/tags", timeout=RESPONSE_TIMEOUT)
+            response = requests.get(f"http://127.0.0.1:{port}/api/tags", timeout=30)
             response_time = time.time() - start_time
 
             if response.status_code == 200:
@@ -155,7 +155,8 @@ def check_ollama_health(port):
                 "action": "restart"
             }
         except requests.ConnectionError:
-            return {"status": "connection_error", "action": "restart"}
+            # ⭐ 연결 오류여도 프로세스가 살아있으면 재시작 안함
+            return {"status": "starting", "memory_mb": memory_mb}
 
     except Exception as e:
         return {"status": "error", "error": str(e), "action": "restart"}
@@ -206,28 +207,35 @@ def kill_all_ollama():
         colored_print(f"Ollama 종료 실패: {e}", "red")
 
 def start_ollama(port):
-    """Ollama 시작"""
+    """Ollama 시작 (독립 인스턴스)"""
     try:
-        env = os.environ.copy()
-        env["OLLAMA_HOST"] = f"127.0.0.1:{port}"
+        # PowerShell 스크립트로 독립 실행
+        ps_script = f'''
+$env:OLLAMA_HOST = "127.0.0.1:{port}"
+Start-Process -FilePath "{OLLAMA_EXE}" -ArgumentList "serve" -WindowStyle Hidden -PassThru
+'''
 
-        # 백그라운드 실행
-        process = subprocess.Popen(
-            [OLLAMA_EXE, "serve"],
-            env=env,
-            creationflags=subprocess.CREATE_NEW_CONSOLE,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+        result = subprocess.run(
+            ["powershell", "-Command", ps_script],
+            capture_output=True,
+            text=True,
+            timeout=10
         )
 
-        time.sleep(5)  # 초기화 대기
+        time.sleep(8)  # 초기화 대기 (증가)
 
-        # 프로세스 확인
-        if process.poll() is None:
-            colored_print(f"Ollama 포트 {port} 시작 완료 (PID: {process.pid})", "green")
-            return process
+        # 포트 확인
+        import socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2)
+        port_open = sock.connect_ex(('127.0.0.1', port)) == 0
+        sock.close()
+
+        if port_open:
+            colored_print(f"Ollama 포트 {port} 시작 완료", "green")
+            return True  # 프로세스 객체 대신 True 반환
         else:
-            colored_print(f"Ollama 포트 {port} 시작 실패", "red")
+            colored_print(f"Ollama 포트 {port} 시작 실패 (포트 미개방)", "red")
             return None
 
     except Exception as e:
@@ -252,33 +260,21 @@ def parse_trader_log(line, trader_name):
     if not line:
         return None
 
-    # 중요 키워드 패턴
-    important_patterns = [
-        r'\[CLOSE\]',
-        r'\[TREND_CHANGE\]',
-        r'\[BUY\]',
-        r'\[SELL\]',
-        r'\[PYRAMID\]',
-        r'\[LLM 분석 결과\]',
-        r'신호:',
-        r'신뢰도:',
-        r'PNL[:\s]+[+-]?\d+\.?\d*%',
-        r'손익[:\s]+[+-]?\d+\.?\d*%',
-        r'수익[:\s]+[+-]?\d+\.?\d*%',
-        r'포지션.*진입',
-        r'청산.*완료',
-        r'\[HOLD\].*보유',
+    # ⭐ 모든 로그 출력 (디버깅 모드)
+    # 단, 너무 많은 로그 방지를 위해 일부만 필터링
+    skip_patterns = [
+        r'^=+$',  # === 라인만
     ]
 
-    for pattern in important_patterns:
-        if re.search(pattern, line):
-            # 텔레그램 알림 (중요 이벤트만)
-            if any(keyword in line for keyword in ['TREND_CHANGE', '청산 완료', 'PYRAMID', '진입 완료']):
-                telegram.notify_position_change(trader_name, "포지션 변경", line)
+    for skip in skip_patterns:
+        if re.match(skip, line):
+            return None
 
-            return line
+    # 텔레그램 알림 (중요 이벤트만)
+    if any(keyword in line for keyword in ['TREND_CHANGE', '청산 완료', 'PYRAMID', '진입 완료']):
+        telegram.notify_position_change(trader_name, "포지션 변경", line)
 
-    return None
+    return line  # 모든 로그 반환!
 
 def log_reader_thread(process, trader_name):
     """트레이더 로그 읽기 스레드"""
@@ -305,16 +301,17 @@ def start_trader(script_path, python_exe, working_dir, trader_name, ollama_port)
     """트레이더 시작 (로그 캡처)"""
     try:
         env = os.environ.copy()
-        env["OLLAMA_HOST"] = f"http://127.0.0.1:{ollama_port}"
+        env["OLLAMA_HOST"] = f"127.0.0.1:{ollama_port}"  # http:// 제거 (트레이더 내부에서 추가)
         env["PYTHONIOENCODING"] = "utf-8"
 
         process = subprocess.Popen(
-            [python_exe, script_path],
+            [python_exe, "-u", script_path],  # -u: unbuffered output
             cwd=working_dir,
             env=env,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            creationflags=subprocess.CREATE_NO_WINDOW  # 백그라운드 실행
+            bufsize=0,  # unbuffered
+            universal_newlines=False  # 바이트 모드
         )
 
         # 로그 읽기 스레드 시작
@@ -365,18 +362,28 @@ def main():
     telegram.notify_system_start()
 
     # 초기 정리
-    colored_print("\n[초기화] 기존 프로세스 정리 중...", "yellow")
+    colored_print("\n[초기화] 기존 Ollama 프로세스 정리 중...", "yellow")
     kill_all_ollama()
-
-    # Ollama 시작
-    colored_print("\n[OLLAMA] 시작 중...", "blue")
-    ollama_eth = start_ollama(OLLAMA_PORT_ETH)
     time.sleep(3)
-    ollama_kis = start_ollama(OLLAMA_PORT_KIS)
 
-    if not ollama_eth or not ollama_kis:
-        colored_print("\n[ERROR] Ollama 시작 실패! 종료합니다.", "red")
+    colored_print("\n[OLLAMA] 독립 인스턴스 2개 시작 중...", "blue")
+
+    # ETH Ollama (11434)
+    colored_print(f"[OLLAMA] 포트 {OLLAMA_PORT_ETH} 시작 중...", "blue")
+    ollama_eth = start_ollama(OLLAMA_PORT_ETH)
+    if not ollama_eth:
+        colored_print(f"\n[ERROR] Ollama 포트 {OLLAMA_PORT_ETH} 시작 실패!", "red")
         return
+
+    # KIS Ollama (11435)
+    colored_print(f"[OLLAMA] 포트 {OLLAMA_PORT_KIS} 시작 중...", "blue")
+    ollama_kis = start_ollama(OLLAMA_PORT_KIS)
+    if not ollama_kis:
+        colored_print(f"\n[ERROR] Ollama 포트 {OLLAMA_PORT_KIS} 시작 실패!", "red")
+        kill_all_ollama()
+        return
+
+    colored_print("[OLLAMA] 두 인스턴스 모두 시작 완료!", "green")
 
     # 트레이더 시작
     colored_print("\n[TRADER] 시작 중...", "blue")
@@ -426,22 +433,31 @@ def main():
             if health_kis.get("response_time"):
                 response_times_kis.append(health_kis["response_time"])
 
-            # Ollama 재시작 판단 (ETH)
-            need_restart_eth, reason_eth = should_restart_ollama(health_eth, response_times_eth)
-            if need_restart_eth:
-                colored_print(f"\n[SMART_RESTART] ETH Ollama 재시작 필요: {reason_eth}", "red")
-                # telegram.notify_ollama_restart("ETH", reason_eth)  # 메모리 과다 알림 끔
-                colored_print("[SMART_RESTART] ETH Trader 종료 중...", "yellow")
+            # Ollama 재시작 판단 (공유 체크)
+            need_restart_ollama, reason = should_restart_ollama(health_eth, response_times_eth)
+
+            if need_restart_ollama:
+                colored_print(f"\n[SMART_RESTART] Ollama 재시작 필요: {reason}", "red")
+
+                # 두 트레이더 모두 종료
+                colored_print("[SMART_RESTART] 트레이더 종료 중...", "yellow")
                 stop_process(trader_eth, "ETH Trader", timeout=10)
+                stop_process(trader_kis, "KIS Trader", timeout=10)
 
-                colored_print("[SMART_RESTART] ETH Ollama 재시작 중...", "yellow")
-                if ollama_eth and ollama_eth.poll() is None:
-                    ollama_eth.terminate()
-                    time.sleep(3)
+                # Ollama 모두 재시작
+                colored_print("[SMART_RESTART] Ollama 재시작 중...", "yellow")
+                kill_all_ollama()
+                time.sleep(3)
+
                 ollama_eth = start_ollama(OLLAMA_PORT_ETH)
-                time.sleep(5)
+                ollama_kis = start_ollama(OLLAMA_PORT_KIS)
 
-                colored_print("[SMART_RESTART] ETH Trader 재시작 중...", "green")
+                if not ollama_eth or not ollama_kis:
+                    colored_print("[ERROR] Ollama 재시작 실패!", "red")
+                    break
+
+                # 트레이더 재시작
+                colored_print("[SMART_RESTART] 트레이더 재시작 중...", "green")
                 trader_eth = start_trader(
                     ETH_TRADER_SCRIPT,
                     ETH_PYTHON,
@@ -449,24 +465,6 @@ def main():
                     "ETH Trader (코드3)",
                     OLLAMA_PORT_ETH
                 )
-                response_times_eth.clear()
-
-            # Ollama 재시작 판단 (KIS)
-            need_restart_kis, reason_kis = should_restart_ollama(health_kis, response_times_kis)
-            if need_restart_kis:
-                colored_print(f"\n[SMART_RESTART] KIS Ollama 재시작 필요: {reason_kis}", "red")
-                # telegram.notify_ollama_restart("KIS", reason_kis)  # 메모리 과다 알림 끔
-                colored_print("[SMART_RESTART] KIS Trader 종료 중...", "yellow")
-                stop_process(trader_kis, "KIS Trader", timeout=10)
-
-                colored_print("[SMART_RESTART] KIS Ollama 재시작 중...", "yellow")
-                if ollama_kis and ollama_kis.poll() is None:
-                    ollama_kis.terminate()
-                    time.sleep(3)
-                ollama_kis = start_ollama(OLLAMA_PORT_KIS)
-                time.sleep(5)
-
-                colored_print("[SMART_RESTART] KIS Trader 재시작 중...", "green")
                 trader_kis = start_trader(
                     KIS_TRADER_SCRIPT,
                     KIS_PYTHON,
@@ -474,10 +472,12 @@ def main():
                     "KIS Trader (코드4)",
                     OLLAMA_PORT_KIS
                 )
+
+                response_times_eth.clear()
                 response_times_kis.clear()
 
             # 프로세스 복구 (크래시 시)
-            if not eth_alive and not need_restart_eth:
+            if not eth_alive and not need_restart_ollama:
                 colored_print("\n[AUTO_RECOVERY] ETH Trader 크래시 → 재시작...", "yellow")
                 trader_eth = start_trader(
                     ETH_TRADER_SCRIPT,
@@ -487,7 +487,7 @@ def main():
                     OLLAMA_PORT_ETH
                 )
 
-            if not kis_alive and not need_restart_kis:
+            if not kis_alive and not need_restart_ollama:
                 colored_print("\n[AUTO_RECOVERY] KIS Trader 크래시 → 재시작...", "yellow")
                 trader_kis = start_trader(
                     KIS_TRADER_SCRIPT,
@@ -503,34 +503,22 @@ def main():
                 colored_print(f"{RESTART_INTERVAL // 3600}시간 경과 → 전체 재시작", "magenta")
                 colored_print("=" * 70, "magenta")
 
-                # 1. ETH 트레이더 재시작
-                colored_print("\n[RESTART 1/4] ETH Trader 종료 중...", "yellow")
+                # 1. 트레이더 종료
+                colored_print("\n[RESTART 1/3] 트레이더 종료 중...", "yellow")
                 stop_process(trader_eth, "ETH Trader")
-                time.sleep(5)
-
-                # 2. ETH Ollama 재시작
-                colored_print("[RESTART 2/4] ETH Ollama 재시작 중...", "yellow")
-                if ollama_eth and ollama_eth.poll() is None:
-                    ollama_eth.terminate()
-                    time.sleep(3)
-                ollama_eth = start_ollama(OLLAMA_PORT_ETH)
-                time.sleep(5)
-
-                # 3. KIS 트레이더 재시작
-                colored_print("[RESTART 3/4] KIS Trader 종료 중...", "yellow")
                 stop_process(trader_kis, "KIS Trader")
-                time.sleep(5)
+                time.sleep(3)
 
-                # 4. KIS Ollama 재시작
-                colored_print("[RESTART 4/4] KIS Ollama 재시작 중...", "yellow")
-                if ollama_kis and ollama_kis.poll() is None:
-                    ollama_kis.terminate()
-                    time.sleep(3)
+                # 2. Ollama 재시작
+                colored_print("[RESTART 2/3] Ollama 재시작 중...", "yellow")
+                kill_all_ollama()
+                time.sleep(3)
+
+                ollama_eth = start_ollama(OLLAMA_PORT_ETH)
                 ollama_kis = start_ollama(OLLAMA_PORT_KIS)
-                time.sleep(5)
 
-                # 트레이더 재시작
-                colored_print("\n[RESTART] 트레이더 재시작 중...", "green")
+                # 3. 트레이더 재시작
+                colored_print("[RESTART 3/3] 트레이더 재시작 중...", "green")
                 trader_eth = start_trader(
                     ETH_TRADER_SCRIPT,
                     ETH_PYTHON,
@@ -572,11 +560,6 @@ def main():
 
         stop_process(trader_eth, "ETH Trader")
         stop_process(trader_kis, "KIS Trader")
-
-        if ollama_eth and ollama_eth.poll() is None:
-            ollama_eth.terminate()
-        if ollama_kis and ollama_kis.poll() is None:
-            ollama_kis.terminate()
 
         time.sleep(2)
         kill_all_ollama()
