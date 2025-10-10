@@ -250,12 +250,11 @@ class ExplosiveKISTrader:
 
     def get_current_price(self, symbol: str) -> float:
         """
-        현재가 조회 (KIS API - 해외주식 시세)
+        현재가 조회 (KIS API 우선 → FMP API 백업)
 
         🔧 2025-10-10 수정:
-        - custtype 헤더 추가 (필수!)
-        - 파라미터명 수정: AUTH/EXCD/SYMB → FID_COND_MRKT_DIV_CODE/FID_INPUT_ISCD
-        - 응답 필드명 수정: last → stck_prpr
+        - KIS API: custtype 헤더, FID_COND_MRKT_DIV_CODE/FID_INPUT_ISCD 파라미터
+        - FMP API: 백업 시스템 (KIS 실패 시 자동 전환)
 
         Args:
             symbol: 종목명 ('SOXL' 또는 'SOXS')
@@ -263,62 +262,73 @@ class ExplosiveKISTrader:
         Returns:
             float: 현재가 (USD), 조회 실패 시 0.0
         """
+        # 1차 시도: KIS API
         try:
             import requests
 
-            # ⭐ KIS API는 티커명(SOXL/SOXS)를 직접 사용!
-            # A980679/A980680은 내부 코드이지만 API에는 티커명 전달
             url = f"{self.base_url}/uapi/overseas-price/v1/quotations/price"
 
-            # ⚠️  중요: custtype 헤더 누락 시 "EXCD 필드 없음" 오류 발생!
             headers = {
                 "authorization": f"Bearer {self.access_token}",
                 "appkey": self.app_key,
                 "appsecret": self.app_secret,
-                "tr_id": "HHDFS00000300",  # 해외주식 현재가 조회
-                "custtype": "P"  # ⭐ 개인 투자자 (필수!)
+                "tr_id": "HHDFS00000300",
+                "custtype": "P"
             }
 
-            # ⭐ KIS API 정확한 파라미터 (soxl.txt 라인 393-396 참고)
-            # FID_COND_MRKT_DIV_CODE: "N" = 해외주식 (NASD)
-            # FID_INPUT_ISCD: 티커명 직접 입력 (SOXL, SOXS 등)
             params = {
                 "FID_COND_MRKT_DIV_CODE": "N",
-                "FID_INPUT_ISCD": symbol  # ⭐ 티커명 직접 사용 (SOXL/SOXS)
+                "FID_INPUT_ISCD": symbol
             }
 
             response = requests.get(url, headers=headers, params=params, timeout=10)
 
             if response.status_code == 200:
                 data = response.json()
-                print(f"[DEBUG] {symbol} API 응답: rt_cd={data.get('rt_cd')}, msg1={data.get('msg1')}")
-                print(f"[DEBUG] FID_INPUT_ISCD 파라미터: {symbol}")
 
                 if data.get('rt_cd') == '0':
-                    # ⭐ KIS API 응답 필드: stck_prpr (현재가)
-                    # ⚠️  이전 필드명 'last'는 작동하지 않음!
                     stck_prpr = data.get('output', {}).get('stck_prpr', '0')
-                    # 빈 문자열 처리
-                    if not stck_prpr or stck_prpr == '':
-                        print(f"[WARNING] {symbol} 가격 정보 없음")
-                        print(f"[DEBUG] output 전체: {data.get('output')}")
-                        return 0.0
-                    price = float(stck_prpr)
-                    print(f"[OK] {symbol} 가격: ${price:.2f}")
-                    return price
-                else:
-                    print(f"[ERROR] API 오류 코드: {data.get('rt_cd')}, 메시지: {data.get('msg1')}")
-                    print(f"[DEBUG] 전체 응답: {data}")
-            else:
-                print(f"[ERROR] HTTP 오류: {response.status_code}")
-                print(f"[DEBUG] 응답 내용: {response.text[:500]}")
+                    if stck_prpr and stck_prpr != '':
+                        price = float(stck_prpr)
+                        print(f"[KIS] {symbol} 가격: ${price:.2f}")
+                        return price
 
+        except Exception as e:
+            print(f"[KIS] API 오류: {e}")
+
+        # 2차 시도: FMP API (백업)
+        print(f"[INFO] KIS API 실패 → FMP API로 전환")
+        return self.get_price_from_fmp(symbol)
+
+    def get_price_from_fmp(self, symbol: str) -> float:
+        """
+        FMP API로 현재가 조회 (백업 시스템)
+
+        무료 API Key: demo (제한: 250 requests/day)
+        실전용 API Key 발급 필요 시: https://site.financialmodelingprep.com/
+        """
+        try:
+            import requests
+
+            # FMP API (무료 demo 키 사용)
+            api_key = "demo"  # 실전용은 유료 키 발급 필요
+            url = f"https://financialmodelingprep.com/api/v3/quote-short/{symbol}?apikey={api_key}"
+
+            response = requests.get(url, timeout=10)
+
+            if response.status_code == 200:
+                data = response.json()
+                if data and len(data) > 0:
+                    price = data[0].get('price', 0)
+                    if price > 0:
+                        print(f"[FMP] {symbol} 가격: ${price:.2f}")
+                        return float(price)
+
+            print(f"[FMP] {symbol} 가격 조회 실패")
             return 0.0
 
         except Exception as e:
-            print(f"[ERROR] 가격 조회 실패: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"[FMP] API 오류: {e}")
             return 0.0
 
     def calculate_trend(self) -> str:
