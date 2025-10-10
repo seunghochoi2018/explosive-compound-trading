@@ -87,16 +87,17 @@ response_times_eth = deque(maxlen=10)
 response_times_kis = deque(maxlen=10)
 
 # ⭐ 거래/수익 모니터링 설정
-TRADING_CHECK_INTERVAL = 60 * 60  # 1시간마다 거래 현황 체크
+TRADING_CHECK_INTERVAL = 30 * 60  # 30분마다 거래 현황 체크
 ETH_TRADE_HISTORY = r"C:\Users\user\Documents\코드3\eth_trade_history.json"
 KIS_TRADE_HISTORY = r"C:\Users\user\Documents\코드4\kis_trade_history.json"
 
 # ⭐ 자기개선 엔진 설정 (통합) - 16b 단독 (메모리 최적화)
-SELF_IMPROVEMENT_INTERVAL = 60 * 60  # 1시간마다 자기 분석
+SELF_IMPROVEMENT_INTERVAL = 30 * 60  # 30분마다 자기 분석
 IMPROVEMENT_REPORT_INTERVAL = 6 * 60 * 60  # 6시간마다 텔레그램 리포트
+TELEGRAM_ALERT_INTERVAL = 6 * 60 * 60  # 6시간마다만 텔레그램 알림
 OLLAMA_IMPROVEMENT_HOST = f"http://127.0.0.1:{OLLAMA_PORT_IMPROVEMENT}"
 OLLAMA_IMPROVEMENT_MODEL = "deepseek-coder-v2:16b"  # 단독 모델
-OLLAMA_IMPROVEMENT_TIMEOUT = 60
+OLLAMA_IMPROVEMENT_TIMEOUT = 300  # ⭐ 5분으로 증가 (Triple Validation용)
 
 # 자기개선 상태 추적
 improvement_history_eth = []
@@ -113,7 +114,7 @@ ERROR_PATTERN_FILE_KIS = r"C:\Users\user\Documents\코드4\kis_error_patterns.js
 # ⭐ 백그라운드 학습 설정
 FMP_API_KEY = "5j69XWnoSpoBvEY0gKSUTB0zXcr0z2KI"  # FMP API 키
 BACKGROUND_LEARNING_INTERVAL = 10 * 60  # 10분마다 백그라운드 학습
-HISTORICAL_DATA_DAYS = 7  # 과거 7일간 데이터 학습
+HISTORICAL_DATA_DAYS = 90  # 과거 90일간 데이터 학습 (충분한 데이터 확보)
 learning_session_count = 0  # 학습 세션 카운터
 background_learning_thread = None  # 백그라운드 학습 스레드
 
@@ -755,9 +756,9 @@ def guardian_cleanup_rogue_ollama():
         except:
             pass
 
-        # 2. 메모리 폭주만 정리 (15GB 초과)
-        # 16b 모델은 정상적으로 8-10GB 사용하므로, 15GB 초과만 비정상으로 판단
-        if memory_mb > 15 * 1024:
+        # 2. 메모리 폭주만 정리 (12GB 초과)
+        # 16b 모델은 정상적으로 8-10GB 사용하므로, 12GB 초과면 비정상으로 판단
+        if memory_mb > 12 * 1024:
             try:
                 p['proc'].kill()
                 killed.append(f"PID {pid} (메모리폭주 {memory_mb:.0f}MB)")
@@ -1418,6 +1419,7 @@ def main():
     last_trading_check = time.time()  # ⭐ 거래 현황 체크
     last_improvement_check = time.time()  # ⭐ 자기개선 체크
     last_improvement_report = time.time()  # ⭐ 개선 리포트
+    last_telegram_alert = time.time()  # ⭐ 텔레그램 알림 (6시간 제한)
 
     # ⭐ Option 4: 오류 패턴 로드
     global error_patterns_eth, error_patterns_kis
@@ -1438,11 +1440,11 @@ def main():
 
     colored_print("\n[MONITOR] 모니터링 시작 (Ctrl+C로 종료)\n", "green")
     colored_print(f"[GUARDIAN] 실시간 Ollama 관리 활성화 ({GUARDIAN_CHECK_INTERVAL}초마다)\n", "green")
-    colored_print(f"[TRADING] 거래/수익 모니터링 활성화 (1시간마다)\n", "green")
+    colored_print(f"[TRADING] 거래/수익 모니터링 활성화 (30분마다 체크, 6시간마다 텔레그램)\n", "green")
     colored_print(f"[SELF-IMPROVE] 자기개선 엔진 활성화\n", "green")
     colored_print(f"  - Option 1: Triple Validation (3중 검증)\n", "green")
     colored_print(f"  - Option 4: Self-Improving Feedback Loop (오류 패턴 학습)\n", "green")
-    colored_print(f"  - 1시간마다 LLM 분석, 6시간마다 리포트\n", "green")
+    colored_print(f"  - 30분마다 LLM 분석, 6시간마다 텔레그램 리포트\n", "green")
     colored_print(f"[BACKGROUND LEARNING] FMP API 과거 데이터 학습 활성화\n", "magenta")
     colored_print(f"  - 10분마다 ETH/SOXL 실제 데이터 수집 및 전략 탐색\n", "magenta")
     colored_print(f"  - 자동 검증: 동일 전략 {VALIDATION_THRESHOLD}번 발견 시 자동 적용\n", "magenta")
@@ -1473,7 +1475,6 @@ def main():
                     if eth_health.get('warnings'):
                         for w in eth_health['warnings']:
                             colored_print(f"    - {w}", "yellow")
-                    telegram.notify_system_error(f"ETH 거래 경고: {', '.join(eth_health.get('warnings', []))}")
                 else:
                     colored_print(f"✅ [ETH] {eth_health['message']}", "green")
 
@@ -1483,21 +1484,27 @@ def main():
                     if kis_health.get('warnings'):
                         for w in kis_health['warnings']:
                             colored_print(f"    - {w}", "yellow")
-                    telegram.notify_system_error(f"KIS 거래 경고: {', '.join(kis_health.get('warnings', []))}")
                 else:
                     colored_print(f"✅ [KIS] {kis_health['message']}", "green")
 
-                # 종합 리포트 텔레그램 전송
-                report = f"📊 <b>거래 현황 리포트</b>\n\n"
-                report += f"<b>ETH:</b> {eth_health['message']}\n"
-                report += f"<b>KIS:</b> {kis_health['message']}\n\n"
+                # ⭐ 텔레그램 알림은 6시간마다만
+                if (current_time - last_telegram_alert) >= TELEGRAM_ALERT_INTERVAL:
+                    # 종합 리포트 텔레그램 전송
+                    report = f"📊 <b>거래 현황 리포트</b>\n\n"
+                    report += f"<b>ETH:</b> {eth_health['message']}\n"
+                    report += f"<b>KIS:</b> {kis_health['message']}\n\n"
 
-                if eth_health['alert'] or kis_health['alert']:
-                    report += "⚠️ 문제 감지 - 자기개선 엔진이 분석 중입니다"
+                    if eth_health['alert'] or kis_health['alert']:
+                        report += "⚠️ 문제 감지 - 자기개선 엔진이 분석 중입니다"
+                    else:
+                        report += "✅ 모든 봇 정상 작동 중"
+
+                    telegram.send_message(report)
+                    last_telegram_alert = current_time
+                    colored_print("📱 텔레그램 알림 전송 완료 (다음 알림: 6시간 후)", "cyan")
                 else:
-                    report += "✅ 모든 봇 정상 작동 중"
-
-                telegram.send_message(report)
+                    time_until_next = (TELEGRAM_ALERT_INTERVAL - (current_time - last_telegram_alert)) / 3600
+                    colored_print(f"📱 텔레그램 알림 생략 (다음 알림: {time_until_next:.1f}시간 후)", "yellow")
 
                 colored_print("="*70 + "\n", "cyan")
                 last_trading_check = current_time
