@@ -2,6 +2,7 @@
 import json
 import os
 from datetime import datetime
+import psutil
 
 print("=" * 70)
 print("TRADING SYSTEM STATUS")
@@ -53,13 +54,50 @@ except:
 
 # System
 print("\n[System Config]")
-print("   Monitor: Every 30min")
+print("   Monitor: Every 15min")
 print("   Telegram: Every 6hr")
-print("   Analysis: Every 30min")
+print("   Analysis: Every 15min")
+
+# Time remaining calculation
+try:
+    import glob
+
+    # Find unified_trader_manager process start time
+    manager_start = None
+    for proc in psutil.process_iter(['pid', 'name', 'cmdline', 'create_time']):
+        try:
+            if 'python' in proc.info['name'].lower():
+                cmdline = proc.info.get('cmdline', [])
+                if cmdline and 'unified_trader_manager.py' in ' '.join(cmdline):
+                    manager_start = proc.info['create_time']
+                    break
+        except:
+            continue
+
+    if manager_start:
+        from datetime import datetime
+        now = datetime.now().timestamp()
+        elapsed_sec = now - manager_start
+
+        # Calculate time until next analysis (15min interval)
+        next_analysis_sec = 15 * 60 - (elapsed_sec % (15 * 60))
+        next_analysis_min = next_analysis_sec / 60
+
+        # Calculate time until next telegram (6hr interval)
+        next_telegram_sec = 6 * 60 * 60 - (elapsed_sec % (6 * 60 * 60))
+        next_telegram_hr = next_telegram_sec / 3600
+
+        print("\n[Next Events]")
+        print(f"   Next Analysis: {int(next_analysis_min)}min {int(next_analysis_sec % 60)}sec")
+        print(f"   Next Telegram: {next_telegram_hr:.1f}hr")
+    else:
+        print("\n[Next Events]")
+        print("   Manager not running")
+except Exception as e:
+    print(f"\n[Next Events] Error: {e}")
 
 # Process check
 print("\n[Process Status]")
-import psutil
 python_count = sum(1 for p in psutil.process_iter(['name']) if 'python' in p.info['name'].lower())
 print(f"   Python: {python_count} processes {'[OK]' if python_count == 3 else '[WARN]'}")
 

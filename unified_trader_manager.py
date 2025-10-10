@@ -87,12 +87,12 @@ response_times_eth = deque(maxlen=10)
 response_times_kis = deque(maxlen=10)
 
 # ⭐ 거래/수익 모니터링 설정
-TRADING_CHECK_INTERVAL = 30 * 60  # 30분마다 거래 현황 체크
+TRADING_CHECK_INTERVAL = 15 * 60  # 15분마다 거래 현황 체크
 ETH_TRADE_HISTORY = r"C:\Users\user\Documents\코드3\eth_trade_history.json"
 KIS_TRADE_HISTORY = r"C:\Users\user\Documents\코드4\kis_trade_history.json"
 
 # ⭐ 자기개선 엔진 설정 (통합) - 16b 단독 (메모리 최적화)
-SELF_IMPROVEMENT_INTERVAL = 30 * 60  # 30분마다 자기 분석
+SELF_IMPROVEMENT_INTERVAL = 15 * 60  # 15분마다 자기 분석
 IMPROVEMENT_REPORT_INTERVAL = 6 * 60 * 60  # 6시간마다 텔레그램 리포트
 TELEGRAM_ALERT_INTERVAL = 6 * 60 * 60  # 6시간마다만 텔레그램 알림
 OLLAMA_IMPROVEMENT_HOST = f"http://127.0.0.1:{OLLAMA_PORT_IMPROVEMENT}"
@@ -1440,11 +1440,11 @@ def main():
 
     colored_print("\n[MONITOR] 모니터링 시작 (Ctrl+C로 종료)\n", "green")
     colored_print(f"[GUARDIAN] 실시간 Ollama 관리 활성화 ({GUARDIAN_CHECK_INTERVAL}초마다)\n", "green")
-    colored_print(f"[TRADING] 거래/수익 모니터링 활성화 (30분마다 체크, 6시간마다 텔레그램)\n", "green")
+    colored_print(f"[TRADING] 거래/수익 모니터링 활성화 (15분마다 체크, 6시간마다 텔레그램)\n", "green")
     colored_print(f"[SELF-IMPROVE] 자기개선 엔진 활성화\n", "green")
     colored_print(f"  - Option 1: Triple Validation (3중 검증)\n", "green")
     colored_print(f"  - Option 4: Self-Improving Feedback Loop (오류 패턴 학습)\n", "green")
-    colored_print(f"  - 30분마다 LLM 분석, 6시간마다 텔레그램 리포트\n", "green")
+    colored_print(f"  - 15분마다 LLM 분석, 6시간마다 텔레그램 리포트\n", "green")
     colored_print(f"[BACKGROUND LEARNING] FMP API 과거 데이터 학습 활성화\n", "magenta")
     colored_print(f"  - 10분마다 ETH/SOXL 실제 데이터 수집 및 전략 탐색\n", "magenta")
     colored_print(f"  - 자동 검증: 동일 전략 {VALIDATION_THRESHOLD}번 발견 시 자동 적용\n", "magenta")
