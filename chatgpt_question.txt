@@ -1,0 +1,113 @@
+================================================================================
+한국투자증권 KIS API 해외주식 시장가 주문 오류
+================================================================================
+
+[문제]
+해외주식(SOXL, SOXS) 시장가 주문 시 오류 발생:
+"가격 $0.01 미만시 온라인 주문불가조건입니다."
+
+[주문 요청 Body]
+```json
+{
+  "CANO": "계좌번호",
+  "ACNT_PRDT_CD": "01",
+  "OVRS_EXCG_CD": "NASD",
+  "PDNO": "SOXL",
+  "ORD_QTY": "2",
+  "OVRS_ORD_UNPR": "0",      // 시장가는 "0"
+  "ORD_SVR_DVSN_CD": "0",
+  "ORD_DVSN": "00"            // 00 = 시장가
+}
+```
+
+[응답]
+```json
+{
+  "rt_cd": "7",
+  "msg_cd": "APBK1507",
+  "msg1": "가격 $0.01 미만시 온라인 주문불가조건입니다. 해외투자영업부(3276-5300)문의"
+}
+```
+
+[Headers]
+```python
+{
+  "authorization": "Bearer {access_token}",
+  "appkey": "{app_key}",
+  "appsecret": "{app_secret}",
+  "tr_id": "TTTT1002U",  # 매수
+  "custtype": "P",
+  "hashkey": "{hashkey}"
+}
+```
+
+[API 정보]
+- URL: https://openapi.koreainvestment.com:9443/uapi/overseas-stock/v1/trading/order
+- Method: POST
+- TR_ID: TTTT1002U (매수), TTTT1006U (매도)
+
+[공식 문서]
+한국투자증권 공식 가이드에는:
+"시장가 주문 시 반드시 OVRS_ORD_UNPR = '0' 입력"
+
+엑셀 스펙(해외주식 주문[v1_해외주식-001].xlsx)에도:
+- 시장가: OVRS_ORD_UNPR = "0"
+- ORD_DVSN = "00"
+
+[시도한 것]
+✅ TR_ID: TTTT1002U/TTTT1006U 사용
+✅ OVRS_EXCG_CD: "NASD"
+✅ OVRS_ORD_UNPR: "0"
+✅ ORD_DVSN: "00"
+✅ hashkey 생성 및 전송
+✅ HTTP 200 응답 받음 (하지만 rt_cd="7")
+
+[질문]
+해외주식 시장가 주문 시 OVRS_ORD_UNPR에 무엇을 넣어야 하나요?
+
+1. "0" (문서대로) → 현재 "$0.01 미만" 오류
+2. 현재가 입력 (예: "40.16") → 시도 안 함
+3. 다른 값?
+
+실제 한국투자증권 해외주식 API로 시장가 주문 성공하신 분 계신가요?
+
+================================================================================
+
+간단한 코드:
+
+```python
+import requests
+
+order_data = {
+    "CANO": "계좌번호",
+    "ACNT_PRDT_CD": "01",
+    "OVRS_EXCG_CD": "NASD",
+    "PDNO": "SOXL",
+    "ORD_QTY": "2",
+    "OVRS_ORD_UNPR": "0",      # ⚠️ 이 값이 문제
+    "ORD_SVR_DVSN_CD": "0",
+    "ORD_DVSN": "00"
+}
+
+hashkey = get_hashkey(order_data)
+
+headers = {
+    "authorization": f"Bearer {access_token}",
+    "appkey": app_key,
+    "appsecret": app_secret,
+    "tr_id": "TTTT1002U",
+    "custtype": "P",
+    "hashkey": hashkey
+}
+
+response = requests.post(
+    "https://openapi.koreainvestment.com:9443/uapi/overseas-stock/v1/trading/order",
+    headers=headers,
+    json=order_data
+)
+
+# HTTP 200 받지만:
+# {"rt_cd":"7", "msg_cd":"APBK1507", "msg1":"가격 $0.01 미만..."}
+```
+
+================================================================================

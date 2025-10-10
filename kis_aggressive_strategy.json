@@ -1,0 +1,149 @@
+{
+  "best_strategy": {
+    "holding_min": 120,
+    "take_profit": 0.5,
+    "stop_loss": -1.0,
+    "trades": 336,
+    "win_rate": 60.416666666666664,
+    "avg_pnl": 0.16111146254285533,
+    "compound": 63.61867704280178
+  },
+  "top_15": [
+    {
+      "holding_min": 120,
+      "take_profit": 0.5,
+      "stop_loss": -1.0,
+      "trades": 336,
+      "win_rate": 60.416666666666664,
+      "avg_pnl": 0.16111146254285533,
+      "compound": 63.61867704280178
+    },
+    {
+      "holding_min": 240,
+      "take_profit": 0.5,
+      "stop_loss": -1.0,
+      "trades": 307,
+      "win_rate": 63.19218241042345,
+      "avg_pnl": 0.17672225179328727,
+      "compound": 63.61867704280178
+    },
+    {
+      "holding_min": 60,
+      "take_profit": 0.5,
+      "stop_loss": -1.0,
+      "trades": 428,
+      "win_rate": 57.476635514018696,
+      "avg_pnl": 0.12661601712996348,
+      "compound": 63.61867704280149
+    },
+    {
+      "holding_min": 240,
+      "take_profit": 1.0,
+      "stop_loss": -1.0,
+      "trades": 220,
+      "win_rate": 54.54545454545454,
+      "avg_pnl": 0.24673643838779882,
+      "compound": 63.618677042801394
+    },
+    {
+      "holding_min": 120,
+      "take_profit": 1.0,
+      "stop_loss": -1.0,
+      "trades": 253,
+      "win_rate": 54.54545454545454,
+      "avg_pnl": 0.21463998322227287,
+      "compound": 63.61867704280137
+    },
+    {
+      "holding_min": 60,
+      "take_profit": 1.0,
+      "stop_loss": -1.0,
+      "trades": 369,
+      "win_rate": 55.28455284552846,
+      "avg_pnl": 0.14697662150828805,
+      "compound": 63.61867704280122
+    },
+    {
+      "holding_min": 30,
+      "take_profit": 1.0,
+      "stop_loss": -1.0,
+      "trades": 617,
+      "win_rate": 53.16045380875203,
+      "avg_pnl": 0.08655852111307821,
+      "compound": 62.00389105058412
+    },
+    {
+      "holding_min": 30,
+      "take_profit": 1.0,
+      "stop_loss": -0.5,
+      "trades": 657,
+      "win_rate": 52.054794520547944,
+      "avg_pnl": 0.08121158764640168,
+      "compound": 62.00389105058386
+    },
+    {
+      "holding_min": 120,
+      "take_profit": 0.5,
+      "stop_loss": -0.5,
+      "trades": 434,
+      "win_rate": 52.995391705069125,
+      "avg_pnl": 0.12284867601424729,
+      "compound": 62.00389105058382
+    },
+    {
+      "holding_min": 30,
+      "take_profit": 2.0,
+      "stop_loss": -1.0,
+      "trades": 596,
+      "win_rate": 52.18120805369127,
+      "avg_pnl": 0.08952319411578895,
+      "compound": 62.003891050583746
+    },
+    {
+      "holding_min": 240,
+      "take_profit": 1.0,
+      "stop_loss": -0.5,
+      "trades": 307,
+      "win_rate": 44.62540716612378,
+      "avg_pnl": 0.17399914838081607,
+      "compound": 62.003891050583746
+    },
+    {
+      "holding_min": 30,
+      "take_profit": 2.0,
+      "stop_loss": -0.5,
+      "trades": 635,
+      "win_rate": 51.653543307086615,
+      "avg_pnl": 0.08398196038545118,
+      "compound": 62.003891050583704
+    },
+    {
+      "holding_min": 240,
+      "take_profit": 0.5,
+      "stop_loss": -0.5,
+      "trades": 413,
+      "win_rate": 53.753026634382564,
+      "avg_pnl": 0.1291039855054483,
+      "compound": 62.00389105058366
+    },
+    {
+      "holding_min": 30,
+      "take_profit": 3.0,
+      "stop_loss": -1.0,
+      "trades": 592,
+      "win_rate": 52.195945945945944,
+      "avg_pnl": 0.09000399639415041,
+      "compound": 62.00389105058364
+    },
+    {
+      "holding_min": 30,
+      "take_profit": 5.0,
+      "stop_loss": -1.0,
+      "trades": 592,
+      "win_rate": 52.195945945945944,
+      "avg_pnl": 0.09000399639415041,
+      "compound": 62.00389105058364
+    }
+  ],
+  "generated": "2025-10-10T00:28:50.606349"
+}

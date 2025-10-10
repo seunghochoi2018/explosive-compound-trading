@@ -1,0 +1,21 @@
+{
+  "kis_app_key": "YOUR_KIS_APP_KEY",
+  "kis_app_secret": "YOUR_KIS_APP_SECRET",
+  "account_num": "YOUR_ACCOUNT_NUMBER",
+  "account_code": "01",
+  "trading_settings": {
+    "nvda_position_size_usd": 1000,
+    "analysis_interval_sec": 60,
+    "stop_loss_pct": -5.0,
+    "take_profit_pct": 10.0,
+    "min_confidence": 70
+  },
+  "nvdl_settings": {
+    "max_position_size_usd": 5000,
+    "analysis_interval_sec": 120,
+    "trailing_stop_pct": -15.0,
+    "max_drawdown_pct": -20.0,
+    "pyramid_levels": 3,
+    "min_confidence": 75
+  }
+}

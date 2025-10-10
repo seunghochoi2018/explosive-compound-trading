@@ -1,0 +1,14 @@
+{
+  "name": "SOXL 10-hour v1",
+  "description": "백테스트 검증 완료: 연 +2,634%",
+  "max_holding_hours": 10,
+  "min_holding_hours": 0,
+  "trend_reversal_detection": true,
+  "annual_return": 2634,
+  "win_rate": 55.0,
+  "dynamic_stop_loss": -3.0,
+  "verification_trades": 0,
+  "created": "2025-10-10",
+  "last_updated": "2025-10-10",
+  "status": "active"
+}

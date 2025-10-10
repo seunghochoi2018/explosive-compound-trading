@@ -1,0 +1,9 @@
+{
+    "bot_token": "7819173403:AAEwBNh6etqyWvh-GivLDrTJb8b_ho2ju-U",
+    "chat_id": "7805944420",
+    "notification_settings": {
+        "initial_position": true,
+        "position_change": true,
+        "error_alert": true
+    }
+}

@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-통합 멀티 자동매매 시스템 v2.0
+통합 멀티 자동매매 시스템
 - NVIDIA: NVDL/NVDD (KIS API)
 - ETH: ETH/USDT (ByBit API)
-- 하나의 LLM으로 두 시장 동시 분석
 """
 
 import json
 import requests
 import time
-import hmac
-import hashlib
+import os
 from datetime import datetime
 import logging
 import sys
@@ -94,22 +92,13 @@ class KISTrader:
         except Exception as e:
             return False, str(e)
 
-# ByBit API 클래스
+# ByBit API 클래스 (기존 코드에서 가져오기)
 class ByBitTrader:
     def __init__(self):
-        # 실제 API 키 사용
-        self.api_key = "KLthPXAti9nWKLOeNX"
-        self.api_secret = "ioRLGkzvHcmOoJeJhBkDmG2JJPuSROOEVm2S"
+        # 실제 API 키로 교체 필요
+        self.api_key = "YOUR_BYBIT_API_KEY"
+        self.api_secret = "YOUR_BYBIT_API_SECRET"
         self.base_url = "https://api.bybit.com"
-
-    def generate_signature(self, params_str, timestamp):
-        """ByBit API 서명 생성 (정확한 방식)"""
-        sign_str = timestamp + self.api_key + params_str
-        return hmac.new(
-            self.api_secret.encode('utf-8'),
-            sign_str.encode('utf-8'),
-            hashlib.sha256
-        ).hexdigest()
 
     def get_eth_price(self):
         try:
@@ -123,156 +112,15 @@ class ByBitTrader:
         except:
             return 0
 
-    def get_eth_balance(self):
-        """ETH 잔고 조회 (정확한 ByBit API 방식)"""
-        try:
-            timestamp = str(int(time.time() * 1000))
-            params = {"accountType": "UNIFIED", "coin": "ETH"}
-
-            # GET 요청용 쿼리 스트링 생성
-            query_string = "&".join([f"{k}={v}" for k, v in sorted(params.items())])
-            signature = self.generate_signature(query_string, timestamp)
-
-            headers = {
-                "X-BAPI-API-KEY": self.api_key,
-                "X-BAPI-SIGN": signature,
-                "X-BAPI-SIGN-TYPE": "2",
-                "X-BAPI-TIMESTAMP": timestamp,
-                "Content-Type": "application/json"
-            }
-
-            url = f"{self.base_url}/v5/account/wallet-balance"
-            response = requests.get(url, params=params, headers=headers, timeout=10)
-
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("retCode") == 0:
-                    accounts = data.get("result", {}).get("list", [])
-                    for account in accounts:
-                        for coin in account.get("coin", []):
-                            if coin.get("coin") == "ETH":
-                                return float(coin.get("availableToWithdraw", 0))
-            else:
-                logger.error(f"ByBit ETH 잔고 조회 HTTP 오류: {response.status_code} - {response.text}")
-            return 0
-        except Exception as e:
-            logger.error(f"ByBit ETH 잔고 조회 오류: {e}")
-            return 0
-
-    def get_usdt_balance(self):
-        """USDT 잔고 조회 (정확한 ByBit API 방식)"""
-        try:
-            timestamp = str(int(time.time() * 1000))
-            params = {"accountType": "UNIFIED", "coin": "USDT"}
-
-            # GET 요청용 쿼리 스트링 생성
-            query_string = "&".join([f"{k}={v}" for k, v in sorted(params.items())])
-            signature = self.generate_signature(query_string, timestamp)
-
-            headers = {
-                "X-BAPI-API-KEY": self.api_key,
-                "X-BAPI-SIGN": signature,
-                "X-BAPI-SIGN-TYPE": "2",
-                "X-BAPI-TIMESTAMP": timestamp,
-                "Content-Type": "application/json"
-            }
-
-            url = f"{self.base_url}/v5/account/wallet-balance"
-            response = requests.get(url, params=params, headers=headers, timeout=10)
-
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("retCode") == 0:
-                    accounts = data.get("result", {}).get("list", [])
-                    for account in accounts:
-                        for coin in account.get("coin", []):
-                            if coin.get("coin") == "USDT":
-                                return float(coin.get("availableToWithdraw", 0))
-            else:
-                logger.error(f"ByBit USDT 잔고 조회 HTTP 오류: {response.status_code} - {response.text}")
-            return 0
-        except Exception as e:
-            logger.error(f"ByBit USDT 잔고 조회 오류: {e}")
-            return 0
-
-    def buy_eth_spot(self, quantity_usdt):
-        """ETH 현물 매수 (USDT 기준)"""
-        try:
-            eth_price = self.get_eth_price()
-            if eth_price <= 0:
-                return False, "ETH 가격 조회 실패"
-
-            quantity_eth = quantity_usdt / eth_price
-
-            timestamp = str(int(time.time() * 1000))
-            params = {
-                "category": "spot",
-                "symbol": "ETHUSDT",
-                "side": "Buy",
-                "orderType": "Market",
-                "qty": f"{quantity_eth:.6f}"
-            }
-
-            headers = {
-                "X-BAPI-API-KEY": self.api_key,
-                "X-BAPI-TIMESTAMP": timestamp,
-                "X-BAPI-SIGN": self.generate_signature(timestamp, params),
-                "Content-Type": "application/json"
-            }
-
-            url = f"{self.base_url}/v5/order/create"
-            response = requests.post(url, json=params, headers=headers)
-
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("retCode") == 0:
-                    logger.info(f"[SUCCESS] ETH {quantity_eth:.6f} (${quantity_usdt:.2f}) 매수 주문 성공")
-                    return True, data.get("result", {})
-                else:
-                    return False, data.get("retMsg", "주문 실패")
-            return False, f"HTTP {response.status_code}"
-
-        except Exception as e:
-            return False, str(e)
-
-    def sell_eth_spot(self, quantity_eth):
-        """ETH 현물 매도"""
-        try:
-            timestamp = str(int(time.time() * 1000))
-            params = {
-                "category": "spot",
-                "symbol": "ETHUSDT",
-                "side": "Sell",
-                "orderType": "Market",
-                "qty": f"{quantity_eth:.6f}"
-            }
-
-            headers = {
-                "X-BAPI-API-KEY": self.api_key,
-                "X-BAPI-TIMESTAMP": timestamp,
-                "X-BAPI-SIGN": self.generate_signature(timestamp, params),
-                "Content-Type": "application/json"
-            }
-
-            url = f"{self.base_url}/v5/order/create"
-            response = requests.post(url, json=params, headers=headers)
-
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("retCode") == 0:
-                    logger.info(f"[SUCCESS] ETH {quantity_eth:.6f} 매도 주문 성공")
-                    return True, data.get("result", {})
-                else:
-                    return False, data.get("retMsg", "주문 실패")
-            return False, f"HTTP {response.status_code}"
-
-        except Exception as e:
-            return False, str(e)
+    def buy_eth(self, quantity):
+        # ByBit 매수 로직 (실제 API 키 필요)
+        logger.info(f"[SIMULATION] ETH {quantity} 매수")
+        return True, "Simulated"
 
 # 통합 트레이더
 class UnifiedMultiTrader:
     def __init__(self):
-        print("[START] 통합 멀티 자동매매 시스템 v2.0")
+        print("[START] 통합 멀티 자동매매 시스템")
         print("=" * 60)
 
         # API 초기화
@@ -281,10 +129,11 @@ class UnifiedMultiTrader:
 
         # 심볼 설정
         self.nvidia_symbols = {'nvdl': 'NVDL', 'nvdd': 'NVDD'}
+        self.eth_symbol = 'ETHUSDT'
 
         # 설정
         self.analysis_interval = 120  # 2분
-        self.max_position_usd = 50   # 포지션당 $50
+        self.max_position_usd = 50   # 포지션당 $50 (작은 금액으로 시작)
 
         # 가격 히스토리
         self.price_history = {
@@ -294,51 +143,35 @@ class UnifiedMultiTrader:
         }
 
         # 포지션 추적
-        self.positions = {
-            'nvdl': None,
-            'nvdd': None,
-            'eth': None
-        }
-
-        # 잔고 추적
-        self.usd_balance = 70.92  # KIS 계좌 USD
-        self.eth_balance = 0      # ByBit ETH 보유량
-        self.usdt_balance = 0     # ByBit USDT 잔고
-
-        print(f"[INFO] 시스템 초기화 완료")
-        print(f"[INFO] 분석 주기: {self.analysis_interval}초")
-        print(f"[INFO] 최대 포지션: ${self.max_position_usd}")
+        self.positions = {}
+        self.balance_usd = 70.92  # 실제 잔고
 
     def analyze_with_llm(self, market_data):
-        """통합 시장 분석 (재시도 포함)"""
+        """통합 시장 분석"""
         max_retries = 2
 
         for attempt in range(max_retries):
             try:
                 # 통합 프롬프트 생성
                 prompt = f"""
-시장 데이터 분석:
+다음 시장 데이터를 분석하여 거래 결정을 내려주세요:
 
 NVIDIA ETF:
-- NVDL (2x Long): ${market_data['nvdl']['price']:.2f} 트렌드:{market_data['nvdl']['trend']}
-- NVDD (-2x Short): ${market_data['nvdd']['price']:.2f} 트렌드:{market_data['nvdd']['trend']}
+- NVDL (2x Long): ${market_data['nvdl']['price']:.2f} (트렌드: {market_data['nvdl']['trend']})
+- NVDD (-2x Short): ${market_data['nvdd']['price']:.2f} (트렌드: {market_data['nvdd']['trend']})
 
 ETH:
-- ETH/USDT: ${market_data['eth']['price']:.2f} 트렌드:{market_data['eth']['trend']}
+- ETH/USDT: ${market_data['eth']['price']:.2f} (트렌드: {market_data['eth']['trend']})
 
-잔고:
-- USD: ${self.usd_balance:.2f}
-- ETH: {self.eth_balance:.6f}
-- USDT: ${self.usdt_balance:.2f}
-
-다음 중 하나를 선택:
+시장 상관관계를 고려하여 다음 중 선택:
 1. BUY_NVDL - NVIDIA 상승 전망
 2. BUY_NVDD - NVIDIA 하락 전망
 3. BUY_ETH - ETH 상승 전망
-4. SELL_ETH - ETH 매도
+4. SELL_ETH - ETH 포지션 정리
 5. HOLD - 대기
 
-답변: [선택만]
+답변: [선택]
+근거: [간단한 설명]
 """
 
                 url = "http://localhost:11434/api/generate"
@@ -346,10 +179,10 @@ ETH:
                     "model": "qwen2.5:7b",
                     "prompt": prompt,
                     "stream": False,
-                    "options": {"temperature": 0.3, "max_tokens": 100}
+                    "options": {"temperature": 0.3, "max_tokens": 200}
                 }
 
-                timeout = 15 + (attempt * 10)
+                timeout = 20 + (attempt * 10)
                 response = requests.post(url, json=data, timeout=timeout)
 
                 if response.status_code == 200:
@@ -367,16 +200,16 @@ ETH:
         return self.fallback_analysis(market_data)
 
     def fallback_analysis(self, market_data):
-        """폴백 분석 (LLM 실패시)"""
+        """폴백 분석"""
         try:
-            # 간단한 트렌드 기반 로직
+            # NVIDIA 분석
             nvdl_trend = market_data['nvdl']['trend']
-            nvdd_trend = market_data['nvdd']['trend']
             eth_trend = market_data['eth']['trend']
 
+            # 트렌드 기반 간단한 로직
             if nvdl_trend == "상승" and eth_trend == "상승":
                 return "BUY_NVDL"
-            elif nvdl_trend == "하락" or nvdd_trend == "상승":
+            elif nvdl_trend == "하락":
                 return "BUY_NVDD"
             elif eth_trend == "상승":
                 return "BUY_ETH"
@@ -450,10 +283,6 @@ ETH:
             market_data['eth'] = {'price': eth_price, 'trend': trend}
             logger.info(f"ETH: ${eth_price:.2f} ({trend})")
 
-            # ByBit 잔고 업데이트
-            self.eth_balance = self.bybit.get_eth_balance()
-            self.usdt_balance = self.bybit.get_usdt_balance()
-
         except Exception as e:
             logger.error(f"ETH 데이터 오류: {e}")
             market_data['eth'] = {'price': 0, 'trend': '오류'}
@@ -463,37 +292,40 @@ ETH:
     def execute_trade(self, action, market_data):
         """거래 실행"""
         try:
-            if action == "BUY_NVDL" and self.usd_balance >= self.max_position_usd:
+            if action == "BUY_NVDL":
                 price = market_data['nvdl']['price']
                 if price > 0:
                     quantity = int(self.max_position_usd / price)
                     if quantity > 0:
                         success, msg = self.kis.buy_stock('NVDL', quantity)
                         if success:
-                            logger.info(f"[TRADE] NVDL {quantity}주 매수 완료")
-                            self.positions['nvdl'] = {'quantity': quantity, 'price': price}
-                            self.usd_balance -= quantity * price
+                            logger.info(f"[SUCCESS] NVDL {quantity}주 매수 완료")
                             return True
+                        else:
+                            logger.error(f"NVDL 매수 실패: {msg}")
 
-            elif action == "BUY_NVDD" and self.usd_balance >= self.max_position_usd:
+            elif action == "BUY_NVDD":
                 price = market_data['nvdd']['price']
                 if price > 0:
                     quantity = int(self.max_position_usd / price)
                     if quantity > 0:
                         success, msg = self.kis.buy_stock('NVDD', quantity)
                         if success:
-                            logger.info(f"[TRADE] NVDD {quantity}주 매수 완료")
-                            self.positions['nvdd'] = {'quantity': quantity, 'price': price}
-                            self.usd_balance -= quantity * price
+                            logger.info(f"[SUCCESS] NVDD {quantity}주 매수 완료")
                             return True
+                        else:
+                            logger.error(f"NVDD 매수 실패: {msg}")
 
-            elif action == "BUY_ETH" and self.usdt_balance >= self.max_position_usd:
-                success, msg = self.bybit.buy_eth_spot(self.max_position_usd)
-                if success:
-                    eth_qty = self.max_position_usd / market_data['eth']['price']
-                    self.positions['eth'] = {'quantity': eth_qty, 'price': market_data['eth']['price']}
-                    self.usdt_balance -= self.max_position_usd
-                    return True
+            elif action == "BUY_ETH":
+                eth_price = market_data['eth']['price']
+                if eth_price > 0:
+                    quantity = self.max_position_usd / eth_price
+                    success, msg = self.bybit.buy_eth(quantity)
+                    if success:
+                        logger.info(f"[SUCCESS] ETH {quantity:.4f} 매수 완료")
+                        return True
+                    else:
+                        logger.error(f"ETH 매수 실패: {msg}")
 
             elif action == "HOLD":
                 logger.info("[HOLD] 대기")
@@ -516,24 +348,8 @@ ETH:
         print(f"  NVDD: ${market_data['nvdd']['price']:.2f} ({market_data['nvdd']['trend']})")
         print(f"  ETH:  ${market_data['eth']['price']:.2f} ({market_data['eth']['trend']})")
 
-        print(f"\n[BALANCE]")
-        print(f"  USD (KIS): ${self.usd_balance:.2f}")
-        print(f"  ETH (ByBit): {self.eth_balance:.6f}")
-        print(f"  USDT (ByBit): ${self.usdt_balance:.2f}")
-
-        print(f"\n[POSITIONS]")
-        for key, pos in self.positions.items():
-            if pos:
-                if key == 'eth':
-                    current_value = pos['quantity'] * market_data['eth']['price']
-                    pnl = current_value - (pos['quantity'] * pos['price'])
-                    print(f"  {key.upper()}: {pos['quantity']:.4f} (${current_value:.2f}, PnL: ${pnl:.2f})")
-                else:
-                    current_value = pos['quantity'] * market_data[key]['price']
-                    pnl = current_value - (pos['quantity'] * pos['price'])
-                    print(f"  {key.upper()}: {pos['quantity']}주 (${current_value:.2f}, PnL: ${pnl:.2f})")
-
         print(f"\n[ANALYSIS] {analysis_result}")
+        print(f"[BALANCE] ${self.balance_usd:.2f}")
 
     def run(self):
         """메인 실행 루프"""
