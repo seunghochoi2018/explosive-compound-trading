@@ -299,6 +299,10 @@ def guardian_cleanup_rogue_ollama():
     if not procs:
         return
 
+    # ⚠️ Ollama는 각 모델마다 별도의 runner 프로세스를 생성함
+    # runner 프로세스는 랜덤 포트를 사용하므로 포트로 구분 불가능!
+    # 대신 메모리 기준으로만 판단 (15GB 초과만 정리)
+
     killed = []
     for p in procs:
         pid = p['pid']
@@ -312,32 +316,13 @@ def guardian_cleanup_rogue_ollama():
         except:
             pass
 
-        # 2. 포트 없는 프로세스 중 메모리 1GB 이상
-        if port is None and memory_mb > 1024:
+        # 2. 메모리 폭주만 정리 (15GB 초과)
+        # 16b 모델은 정상적으로 8-10GB 사용하므로, 15GB 초과만 비정상으로 판단
+        if memory_mb > 15 * 1024:
             try:
                 p['proc'].kill()
-                killed.append(f"PID {pid} (포트없음, {memory_mb:.0f}MB)")
-                colored_print(f"[GUARDIAN] 정리: PID {pid} (포트없음, 메모리 {memory_mb:.0f}MB)", "red")
-            except:
-                pass
-            continue
-
-        # 3. 허가되지 않은 포트
-        if port and port not in ALLOWED_PORTS:
-            try:
-                p['proc'].kill()
-                killed.append(f"PID {pid} (포트 {port}, {memory_mb:.0f}MB)")
-                colored_print(f"[GUARDIAN] 정리: PID {pid} (미허가 포트 {port}, {memory_mb:.0f}MB)", "red")
-            except:
-                pass
-            continue
-
-        # 4. 메모리 폭주 (8GB 초과)
-        if memory_mb > 8 * 1024:
-            try:
-                p['proc'].kill()
-                killed.append(f"PID {pid} (포트 {port}, 메모리폭주 {memory_mb:.0f}MB)")
-                colored_print(f"[GUARDIAN] 정리: PID {pid} (메모리폭주 {memory_mb:.0f}MB)", "red")
+                killed.append(f"PID {pid} (메모리폭주 {memory_mb:.0f}MB)")
+                colored_print(f"[GUARDIAN] 정리: PID {pid} (메모리폭주 {memory_mb:.0f}MB > 15GB)", "red")
             except:
                 pass
 
