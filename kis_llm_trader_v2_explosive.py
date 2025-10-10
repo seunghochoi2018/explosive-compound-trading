@@ -304,17 +304,17 @@ class ExplosiveKISTrader:
         """
         FMP API로 현재가 조회 (백업 시스템)
 
-        무료 API Key: demo (제한: 250 requests/day)
-        실전용 API Key 발급 필요 시: https://site.financialmodelingprep.com/
+        - Starter 플랜: 300 calls/minute
+        - 실시간 데이터 지원
         """
         try:
             import requests
 
-            # FMP API (무료 demo 키 사용)
-            api_key = "demo"  # 실전용은 유료 키 발급 필요
-            url = f"https://financialmodelingprep.com/api/v3/quote-short/{symbol}?apikey={api_key}"
+            # FMP API 키 (코드3/fmp_config.py에서 가져옴)
+            api_key = "5j69XWnoSpoBvEY0gKSUTB0zXcr0z2KI"
+            url = f"https://financialmodelingprep.com/api/v3/quote/{symbol}"
 
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, params={'apikey': api_key}, timeout=10)
 
             if response.status_code == 200:
                 data = response.json()
