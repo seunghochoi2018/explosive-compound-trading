@@ -1,14 +1,28 @@
 {
   "permissions": {
     "allow": [
-      "Bash(\"C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python311\\python.exe\" \"C:\\Users\\user\\Documents\\코드5\\check_analysis_logs.py\")",
-      "Bash(git add:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nAdd auto-apply logic for background learning strategies\n\n- Implement rsi_based_entry: RSI filter (30/70) with confirmation\n- Implement conservative_entry: Confidence boost + double confirmation  \n- Implement stop_loss_adjustment: Dynamic stop-loss optimization\n- Add analysis tools: check_analysis_logs.py, generate_status_html.py\n- Update status monitoring with real-time countdown and validation tracking\n\nThese 3 strategy types are now auto-applied after 3x validation by Triple LLM consensus.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git commit:*)",
-      "Bash(git branch:*)",
-      "Bash(git pull:*)",
-      "Bash(git push:*)",
-      "Bash(git stash:*)"
+      "Bash(cmd /c:*)",
+      "Bash(ls:*)",
+      "Read(//c/Users/user/Documents/코드5/**)",
+      "Read(//c/Users/user/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup/**)",
+      "Bash(powershell:*)",
+      "Bash(start /min \"\" \"C:\\Users\\user\\PycharmProjects\\PythonProject\\.venv\\Scripts\\pythonw.exe\" unified_trader_manager.py)",
+      "Bash(tasklist)",
+      "Bash(findstr:*)",
+      "Bash(python:*)",
+      "Bash(\"C:\\Users\\user\\PycharmProjects\\PythonProject\\.venv\\Scripts\\pythonw.exe\" unified_trader_manager.py)",
+      "Bash(\"C:\\Users\\user\\PycharmProjects\\PythonProject\\.venv\\Scripts\\python.exe\" unified_trader_manager.py)",
+      "Read(//c/Users/user/Documents/코드3/**)",
+      "Bash(ollama ps:*)",
+      "Bash(ollama list:*)",
+      "Bash(wmic:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(start:*)",
+      "Bash(timeout:*)",
+      "Read(//c/Users/user/Documents/코드/**)",
+      "Bash(dir:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
