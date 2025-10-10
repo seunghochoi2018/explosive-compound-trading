@@ -74,8 +74,8 @@ KIS_PYTHON = r"C:\Users\user\AppData\Local\Programs\Python\Python311\python.exe"
 
 # 모델 업그레이드 전략 (공평하게!)
 # 1단계: ETH 14b×1 + KIS 14b×1 = 16GB (완료)
-# 2단계: ETH (16b+7b) + KIS (16b+7b) = 24GB (현재 ⭐ deepseek-coder-v2:16b)
-# 3단계: ETH 16b×2 + KIS 16b×2 = 32GB (메모리 충분시)
+# 2단계: ETH (16b+7b) + KIS (16b+7b) + Self-Improvement (16b+7b) = 29GB (현재 ⭐)
+# 3단계: ETH 16b×2 + KIS 16b×2 + Self-Improvement 16b×2 = 48GB (메모리 충분시)
 
 # ===== 리소스 모니터링 설정 =====
 MAX_MEMORY_MB = 10 * 1024  # Ollama 메모리 상한: 10GB
@@ -92,11 +92,12 @@ TRADING_CHECK_INTERVAL = 60 * 60  # 1시간마다 거래 현황 체크
 ETH_TRADE_HISTORY = r"C:\Users\user\Documents\코드3\eth_trade_history.json"
 KIS_TRADE_HISTORY = r"C:\Users\user\Documents\코드4\kis_trade_history.json"
 
-# ⭐ 자기개선 엔진 설정 (통합)
+# ⭐ 자기개선 엔진 설정 (통합) - 16b + 7b 듀얼 앙상블!
 SELF_IMPROVEMENT_INTERVAL = 60 * 60  # 1시간마다 자기 분석
 IMPROVEMENT_REPORT_INTERVAL = 6 * 60 * 60  # 6시간마다 텔레그램 리포트
 OLLAMA_IMPROVEMENT_HOST = f"http://127.0.0.1:{OLLAMA_PORT_IMPROVEMENT}"
-OLLAMA_IMPROVEMENT_MODEL = "deepseek-coder-v2:16b"
+OLLAMA_IMPROVEMENT_MODEL_PRIMARY = "deepseek-coder-v2:16b"  # 주 모델
+OLLAMA_IMPROVEMENT_MODEL_SECONDARY = "qwen2.5:7b"  # 검증 모델
 OLLAMA_IMPROVEMENT_TIMEOUT = 60
 
 # 자기개선 상태 추적
@@ -344,24 +345,52 @@ def guardian_cleanup_rogue_ollama():
         telegram.notify_system_error(f"불필요한 Ollama 정리: {', '.join(killed)}")
         time.sleep(2)  # 정리 후 대기
 
-def ask_llm_for_analysis(prompt: str) -> str:
-    """⭐ LLM에게 분석 요청 (11436 포트)"""
+def ask_llm_for_analysis(prompt: str, use_ensemble: bool = True) -> str:
+    """⭐ LLM에게 분석 요청 (11436 포트) - 16b + 7b 듀얼 앙상블"""
     try:
-        response = requests.post(
+        # 1차: 16b 메인 분석
+        response_16b = requests.post(
             f"{OLLAMA_IMPROVEMENT_HOST}/api/generate",
             json={
-                "model": OLLAMA_IMPROVEMENT_MODEL,
+                "model": OLLAMA_IMPROVEMENT_MODEL_PRIMARY,
                 "prompt": prompt,
                 "stream": False
             },
             timeout=OLLAMA_IMPROVEMENT_TIMEOUT
         )
 
-        if response.status_code == 200:
-            return response.json().get('response', '')
-        else:
-            colored_print(f"[LLM] 응답 오류: {response.status_code}", "yellow")
+        if response_16b.status_code != 200:
+            colored_print(f"[LLM 16b] 응답 오류: {response_16b.status_code}", "yellow")
             return ""
+
+        result_16b = response_16b.json().get('response', '')
+
+        # 2차: 7b 검증 (앙상블 사용 시)
+        if use_ensemble and result_16b:
+            verification_prompt = f"""다음은 16b 모델의 트레이딩 분석 결과입니다:
+
+{result_16b}
+
+이 분석이 타당한지 검증하고, 추가로 고려해야 할 중요한 사항이 있다면 1-2문장으로 간결하게 추가하세요."""
+
+            response_7b = requests.post(
+                f"{OLLAMA_IMPROVEMENT_HOST}/api/generate",
+                json={
+                    "model": OLLAMA_IMPROVEMENT_MODEL_SECONDARY,
+                    "prompt": verification_prompt,
+                    "stream": False
+                },
+                timeout=30  # 7b는 빠르므로 30초
+            )
+
+            if response_7b.status_code == 200:
+                result_7b = response_7b.json().get('response', '')
+                if result_7b and len(result_7b) > 10:
+                    colored_print(f"[LLM 7b 검증] {result_7b[:100]}...", "cyan")
+                    # 7b의 추가 인사이트가 있으면 병합
+                    return f"{result_16b}\n\n[7b 검증] {result_7b}"
+
+        return result_16b
 
     except requests.Timeout:
         colored_print(f"[LLM] 타임아웃 (60초 초과)", "yellow")
