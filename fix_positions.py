@@ -6,13 +6,13 @@ with open('kis_llm_trader.py', 'r', encoding='utf-8') as f:
     content = f.read()
 
 # 수정할 부분
-old_code = '''                        # ⭐ PDNO → Symbol 변환 ⭐
+old_code = '''                        #  PDNO → Symbol 변환 
                         symbol = self.pdno_symbol_map.get(pdno, None)
                         if symbol is None:
                             print(f"[DEBUG] PDNO {pdno}는 매핑되지 않은 종목 (스킵)")
                             continue'''
 
-new_code = '''                        # ⭐ PDNO → Symbol 변환 (API가 심볼을 반환하는 경우도 처리) ⭐
+new_code = '''                        #  PDNO → Symbol 변환 (API가 심볼을 반환하는 경우도 처리) 
                         symbol = self.pdno_symbol_map.get(pdno, None)
 
                         # PDNO로 변환 실패 시, API가 심볼을 직접 반환한 경우 확인

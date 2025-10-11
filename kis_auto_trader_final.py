@@ -142,7 +142,7 @@ class KISAutoTrader:
             {
                 'success': bool,
                 'ord_psbl_cash': float,  # 주문가능현금
-                'ord_psbl_frcr_amt': float,  # 주문가능외화금액 (실제 USD!) ⭐
+                'ord_psbl_frcr_amt': float,  # 주문가능외화금액 (실제 USD!) 
                 'max_ord_psbl_qty': int  # 최대주문가능수량
             }
         """
@@ -189,7 +189,7 @@ class KISAutoTrader:
             return {
                 'success': True,
                 'ord_psbl_cash': ord_psbl_cash,
-                'ord_psbl_frcr_amt': ord_psbl_frcr_amt,  # 이게 실제 USD 현금! ⭐
+                'ord_psbl_frcr_amt': ord_psbl_frcr_amt,  # 이게 실제 USD 현금! 
                 'max_ord_psbl_qty': max_ord_psbl_qty
             }
 

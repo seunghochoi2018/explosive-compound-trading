@@ -38,4 +38,7 @@ Thumbs.db
 # Logs
 *.log
 logs/
+
+# Runtime files
+.unified_trader_manager.pid
 nul

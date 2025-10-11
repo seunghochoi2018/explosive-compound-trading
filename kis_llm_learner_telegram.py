@@ -148,7 +148,7 @@ if hasattr(sys.stderr, 'buffer') and not isinstance(sys.stderr, io.TextIOWrapper
 ================================================================================
 3. 주문 가격 (OVRS_ORD_UNPR)
 ================================================================================
-⭐⭐⭐ [중요] 시장가도 현재가 입력 필수! ⭐⭐⭐
+ [중요] 시장가도 현재가 입력 필수! 
 
 시장가: 현재가 입력 (예: "40.17") + ORD_DVSN = "00"
 지정가: 지정가 입력 (예: "45.50") + ORD_DVSN = "01"
@@ -160,7 +160,7 @@ if hasattr(sys.stderr, 'buffer') and not isinstance(sys.stderr, io.TextIOWrapper
 
 시장가 예시 (ChatGPT/한국투자 챗봇 확인):
 {
-  "OVRS_ORD_UNPR": "40.17", // ⭐ 시장가도 현재가 입력!
+  "OVRS_ORD_UNPR": "40.17", //  시장가도 현재가 입력!
   "ORD_DVSN": "00"          // 00 = 시장가
 }
 
@@ -173,8 +173,8 @@ if hasattr(sys.stderr, 'buffer') and not isinstance(sys.stderr, io.TextIOWrapper
 ================================================================================
 4. 주문 구분 (ORD_DVSN)
 ================================================================================
-⭐ 시장가: "00" ⭐
-⭐ 지정가: "01" ⭐
+ 시장가: "00" 
+ 지정가: "01" 
 
 ================================================================================
 5. 필수 필드
@@ -285,7 +285,7 @@ class KISLLMTrader:
         self.exchange_cd = "NASD"  # 기본 거래소 코드
         self.exchange_cd_query = "AMEX"  # 매수가능금액 조회 시 사용
 
-        # ⭐ 종목별 PDNO 매핑 (KIS API 실전 종목코드) ⭐
+        #  종목별 PDNO 매핑 (KIS API 실전 종목코드) 
         self.symbol_pdno_map = {
             "TQQQ": "A206892",  # ProShares UltraPro QQQ
             "SQQQ": "A206893",  # ProShares UltraPro Short QQQ
@@ -293,10 +293,10 @@ class KISLLMTrader:
             "SOXS": "A980680"   # Direxion Daily Semiconductor Bear 3X
         }
 
-        # ⭐ PDNO → Symbol 역변환 맵 (포지션 조회용) ⭐
+        #  PDNO → Symbol 역변환 맵 (포지션 조회용) 
         self.pdno_symbol_map = {v: k for k, v in self.symbol_pdno_map.items()}
 
-        # ⭐ 종목별 거래소 코드 (ChatGPT/KIS 챗봇 확인) ⭐
+        #  종목별 거래소 코드 (ChatGPT/KIS 챗봇 확인) 
         self.symbol_exchange_map = {
             "TQQQ": "NASD",  # KIS 기준 NASD 등록
             "SQQQ": "NASD",  # KIS 기준 NASD 등록
@@ -305,7 +305,7 @@ class KISLLMTrader:
         }
 
         self.currency = "USD"
-        self.target_symbols = ['TQQQ', 'SQQQ']  # ⭐ TQQQ/SQQQ로 변경 (NASDAQ QQQ 3X 레버리지) ⭐
+        self.target_symbols = ['TQQQ', 'SQQQ']  #  TQQQ/SQQQ로 변경 (NASDAQ QQQ 3X 레버리지) 
 
         # [핵심] LLM 분석기 초기화 (14b × 2 병렬)
         print("\n[LLM 초기화] 14b × 2 병렬 앙상블 시작...")
@@ -705,7 +705,7 @@ class KISLLMTrader:
                         qty_str = item.get('ovrs_cblc_qty', '0')
                         print(f"[DEBUG] Item {idx}: pdno={pdno}, qty_str={qty_str}")
 
-                        # ⭐ PDNO → Symbol 변환 ⭐
+                        #  PDNO → Symbol 변환 
                         symbol = self.pdno_symbol_map.get(pdno, None)
                         if symbol is None:
                             print(f"[DEBUG] PDNO {pdno}는 매핑되지 않은 종목 (스킵)")

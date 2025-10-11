@@ -17,7 +17,7 @@ from typing import Dict, List, Tuple
 import statistics
 import requests
 
-# ⭐ Ollama LLM 설정 (11436 포트 - 자기개선 엔진 전용)
+#  Ollama LLM 설정 (11436 포트 - 자기개선 엔진 전용)
 OLLAMA_HOST = "http://127.0.0.1:11436"
 OLLAMA_MODEL = "qwen2.5:14b"
 OLLAMA_TIMEOUT = 60  # LLM 응답 타임아웃 60초
@@ -129,7 +129,7 @@ class SelfImprovementEngine:
         }
 
     def ask_llm(self, prompt: str) -> str:
-        """⭐ LLM에게 분석 요청 (11436 포트)"""
+        """ LLM에게 분석 요청 (11436 포트)"""
         try:
             response = requests.post(
                 f"{OLLAMA_HOST}/api/generate",
@@ -155,7 +155,7 @@ class SelfImprovementEngine:
             return ""
 
     def llm_analyze_trades(self, trades: List[Dict], performance: Dict) -> List[Dict]:
-        """⭐ LLM이 거래 패턴을 분석하고 개선안 제시"""
+        """ LLM이 거래 패턴을 분석하고 개선안 제시"""
         if len(trades) < 5:
             return []  # 데이터 부족
 
@@ -513,7 +513,7 @@ class SelfImprovementEngine:
         issues = self.find_issues(trades)
         print(f"[통계] 문제점 {len(issues)}개 발견")
 
-        # 3. ⭐ LLM 추가 분석 (더 똑똑한 패턴 인식)
+        # 3.  LLM 추가 분석 (더 똑똑한 패턴 인식)
         llm_issues = self.llm_analyze_trades(trades, performance)
         issues.extend(llm_issues)  # 통계 + LLM 결과 합치기
         print(f"[LLM] 추가 인사이트 {len(llm_issues)}개 발견")

@@ -29,13 +29,13 @@ ACCOUNT_NO = "43113014"
 ACCOUNT_CODE = "01"
 
 # 거래 설정
-SYMBOLS = ["TQQQ", "SQQQ"]  # ⭐ TQQQ/SQQQ로 변경
+SYMBOLS = ["TQQQ", "SQQQ"]  #  TQQQ/SQQQ로 변경
 STOP_LOSS = -0.03  # -3% 손절
 TAKE_PROFIT = 0.05  # +5% 익절
 POSITION_SIZE = 0.20  # 계좌 잔고의 20%
 CHECK_INTERVAL = 10  # 10초마다 체크
 
-# ⭐ PDNO 매핑 (KIS API 실전 종목코드)
+#  PDNO 매핑 (KIS API 실전 종목코드)
 PDNO_MAP = {
     "TQQQ": "A206892",
     "SQQQ": "A206893"

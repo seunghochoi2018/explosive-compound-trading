@@ -148,7 +148,7 @@ if hasattr(sys.stderr, 'buffer') and not isinstance(sys.stderr, io.TextIOWrapper
 ================================================================================
 3. 주문 가격 (OVRS_ORD_UNPR)
 ================================================================================
-⭐⭐⭐ [중요] 시장가도 현재가 입력 필수! ⭐⭐⭐
+ [중요] 시장가도 현재가 입력 필수! 
 
 시장가: 현재가 입력 (예: "40.17") + ORD_DVSN = "00"
 지정가: 지정가 입력 (예: "45.50") + ORD_DVSN = "01"
@@ -160,7 +160,7 @@ if hasattr(sys.stderr, 'buffer') and not isinstance(sys.stderr, io.TextIOWrapper
 
 시장가 예시 (ChatGPT/한국투자 챗봇 확인):
 {
-  "OVRS_ORD_UNPR": "40.17", // ⭐ 시장가도 현재가 입력!
+  "OVRS_ORD_UNPR": "40.17", //  시장가도 현재가 입력!
   "ORD_DVSN": "00"          // 00 = 시장가
 }
 
@@ -173,8 +173,8 @@ if hasattr(sys.stderr, 'buffer') and not isinstance(sys.stderr, io.TextIOWrapper
 ================================================================================
 4. 주문 구분 (ORD_DVSN)
 ================================================================================
-⭐ 시장가: "00" ⭐
-⭐ 지정가: "01" ⭐
+ 시장가: "00" 
+ 지정가: "01" 
 
 ================================================================================
 5. 필수 필드
@@ -278,7 +278,7 @@ class KISLLMTrader:
         self.exchange_cd = "NASD"  # 기본 거래소 코드
         self.exchange_cd_query = "AMEX"  # 매수가능금액 조회 시 사용
 
-        # ⭐ 종목별 PDNO 매핑 (KIS API 실전 종목코드) ⭐
+        #  종목별 PDNO 매핑 (KIS API 실전 종목코드) 
         self.symbol_pdno_map = {
             "TQQQ": "A206892",  # ProShares UltraPro QQQ
             "SQQQ": "A206893",  # ProShares UltraPro Short QQQ
@@ -286,10 +286,10 @@ class KISLLMTrader:
             "SOXS": "A980680"   # Direxion Daily Semiconductor Bear 3X
         }
 
-        # ⭐ PDNO → Symbol 역변환 맵 (포지션 조회용) ⭐
+        #  PDNO → Symbol 역변환 맵 (포지션 조회용) 
         self.pdno_symbol_map = {v: k for k, v in self.symbol_pdno_map.items()}
 
-        # ⭐ 종목별 거래소 코드 (실제 API 응답 기준으로 업데이트) ⭐
+        #  종목별 거래소 코드 (실제 API 응답 기준으로 업데이트) 
         self.symbol_exchange_map = {
             "TQQQ": "NASD",  # KIS 기준 NASD 등록
             "SQQQ": "NASD",  # KIS 기준 NASD 등록
@@ -298,7 +298,7 @@ class KISLLMTrader:
         }
 
         self.currency = "USD"
-        self.target_symbols = ['SOXL', 'SOXS']  # ⭐ SOXL/SOXS (반도체 3X 레버리지) ⭐
+        self.target_symbols = ['SOXL', 'SOXS']  #  SOXL/SOXS (반도체 3X 레버리지) 
 
         # [핵심] LLM 분석기 초기화 (14b × 2 병렬)
         print("\n[LLM 초기화] 14b × 2 병렬 앙상블 시작...")
@@ -728,7 +728,7 @@ class KISLLMTrader:
                         qty_str = item.get('ovrs_cblc_qty', '0')
                         print(f"[DEBUG] Item {idx}: pdno={pdno}, qty_str={qty_str}")
 
-                        # ⭐ PDNO → Symbol 변환 (API가 심볼을 반환하는 경우도 처리) ⭐
+                        #  PDNO → Symbol 변환 (API가 심볼을 반환하는 경우도 처리) 
                         symbol = self.pdno_symbol_map.get(pdno, None)
 
                         # PDNO로 변환 실패 시, API가 심볼을 직접 반환한 경우 확인
@@ -836,7 +836,7 @@ class KISLLMTrader:
             else:
                 return {'success': False, 'message': f'잘못된 주문 타입: {order_type}'}
 
-            # ⭐ PDNO 변환 (ChatGPT/KIS 챗봇 확인) ⭐
+            #  PDNO 변환 (ChatGPT/KIS 챗봇 확인) 
             if symbol not in self.symbol_pdno_map:
                 return {'success': False, 'message': f'{symbol} PDNO 매핑 없음 (지원하지 않는 종목)'}
 
@@ -848,7 +848,7 @@ class KISLLMTrader:
             print(f"  PDNO: {pdno}")
             print(f"  거래소: {exchange_cd}")
 
-            # ⭐ 현재가 조회 (시장가도 현재가 필수) ⭐
+            #  현재가 조회 (시장가도 현재가 필수) 
             if price is None:
                 # 가격 히스토리에서 최신 현재가 가져오기
                 if hasattr(self, 'price_history_1m') and self.price_history_1m:
@@ -878,21 +878,21 @@ class KISLLMTrader:
                     # 매도 시 포지션의 현재가 우선 사용
                     price = pos.get('current_price', price)
 
-            # ⭐ 가격 결정 (시장가도 현재가 입력!) ⭐
+            #  가격 결정 (시장가도 현재가 입력!) 
             # 시장가: price=40.16 → order_price="40.16"
             # 지정가: price=45.5 → order_price="45.50"
             order_price = f"{float(price):.2f}"
 
-            # ⭐ 주문 데이터 생성 ⭐
+            #  주문 데이터 생성 
             order_data = {
                 "CANO": self.cano,
                 "ACNT_PRDT_CD": self.acnt_prdt_cd,
-                "OVRS_EXCG_CD": exchange_cd,  # ⭐ NASD (ChatGPT/KIS 챗봇 확인) ⭐
-                "PDNO": pdno,  # ⭐ 정확한 PDNO 사용 (A980679 / A980680) ⭐
+                "OVRS_EXCG_CD": exchange_cd,  #  NASD (ChatGPT/KIS 챗봇 확인) 
+                "PDNO": pdno,  #  정확한 PDNO 사용 (A980679 / A980680) 
                 "ORD_QTY": str(quantity),
-                "OVRS_ORD_UNPR": order_price,  # ⭐ 시장가도 현재가 입력! ⭐
+                "OVRS_ORD_UNPR": order_price,  #  시장가도 현재가 입력! 
                 "ORD_SVR_DVSN_CD": "0",
-                "ORD_DVSN": "00"  # ⭐ 00=시장가, 01=지정가 ⭐
+                "ORD_DVSN": "00"  #  00=시장가, 01=지정가 
             }
 
             print(f"\n[주문 요청] {order_type} {symbol} ({pdno})")

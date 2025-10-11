@@ -227,7 +227,7 @@ class LLMNVDLTrader:
                 self.current_signal = symbol
                 self.signal_price = price
                 self.signal_time = datetime.now()
-                # 주석: 진입 시 포트폴리오 가치 저장 (자산 기반 학습용 ⭐)
+                # 주석: 진입 시 포트폴리오 가치 저장 (자산 기반 학습용 )
                 self.entry_portfolio_value = self.portfolio_value
 
                 if self.notifier:
@@ -243,7 +243,7 @@ class LLMNVDLTrader:
                 if self.current_signal:
                     pnl = self.get_position_pnl(price)
 
-                    # 주석: 포트폴리오 가치 업데이트 (자산 기반 학습용 ⭐)
+                    # 주석: 포트폴리오 가치 업데이트 (자산 기반 학습용 )
                     self.portfolio_value = self.portfolio_value * (1 + pnl / 100)
 
                     self.stats['total_pnl'] += pnl
@@ -283,7 +283,7 @@ class LLMNVDLTrader:
                     'nvdl_trend': 'up' if len(self.nvdl_history) >= 2 and self.nvdl_history[-1] > self.nvdl_history[-2] else 'down',
                     'nvdq_trend': 'up' if len(self.nvdq_history) >= 2 and self.nvdq_history[-1] > self.nvdq_history[-2] else 'down',
                     'holding_time': int(holding_minutes) if self.signal_time else 0,
-                    'portfolio_before': self.entry_portfolio_value or self.portfolio_value  # 진입 시 저장한 포트폴리오 가치 (자산 기반 학습용 ⭐)
+                    'portfolio_before': self.entry_portfolio_value or self.portfolio_value  # 진입 시 저장한 포트폴리오 가치 (자산 기반 학습용 )
                 }
 
                 self.record_trade(
@@ -425,7 +425,7 @@ class LLMNVDLTrader:
         """
         거래 기록 저장 (Few-shot Learning용)
 
-        주석: 포트폴리오 가치 기반 학습 ⭐ 중요!
+        주석: 포트폴리오 가치 기반 학습  중요!
         - 사용자: "잔고기준으로 체크하면안돼? 이더잔고를 계속체크하니까 잔고가 계속 늘어나게끔 학습하면되잖아"
         - 사용자: "그럼 자연스레 수수료도 인식할꺼고"
         - NVDL은 모의거래이므로 포트폴리오 가치 변화를 기록하여 LLM이 직접 학습
