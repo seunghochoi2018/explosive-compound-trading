@@ -555,12 +555,64 @@ class ExplosiveKISTrader:
                 if result.get('rt_cd') == '0':
                     print(f"[OK] 주문 성공: {symbol} {side} {qty}주")
                     return True
+                else:
+                    # API 오류 응답 파싱
+                    error_code = result.get('msg_cd', 'UNKNOWN')
+                    error_msg = result.get('msg1', '알 수 없는 오류')
 
-            print(f"[ERROR] 주문 실패")
-            return False
+                    # 로그 출력
+                    print(f"[ERROR] KIS API 주문 실패")
+                    print(f"  에러 코드: {error_code}")
+                    print(f"  메시지: {error_msg}")
+                    print(f"  종목: {symbol}, 주문: {side}, 수량: {qty}주, 가격: ${current_price:.2f}")
+
+                    # 텔레그램 알림
+                    self.telegram.send_message(
+                        f"[ERROR] <b>KIS 자동매매 실패</b>\n\n"
+                        f"<b>에러 코드:</b> {error_code}\n"
+                        f"<b>메시지:</b> {error_msg}\n\n"
+                        f"종목: {symbol}\n"
+                        f"주문: {side}\n"
+                        f"수량: {qty}주\n"
+                        f"가격: ${current_price:.2f}\n\n"
+                        f"시간: {datetime.now().strftime('%H:%M:%S')}",
+                        priority="important"
+                    )
+
+                    # 로그 파일에 기록
+                    log_entry = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 주문 실패: {error_code} - {error_msg}\n"
+                    try:
+                        with open("kis_trading_log.txt", "a", encoding="utf-8") as f:
+                            f.write(log_entry)
+                    except:
+                        pass
+
+                    return False
+            else:
+                # HTTP 에러
+                error_msg = f"HTTP {response.status_code}"
+                print(f"[ERROR] KIS API HTTP 오류: {error_msg}")
+
+                self.telegram.send_message(
+                    f"[ERROR] <b>KIS API HTTP 오류</b>\n\n"
+                    f"{error_msg}\n"
+                    f"종목: {symbol} {side} {qty}주",
+                    priority="important"
+                )
+
+                return False
 
         except Exception as e:
+            # 예외 발생
             print(f"[ERROR] 주문 예외: {e}")
+
+            self.telegram.send_message(
+                f"[ERROR] <b>KIS 주문 시스템 오류</b>\n\n"
+                f"{str(e)[:200]}\n\n"
+                f"종목: {symbol} {side} {qty}주",
+                priority="important"
+            )
+
             return False
 
     def run(self):
