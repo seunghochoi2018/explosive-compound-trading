@@ -1804,9 +1804,11 @@ def main():
                         for w in eth_health['warnings']:
                             colored_print(f"    - {w}", "yellow")
 
-                    #  32b LLM 자동 진단 및 수정
-                    if "1시간 동안 거래 없음" in str(eth_health.get('warnings', [])):
-                        colored_print("\n[32b LLM] ETH 거래 없음 원인 분석 중...", "cyan")
+                    #  14b LLM 자동 진단 및 수정 (24시간 감시 포함)
+                    # 24시간 거래 없음은 critical 알람이므로 즉시 분석
+                    warnings_str = str(eth_health.get('warnings', []))
+                    if "1시간 동안 거래 없음" in warnings_str or eth_health.get('critical', False):
+                        colored_print("\n[14b LLM] ETH 거래 없음 원인 분석 중...", "cyan")
                         try:
                             # ETH 트레이더 코드 체크
                             eth_code_path = r"C:\Users\user\Documents\코드3\llm_eth_trader_v4_3tier.py"
