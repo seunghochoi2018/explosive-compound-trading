@@ -118,7 +118,12 @@ GPU_OPTIMIZATION = {
 }
 
 # ===== 리소스 모니터링 설정 =====
-MAX_MEMORY_MB = 10 * 1024  # Ollama 메모리 상한: 10GB
+# 포트별 메모리 제한 (사용자 설정)
+MEMORY_LIMITS = {
+    11434: 9 * 1024,  # ETH: 9GB (14b 모델용)
+    11435: 9 * 1024,  # KIS: 9GB (14b 모델용)
+    11436: 12 * 1024,  # 자기개선: 12GB (32b 모델용)
+}
 MAX_CPU_PERCENT = 5.0  # 정상 상태 CPU: 5% 이하
 RESPONSE_TIMEOUT = 10  # API 응답 타임아웃: 10초
 QUEUE_DETECT_THRESHOLD = 60  # 큐잉 감지: 60초 이상 CPU 0%
@@ -680,12 +685,14 @@ def check_ollama_health(port):
         if not ollama_proc:
             return {"status": "not_running", "action": "restart"}
 
-        # 2. 메모리 체크
+        # 2. 메모리 체크 (포트별 제한 적용)
         memory_mb = ollama_proc.info['memory_info'].rss / 1024 / 1024
-        if memory_mb > MAX_MEMORY_MB:
+        max_memory = MEMORY_LIMITS.get(port, 9 * 1024)  # 기본값 9GB
+        if memory_mb > max_memory:
             return {
                 "status": "high_memory",
                 "memory_mb": memory_mb,
+                "max_memory_mb": max_memory,
                 "action": "restart"
             }
 
@@ -727,7 +734,8 @@ def should_restart_ollama(health_status, response_times):
     if health_status.get("action") == "restart":
         reason = health_status.get("status")
         if reason == "high_memory":
-            return True, f"메모리 과다 ({health_status['memory_mb']:.1f}MB > {MAX_MEMORY_MB}MB)"
+            max_mb = health_status.get('max_memory_mb', 9 * 1024)
+            return True, f"메모리 과다 ({health_status['memory_mb']:.1f}MB > {max_mb}MB)"
         elif reason == "timeout":
             return True, f"API 타임아웃 (CPU: {health_status.get('cpu_percent', 0):.1f}%)"
         elif reason == "not_running":
