@@ -1589,8 +1589,8 @@ def main():
     colored_print(f"재시작 주기: {RESTART_INTERVAL // 3600}시간", "cyan")
     colored_print("=" * 70, "cyan")
 
-    # 텔레그램 시작 알림
-    telegram.notify_system_start()
+    # 텔레그램 시작 알림 (사용자 요청으로 비활성화)
+    # telegram.notify_system_start()
 
     # 초기 정리
     colored_print("\n[초기화] 기존 Ollama 프로세스 정리 중...", "yellow")
@@ -1770,24 +1770,21 @@ def main():
                 else:
                     colored_print(f"[OK] [KIS] {kis_health['message']}", "green")
 
-                #  텔레그램 알림은 6시간마다만
+                #  텔레그램 알림은 오류 발생 시에만 (사용자 요청)
                 if (current_time - last_telegram_alert) >= TELEGRAM_ALERT_INTERVAL:
-                    # 종합 리포트 텔레그램 전송
-                    report = f"[REPORT] <b>거래 현황 리포트</b>\n\n"
-                    report += f"<b>ETH:</b> {eth_health['message']}\n"
-                    report += f"<b>KIS:</b> {kis_health['message']}\n\n"
-
+                    # 오류가 있을 때만 텔레그램 전송
                     if eth_health['alert'] or kis_health['alert']:
-                        report += "[WARN] 문제 감지 - 자기개선 엔진이 분석 중입니다"
-                    else:
-                        report += "[OK] 모든 봇 정상 작동 중"
+                        report = f"[WARN] <b>시스템 오류 감지</b>\n\n"
+                        report += f"<b>ETH:</b> {eth_health['message']}\n"
+                        report += f"<b>KIS:</b> {kis_health['message']}\n\n"
+                        report += "자기개선 엔진이 문제를 분석하고 있습니다."
 
-                    telegram.send_message(report)
-                    last_telegram_alert = current_time
-                    colored_print(" 텔레그램 알림 전송 완료 (다음 알림: 6시간 후)", "cyan")
-                else:
-                    time_until_next = (TELEGRAM_ALERT_INTERVAL - (current_time - last_telegram_alert)) / 3600
-                    colored_print(f" 텔레그램 알림 생략 (다음 알림: {time_until_next:.1f}시간 후)", "yellow")
+                        telegram.send_message(report)
+                        last_telegram_alert = current_time
+                        colored_print(" 오류 감지: 텔레그램 알림 전송 완료", "cyan")
+                    else:
+                        # 정상 작동 중일 때는 알림 보내지 않음
+                        colored_print(" 모든 봇 정상 작동 중 (알림 생략)", "green")
 
                 colored_print("="*70 + "\n", "cyan")
                 last_trading_check = current_time
@@ -1860,12 +1857,14 @@ def main():
                 if (current_time - last_improvement_report) >= IMPROVEMENT_REPORT_INTERVAL:
                     total_improvements = len(improvement_history_eth) + len(improvement_history_kis)
                     if total_improvements > 0:
-                        report = f" <b>자기개선 리포트</b>\n\n"
-                        report += f"총 개선 횟수: {total_improvements}회\n"
-                        report += f"ETH: {len(improvement_history_eth)}회\n"
-                        report += f"KIS: {len(improvement_history_kis)}회\n\n"
-                        report += "최근 적용된 개선사항은 전략 파일에 자동 반영되었습니다."
-                        telegram.send_message(report)
+                        # 자기개선 리포트 텔레그램 알림 (사용자 요청으로 비활성화)
+                        # report = f" <b>자기개선 리포트</b>\n\n"
+                        # report += f"총 개선 횟수: {total_improvements}회\n"
+                        # report += f"ETH: {len(improvement_history_eth)}회\n"
+                        # report += f"KIS: {len(improvement_history_kis)}회\n\n"
+                        # report += "최근 적용된 개선사항은 전략 파일에 자동 반영되었습니다."
+                        # telegram.send_message(report)
+                        pass
 
                     last_improvement_report = current_time
 
@@ -1883,6 +1882,15 @@ def main():
             # 트레이더 상태 체크
             eth_alive = trader_eth and trader_eth.poll() is None
             kis_alive = trader_kis and trader_kis.poll() is None
+
+            # 프로세스 중단 감지 및 텔레그램 알림
+            if not eth_alive and trader_eth:
+                telegram.send_message(f"[ERROR] <b>ETH 트레이더 중단 감지</b>\n\n프로세스가 예기치 않게 종료되었습니다.\n자동 재시작을 시도합니다.")
+                colored_print("[ERROR] ETH 트레이더 중단 감지 - 텔레그램 알림 전송", "red")
+
+            if not kis_alive and trader_kis:
+                telegram.send_message(f"[ERROR] <b>KIS 트레이더 중단 감지</b>\n\n프로세스가 예기치 않게 종료되었습니다.\n자동 재시작을 시도합니다.")
+                colored_print("[ERROR] KIS 트레이더 중단 감지 - 텔레그램 알림 전송", "red")
 
             # Ollama 헬스 체크 (지능적 관리)
             health_eth = check_ollama_health(OLLAMA_PORT_ETH)
