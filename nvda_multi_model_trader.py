@@ -322,7 +322,7 @@ class NVDAMultiModelTrader:
                 model['entry_time'] = 0
 
                 # 텔레그램 알림 비활성화
-                # emoji = "🟢" if profit_percent > 0 else "🔴"
+                # emoji = "" if profit_percent > 0 else ""
                 # telegram_msg = f"""
                 # {emoji} <b>{model['symbol']} 청산 완료</b>
                 #
@@ -404,7 +404,7 @@ class NVDAMultiModelTrader:
         profitable_models.sort(key=lambda x: x[1]['total_profit'], reverse=True)
 
         for i, (model_key, model) in enumerate(profitable_models[:10], 1):
-            status_emoji = "" if model['total_profit'] > 0 else "⚪"
+            status_emoji = "" if model['total_profit'] > 0 else ""
             avg_profit = model['total_profit'] / model['trades'] if model['trades'] > 0 else 0
             win_rate = (model['wins'] / model['trades'] * 100) if model['trades'] > 0 else 0
             position_status = f" [{model['position']}]" if model['position'] else ""

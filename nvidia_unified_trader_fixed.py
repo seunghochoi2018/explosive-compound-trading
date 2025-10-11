@@ -416,7 +416,7 @@ RISK: [HIGH/MEDIUM/LOW]
     def print_status(self, market_data, analysis_result):
         """현재 상태 출력"""
         print("\n" + "="*60)
-        print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f" {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print("="*60)
 
         print("[PRICE] 현재 가격:")

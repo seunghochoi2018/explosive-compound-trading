@@ -34,7 +34,7 @@ class NVDLNVDQTelegramBot:
         print("=" * 60)
         print(" NVDL/NVDQ 텔레그램 알림 봇")
         print(" 레버리지 ETF 전용 AI 거래 시스템")
-        print("💬 실시간 텔레그램 알림")
+        print(" 실시간 텔레그램 알림")
         print("=" * 60)
 
         # 기본 설정
@@ -44,7 +44,7 @@ class NVDLNVDQTelegramBot:
         self.start_time = datetime.now()
 
         # 컴포넌트 초기화
-        print("\n📡 컴포넌트 초기화 중...")
+        print("\n 컴포넌트 초기화 중...")
         self.data_collector = NVDLNVDQDataCollector(fmp_api_key)
         self.trading_model = NVDLNVDQTradingModel(fmp_api_key)
         self.telegram = TelegramNotifier()
@@ -117,7 +117,7 @@ class NVDLNVDQTelegramBot:
 
     def initialize_system(self):
         """시스템 초기화"""
-        print("\n🔧 시스템 초기화 중...")
+        print("\n 시스템 초기화 중...")
 
         # 1. 상태 로드
         self.load_state()
@@ -266,7 +266,7 @@ class NVDLNVDQTelegramBot:
             # 실제 거래 실행 코드 (API 연동 필요)
             print(" 자동매매: 실제 주문 실행 (구현 필요)")
         else:
-            print("💬 알림 모드: 수동 거래 권장")
+            print(" 알림 모드: 수동 거래 권장")
 
     def close_position(self, symbol: str, exit_price: float):
         """포지션 청산"""
@@ -341,14 +341,14 @@ class NVDLNVDQTelegramBot:
         analysis_parts = []
 
         if symbol == 'NVDL':
-            analysis_parts.append("🟢 NVIDIA 3x 롱 포지션")
+            analysis_parts.append(" NVIDIA 3x 롱 포지션")
             analysis_parts.append(" 시장 상승 예상")
         elif symbol == 'NVDQ':
-            analysis_parts.append("🔴 NASDAQ 2x 숏 포지션")
+            analysis_parts.append(" NASDAQ 2x 숏 포지션")
             analysis_parts.append(" 시장 하락 예상")
 
         if confidence > 0.7:
-            analysis_parts.append("💪 매우 강한 신호")
+            analysis_parts.append(" 매우 강한 신호")
         elif confidence > 0.5:
             analysis_parts.append(" 강한 신호")
         else:
@@ -468,14 +468,14 @@ class NVDLNVDQTelegramBot:
                 time.sleep(self.config['check_interval'])
 
         except KeyboardInterrupt:
-            print("\n⏹️ 사용자에 의한 중단")
+            print("\n⏹ 사용자에 의한 중단")
         except Exception as e:
             print(f"\n 실행 오류: {e}")
             self.telegram.notify_error("봇 실행 오류", str(e))
         finally:
             self.running = False
-            self.telegram.send_message("⏹️ **봇 중단**\n\n시스템이 안전하게 종료되었습니다.")
-            print("🔚 봇 종료")
+            self.telegram.send_message("⏹ **봇 중단**\n\n시스템이 안전하게 종료되었습니다.")
+            print(" 봇 종료")
 
 def main():
     """메인 실행 함수"""

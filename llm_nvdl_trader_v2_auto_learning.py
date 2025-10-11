@@ -306,7 +306,7 @@ class LLMNVDLTrader:
     def load_trade_history(self):
         """
         ====================================================================
-        📌 학습 모델 보호 시스템 (절대 중요!)
+         학습 모델 보호 시스템 (절대 중요!)
         ====================================================================
 
         주석: 사용자 요청 "여태 학습한 모델 갑자기 날아가면 안되니까"
@@ -466,7 +466,7 @@ class LLMNVDLTrader:
         self.trade_history.append(trade_record)
         self.save_trade_history()
 
-        result_emoji = "✓수익" if portfolio_change > 0 else "✗손실"
+        result_emoji = "수익" if portfolio_change > 0 else "손실"
         print(f"[LEARNING] 거래 기록: {symbol} | 가격손익: {pnl_pct:+.2f}% | 포트폴리오: ${portfolio_before:.2f}→${portfolio_after:.2f} (${portfolio_change:+.2f}, {portfolio_change_pct:+.3f}%) ({result_emoji})")
 
     def get_learning_examples(self, limit: int = 50) -> str:
@@ -975,7 +975,7 @@ class LLMNVDLTrader:
             import json
             with open(self.meta_learning_file, 'w', encoding='utf-8') as f:
                 json.dump(self.meta_insights, f, indent=2, ensure_ascii=False)
-            print(f"[💾 SAVE] {len(self.meta_insights)}개 전략 저장 완료: {self.meta_learning_file}")
+            print(f"[ SAVE] {len(self.meta_insights)}개 전략 저장 완료: {self.meta_learning_file}")
         except Exception as e:
             print(f"[SAVE_ERROR] 전략 저장 실패: {e}")
 
@@ -994,7 +994,7 @@ class LLMNVDLTrader:
             removed_count = len(self.meta_insights) - len(effective_strategies)
 
             if removed_count > 0:
-                print(f"[🗑️ CLEANUP] 효과 없는 전략 {removed_count}개 제거 (승률 향상 가속화)")
+                print(f"[ CLEANUP] 효과 없는 전략 {removed_count}개 제거 (승률 향상 가속화)")
                 self.meta_insights = effective_strategies
                 self.save_meta_learning_insights()
             else:
@@ -1050,7 +1050,7 @@ class LLMNVDLTrader:
  실패 거래 WORST 20 (손실난 거래들 - 이 가격대에서 매수하면 손실):
 {chr(10).join([f"- {t.get('signal', 'N/A')} at ${t.get('entry_price', 0):.2f}, 손실: {t['pnl_pct']:.2f}%" for t in sorted(losses, key=lambda x: x['pnl_pct'])[:20]])}
 
-🚨 긴급 임무 - 승률 급상승 전략:
+ 긴급 임무 - 승률 급상승 전략:
 1. **상대적 패턴 발견**: 절대 가격이 아닌 상대적 조건
 2. **손실 거래 회피**: 실패 거래의 공통점 찾기
 3. **고확률 진입**: 성공 거래의 공통점 찾기

@@ -25,7 +25,7 @@ class NVDLNVDQUltraTimeframeOptimizer:
         print("=" * 70)
         print(" NVDL/NVDQ 울트라 시간주기 최적화 시스템")
         print(" 15분~1주 모든 주기 + 최적 모델 자동 수렴")
-        print("💎 코드3 고급 로직 기반 NVDL/NVDQ 특화")
+        print(" 코드3 고급 로직 기반 NVDL/NVDQ 특화")
         print("=" * 70)
 
         self.fmp_api_key = fmp_api_key
@@ -672,11 +672,11 @@ class NVDLNVDQUltraTimeframeOptimizer:
 
                     # 모델 구조 확인 (디버깅)
                     if symbol not in tf_config['models']:
-                        print(f"🔴 오류: {tf_name}에 {symbol} 모델이 없음")
+                        print(f" 오류: {tf_name}에 {symbol} 모델이 없음")
                         continue
 
                     if not isinstance(tf_config['models'][symbol], dict):
-                        print(f"🔴 오류: {tf_name}-{symbol} 모델이 dict가 아님: {type(tf_config['models'][symbol])}")
+                        print(f" 오류: {tf_name}-{symbol} 모델이 dict가 아님: {type(tf_config['models'][symbol])}")
                         continue
 
                     # 각 전략별로 체크
@@ -742,7 +742,7 @@ class NVDLNVDQUltraTimeframeOptimizer:
                 print(f"\n 상위 전략들:")
                 for i, model_info in enumerate(all_models[:5]):
                     model = model_info['data']
-                    active_mark = "" if model_info['active'] else "💤"
+                    active_mark = "" if model_info['active'] else ""
                     print(f"  {active_mark} {i+1}. {model_info['name']}: "
                           f"{model['win_rate']*100:.1f}% 승률, {model['avg_profit']:+.2f}% 평균")
 
@@ -781,10 +781,10 @@ class NVDLNVDQUltraTimeframeOptimizer:
             with open('nvdl_nvdq_ultra_optimizer_progress.json', 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2, default=str)
 
-            print(f"💾 진행상황 저장 완료")
+            print(f" 진행상황 저장 완료")
 
         except Exception as e:
-            print(f"🔴 진행상황 저장 오류: {e}")
+            print(f" 진행상황 저장 오류: {e}")
             import traceback
             traceback.print_exc()
 
@@ -814,7 +814,7 @@ class NVDLNVDQUltraTimeframeOptimizer:
                     try:
                         self.print_status()
                     except Exception as e:
-                        print(f"🔴 상태 출력 오류: {e}")
+                        print(f" 상태 출력 오류: {e}")
                         import traceback
                         traceback.print_exc()
                     last_status_time = current_time
@@ -824,7 +824,7 @@ class NVDLNVDQUltraTimeframeOptimizer:
                     try:
                         self.save_progress()
                     except Exception as e:
-                        print(f"🔴 저장 오류: {e}")
+                        print(f" 저장 오류: {e}")
                         import traceback
                         traceback.print_exc()
 
@@ -834,7 +834,7 @@ class NVDLNVDQUltraTimeframeOptimizer:
                     for tf_name, tf_config in self.timeframes.items():
                         # 디버깅: 모델 구조 확인
                         if 'models' not in tf_config:
-                            print(f"🔴 오류: {tf_name}에 'models' 키가 없음")
+                            print(f" 오류: {tf_name}에 'models' 키가 없음")
                             continue
 
                         for symbol, symbol_models in tf_config['models'].items():
@@ -845,7 +845,7 @@ class NVDLNVDQUltraTimeframeOptimizer:
                                         active_intervals.append(tf_config['interval'])
                                         break
                             else:
-                                print(f"🔴 오류: {tf_name}-{symbol}의 models가 dict가 아님: {type(symbol_models)}")
+                                print(f" 오류: {tf_name}-{symbol}의 models가 dict가 아님: {type(symbol_models)}")
 
                     if active_intervals:
                         min_interval = min(active_intervals)
@@ -857,7 +857,7 @@ class NVDLNVDQUltraTimeframeOptimizer:
                     time.sleep(sleep_time)
 
                 except Exception as e:
-                    print(f"🔴 대기 시간 계산 오류: {e}")
+                    print(f" 대기 시간 계산 오류: {e}")
                     import traceback
                     traceback.print_exc()
                     # 오류 시 기본값 사용
@@ -868,13 +868,13 @@ class NVDLNVDQUltraTimeframeOptimizer:
         except KeyboardInterrupt:
             print("\n사용자 중단")
         except Exception as e:
-            print(f"\n🔴 시스템 오류: {e}")
+            print(f"\n 시스템 오류: {e}")
             import traceback
             traceback.print_exc()
         finally:
             self.save_progress()
             final_profit = (self.balance / self.initial_balance - 1) * 100
-            print(f"\n🔚 최적화 완료!")
+            print(f"\n 최적화 완료!")
             print(f" 최종 수익률: {final_profit:+.2f}%")
             print(f" 총 사이클: {cycle_count}회")
 

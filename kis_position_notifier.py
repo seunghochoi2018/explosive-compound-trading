@@ -83,7 +83,7 @@ class TelegramNotifier:
 
 ⏰ **시작 시간**: {timestamp}
 
-💼 **현재 포지션**:
+ **현재 포지션**:
 {position_text}
 
  **USD 현금**: ${usd_cash:.2f}
@@ -96,7 +96,7 @@ class TelegramNotifier:
 
 ⏰ **시작 시간**: {timestamp}
 
-💼 **현재 포지션**: 없음
+ **현재 포지션**: 없음
 
  **USD 현금**: ${usd_cash:.2f}
 
@@ -136,7 +136,7 @@ class TelegramNotifier:
   - 이전: {before_text}
   - 현재: {after_text}
 
-💼 **상세 정보**:
+ **상세 정보**:
 {after_detail if after_detail else "  포지션 없음"}
 
  **USD 현금**: ${usd_cash:.2f}
@@ -155,9 +155,9 @@ class TelegramNotifier:
 
 ⏰ **시간**: {timestamp}
 
-🚨 **오류 유형**: {error_type}
+ **오류 유형**: {error_type}
 
-📝 **내용**: {error_message}
+ **내용**: {error_message}
         """.strip()
 
         self.send_message(message)
@@ -165,7 +165,7 @@ class TelegramNotifier:
     def test_connection(self) -> bool:
         """텔레그램 연결 테스트"""
         try:
-            test_message = f"🧪 **연결 테스트**\n\n⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n KIS 포지션 알림 봇 정상 작동"
+            test_message = f" **연결 테스트**\n\n⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n KIS 포지션 알림 봇 정상 작동"
             return self.send_message(test_message)
         except Exception as e:
             print(f"[텔레그램] 연결 테스트 실패: {e}")

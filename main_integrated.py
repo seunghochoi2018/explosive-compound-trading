@@ -31,7 +31,7 @@ def print_banner():
     print("=" * 70)
     print(" NVDL/NVDQ 텔레그램 알림 봇 (통합 버전)")
     print(" AI 기반 레버리지 ETF 거래 시스템")
-    print("💬 실시간 텔레그램 알림")
+    print(" 실시간 텔레그램 알림")
     print("=" * 70)
     print(" NVDL: 3x 레버리지 NVIDIA ETF (상승 시 수익)")
     print(" NVDQ: 2x 역 레버리지 NASDAQ ETF (하락 시 수익)")
@@ -128,7 +128,7 @@ def run_integrated_system(api_key: str, auto_trading: bool = False):
 
         print(" 데이터 수집 완료!")
     else:
-        print("📁 기존 데이터를 로드했습니다.")
+        print(" 기존 데이터를 로드했습니다.")
 
         # 최신 실시간 데이터로 업데이트
         print(" 최신 실시간 데이터로 업데이트 중...")
@@ -162,7 +162,7 @@ def run_integrated_system(api_key: str, auto_trading: bool = False):
     print(" AI 모델 학습 완료!")
 
     # 모델 성능 테스트
-    print("\n🧪 모델 테스트 중...")
+    print("\n 모델 테스트 중...")
     action, symbol, confidence = model.get_portfolio_signal()
     print(f" 현재 AI 추천: {action} {symbol} (신뢰도: {confidence:.1%})")
 
@@ -190,7 +190,7 @@ def run_integrated_system(api_key: str, auto_trading: bool = False):
 
     print(" 시작 알림을 텔레그램으로 전송했습니다.")
     print(" 5분마다 신호를 체크하고 변경 시 알림을 보냅니다.")
-    print("⏹️ 중단하려면 Ctrl+C를 누르세요.")
+    print("⏹ 중단하려면 Ctrl+C를 누르세요.")
 
     # 봇 실행
     bot = NVDLNVDQTelegramBot(api_key, auto_trading=auto_trading)
@@ -198,10 +198,10 @@ def run_integrated_system(api_key: str, auto_trading: bool = False):
     try:
         bot.run()
     except KeyboardInterrupt:
-        print("\n⏹️ 사용자에 의한 중단")
+        print("\n⏹ 사용자에 의한 중단")
 
         # 종료 알림
-        telegram.send_message("⏹️ **봇 중단**\n\n시스템이 안전하게 종료되었습니다.")
+        telegram.send_message("⏹ **봇 중단**\n\n시스템이 안전하게 종료되었습니다.")
 
     except Exception as e:
         print(f"\n 봇 실행 오류: {e}")
@@ -229,7 +229,7 @@ def main():
   python main_integrated.py --auto-trading # 자동매매 모드
   python main_integrated.py --analysis     # 분석 보고서만 생성
 
-📝 기본 실행 시 다음이 자동으로 수행됩니다:
+ 기본 실행 시 다음이 자동으로 수행됩니다:
   1.  NVDL/NVDQ 데이터 수집 (또는 기존 데이터 로드)
   2.  AI 모델 학습 (또는 기존 모델 로드)
   3.  텔레그램 봇 실행 (실시간 알림)
@@ -268,7 +268,7 @@ def main():
             run_integrated_system(args.api_key, args.auto_trading)
 
     except KeyboardInterrupt:
-        print("\n⏹️ 사용자에 의한 중단")
+        print("\n⏹ 사용자에 의한 중단")
     except Exception as e:
         print(f"\n 실행 오류: {e}")
         print("\n 문제 해결:")
@@ -279,8 +279,8 @@ def main():
         end_time = datetime.now()
         duration = end_time - start_time
         print(f"\n⏰ 종료 시간: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"⏱️ 실행 시간: {duration}")
-        print("\n🙏 이용해 주셔서 감사합니다!")
+        print(f"⏱ 실행 시간: {duration}")
+        print("\n 이용해 주셔서 감사합니다!")
 
 if __name__ == "__main__":
     main()

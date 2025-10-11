@@ -7,7 +7,7 @@ NVDL/NVDQ 향상된 자동매매 시스템
 - NVDL(롱) ↔ NVDQ(숏) 스마트 전환
 - 복리 효과 극대화
 
-★★★ 핵심 목표 ★★★
+ 핵심 목표 
 손실을 줄이는 것이 아니라 이득을 내고 방향을 바꿔서 복리효과를 내야 한다!
 
 - 예시: 상승 추세에서 하락 추세로 전환 시
@@ -429,7 +429,7 @@ class NVDLNVDQEnhancedTrader:
                 time.sleep(600)  # 10분
 
         except KeyboardInterrupt:
-            print("\n👋 트레이더 종료")
+            print("\n 트레이더 종료")
             self.save_learning_data()
             self.save_progress()
             self.show_stats()

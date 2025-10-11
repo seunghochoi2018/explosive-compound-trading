@@ -1602,7 +1602,7 @@ def main():
                         colored_print("\n[32b LLM] ETH 거래 없음 원인 분석 중...", "cyan")
                         try:
                             # ETH 트레이더 코드 체크
-                            eth_code_path = r"C:\Users\user\Documents\코드3\llm_eth_trader_v3_explosive.py"
+                            eth_code_path = r"C:\Users\user\Documents\코드3\llm_eth_trader_v4_3tier.py"
                             with open(eth_code_path, 'r', encoding='utf-8') as f:
                                 eth_code = f.read()
 

@@ -147,7 +147,7 @@ def emergency_close_eth(position):
             params={'reduce_only': True}
         )
 
-        msg = f"🚨 <b>ETH 긴급 청산 완료</b>\n\n"
+        msg = f" <b>ETH 긴급 청산 완료</b>\n\n"
         msg += f"손익률: {position['pnl_pct']:.2f}%\n"
         msg += f"손익: ${position['pnl_usd']:.2f}\n"
         msg += f"사유: 손절선 초과"
@@ -167,7 +167,7 @@ def main():
     print(colored(f"체크 주기: {CHECK_INTERVAL}초", "yellow"))
     print(colored("="*70, "cyan"))
 
-    send_telegram("🛡️ <b>긴급 모니터 시작</b>\n\n손절 시스템 활성화")
+    send_telegram(" <b>긴급 모니터 시작</b>\n\n손절 시스템 활성화")
 
     while True:
         try:
@@ -186,7 +186,7 @@ def main():
 
                 # 긴급 손절 체크
                 if pnl <= CRITICAL_STOP_LOSS:
-                    print(colored(f"\n🚨 강제 청산 실행! (손실 {pnl:.2f}%)", "red"))
+                    print(colored(f"\n 강제 청산 실행! (손실 {pnl:.2f}%)", "red"))
                     emergency_close_eth(eth_pos)
                 elif pnl <= EMERGENCY_STOP_LOSS:
                     msg = f" <b>ETH 손절 경고</b>\n\n현재 손익: {pnl:.2f}%\n손절선 근접!"
@@ -207,12 +207,12 @@ def main():
 
                 # 경고만 (KIS 긴급 청산은 수동)
                 if pnl <= CRITICAL_STOP_LOSS:
-                    msg = f"🚨 <b>KIS 강제청산 필요!</b>\n\n"
+                    msg = f" <b>KIS 강제청산 필요!</b>\n\n"
                     msg += f"종목: {kis_pos['symbol']}\n"
                     msg += f"손익: {pnl:.2f}%\n"
                     msg += f"즉시 HTS/MTS에서 수동 청산 필요!"
                     send_telegram(msg)
-                    print(colored(f"🚨 KIS 강제청산 필요! {pnl:.2f}%", "red"))
+                    print(colored(f" KIS 강제청산 필요! {pnl:.2f}%", "red"))
                 elif pnl <= EMERGENCY_STOP_LOSS:
                     msg = f" <b>KIS 손절 경고</b>\n\n종목: {kis_pos['symbol']}\n현재 손익: {pnl:.2f}%"
                     send_telegram(msg)
@@ -224,7 +224,7 @@ def main():
 
         except KeyboardInterrupt:
             print(colored("\n\n모니터 종료", "yellow"))
-            send_telegram("🛡️ 긴급 모니터 종료")
+            send_telegram(" 긴급 모니터 종료")
             break
         except Exception as e:
             print(colored(f"에러: {e}", "red"))

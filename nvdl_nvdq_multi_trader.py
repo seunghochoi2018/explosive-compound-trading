@@ -531,7 +531,7 @@ class NVDLNVDQMultiTrader:
     def print_status(self):
         print(f"\n=== NVDL/NVDQ 멀티 모델 트레이딩 현황 ===")
         print(f"NVDL: ${self.current_prices['NVDL']:.2f}, NVDQ: ${self.current_prices['NVDQ']:.2f}")
-        print(f"시장 상태: {'🟢 개장' if self.is_market_open() else '🔴 휴장'}")
+        print(f"시장 상태: {' 개장' if self.is_market_open() else ' 휴장'}")
         print(f"총 모델: {len(self.models)}개")
 
         # 상위 성과 모델들
@@ -543,7 +543,7 @@ class NVDLNVDQMultiTrader:
             win_rate = (model['wins'] / model['trades']) * 100
             avg_profit = model['total_profit'] / model['trades']
             position_info = f"[{model['position']}]" if model['position'] else ""
-            profit_emoji = "" if model['total_profit'] > 0 else "" if model['total_profit'] < 0 else "⚪"
+            profit_emoji = "" if model['total_profit'] > 0 else "" if model['total_profit'] < 0 else ""
 
             print(f"{profit_emoji} {i+1:2d}. [{model['symbol']}_{model['timeframe']}_{model['leverage']}x_{model['strategy']}]")
             print(f"      거래: {model['wins']:2d}승/{model['trades']:2d}전 ({win_rate:4.1f}%) | "
@@ -588,7 +588,7 @@ class NVDLNVDQMultiTrader:
                 self.price_history['NVDQ'].append(nvdq_price)
 
                 print(f"NVDL: ${nvdl_price:.2f}, NVDQ: ${nvdq_price:.2f}")
-                print(f"시장: {'🟢 개장' if self.is_market_open() else '🔴 휴장'}")
+                print(f"시장: {' 개장' if self.is_market_open() else ' 휴장'}")
 
                 # 최근 1000개 가격 유지
                 for symbol in ['NVDL', 'NVDQ']:

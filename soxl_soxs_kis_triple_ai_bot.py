@@ -550,7 +550,7 @@ class SOXLSOXSKISBot:
         recent_trades = self.trade_history[-limit:] if len(self.trade_history) > limit else self.trade_history
 
         for i, trade in enumerate(recent_trades, 1):
-            result = "✓" if trade['result'] == 'WIN' else "✗"
+            result = "" if trade['result'] == 'WIN' else ""
             examples.append(
                 f"{i}. {trade['symbol']} ${trade['entry_price']:.2f}→${trade['exit_price']:.2f} "
                 f"({trade['pnl_pct']:+.2f}%) {trade['holding_minutes']}분 {result}"

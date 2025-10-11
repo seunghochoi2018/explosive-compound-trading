@@ -98,9 +98,9 @@ class NVDLNVDQSmartTrader:
                 self.current_positions = data.get('current_positions', {})
                 self.learning_patterns = data.get('learning_patterns', {})
                 self.pattern_weights = data.get('pattern_weights', {})
-                print(f"📁 진행 상황 로드: 거래 {self.total_trades}회, 수익 {self.total_profit:+.2f}%")
+                print(f" 진행 상황 로드: 거래 {self.total_trades}회, 수익 {self.total_profit:+.2f}%")
         except FileNotFoundError:
-            print("📁 새로운 거래 시작")
+            print(" 새로운 거래 시작")
 
     def save_progress(self):
         """진행 상황 저장"""
@@ -480,11 +480,11 @@ class NVDLNVDQSmartTrader:
                             print(f"    강력한 {symbol} {side} 신호 감지!")
                             self.open_position(symbol, side, combined_confidence, reason)
                         else:
-                            print(f"   ⏸️ {symbol} 신뢰도 부족: {combined_confidence:.3f} < {self.min_confidence:.2f}")
+                            print(f"   ⏸ {symbol} 신뢰도 부족: {combined_confidence:.3f} < {self.min_confidence:.2f}")
                     else:
                         print(f"   ⏳ {symbol} 학습 데이터 부족")
                 else:
-                    print(f"   ⏸️ {symbol} 기본 신뢰도 부족: {signal['confidence']:.3f} < {self.min_confidence:.2f}")
+                    print(f"   ⏸ {symbol} 기본 신뢰도 부족: {signal['confidence']:.3f} < {self.min_confidence:.2f}")
                     print(f"      신호 상세: {signal['action']} ({signal['reason']})")
 
         # 추천 포지션 요약 (항상 표시)
@@ -494,7 +494,7 @@ class NVDLNVDQSmartTrader:
             for rec in position_recommendations:
                 print(f"    {rec['symbol']} {rec['side']} (신뢰도: {rec['confidence']:.3f}) - {rec['reason']}")
         else:
-            print(f"   ⏸️ 현재 추천 포지션 없음 - 모든 신호가 임계값 미달")
+            print(f"   ⏸ 현재 추천 포지션 없음 - 모든 신호가 임계값 미달")
             print(f"    신뢰도 임계값: {self.min_confidence:.3f} ({self.min_confidence*100:.1f}%)")
 
             # 모든 심볼의 신호 상태 요약
@@ -507,7 +507,7 @@ class NVDLNVDQSmartTrader:
 
     def run_daily_check(self):
         """일일 체크 실행"""
-        print(f"\n📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} 일일 체크")
+        print(f"\n {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} 일일 체크")
         print("="*60)
 
         # 현재 포지션 청산 신호 체크
@@ -529,7 +529,7 @@ class NVDLNVDQSmartTrader:
         if self.total_trades > 0:
             win_rate = self.winning_trades / self.total_trades * 100
             print(f" 승률: {win_rate:.1f}% ({self.winning_trades}/{self.total_trades})")
-            print(f"💹 누적 수익: {self.total_profit:+.2f}%")
+            print(f" 누적 수익: {self.total_profit:+.2f}%")
 
         if self.current_positions:
             print(f"\n 현재 포지션:")
@@ -589,7 +589,7 @@ class NVDLNVDQSmartTrader:
                     print(f"  {symbol} {pos['side']}: ${pos['entry_price']:.2f}")
 
             self.save_progress()
-            print("💾 진행 상황 저장 완료")
+            print(" 진행 상황 저장 완료")
 
 if __name__ == "__main__":
     trader = NVDLNVDQSmartTrader()

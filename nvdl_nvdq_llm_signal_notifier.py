@@ -297,8 +297,8 @@ class NVDLNVDQLLMSignalNotifier:
         """신호 메시지 포맷팅"""
 
         # 이모지 설정
-        action_emoji = "🟢" if signal.action == "BUY" else "🔴"
-        risk_emoji = {"LOW": "🟢", "MEDIUM": "🟡", "HIGH": "🔴"}[signal.risk_level]
+        action_emoji = "" if signal.action == "BUY" else ""
+        risk_emoji = {"LOW": "", "MEDIUM": "", "HIGH": ""}[signal.risk_level]
 
         # 가격 변화 방향 계산
         price_change = ((signal.target_price - signal.current_price) / signal.current_price) * 100
@@ -309,7 +309,7 @@ class NVDLNVDQLLMSignalNotifier:
             "",
             f" **현재가**: ${signal.current_price:.2f}",
             f" **목표가**: ${signal.target_price:.2f} ({price_change:+.1f}%)",
-            f"🛡️ **손절가**: ${signal.stop_loss:.2f}",
+            f" **손절가**: ${signal.stop_loss:.2f}",
             f" **신뢰도**: {signal.confidence:.1%}",
             f"{risk_emoji} **리스크**: {signal.risk_level}",
             f"⏰ **보유기간**: {signal.holding_period}",
@@ -326,10 +326,10 @@ class NVDLNVDQLLMSignalNotifier:
             " **AI 분석**:",
             f"{signal.llm_analysis}",
             "",
-            f"🕒 **발생시간**: {signal.timestamp.strftime('%H:%M:%S')}",
+            f" **발생시간**: {signal.timestamp.strftime('%H:%M:%S')}",
             f"🆔 **신호ID**: {signal.signal_id}",
             "",
-            "📝 *이 신호는 참고용이며, 투자 책임은 본인에게 있습니다.*"
+            " *이 신호는 참고용이며, 투자 책임은 본인에게 있습니다.*"
         ]
 
         return "\n".join(message_parts)

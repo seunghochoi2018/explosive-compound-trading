@@ -35,16 +35,16 @@ class RealtimeTradingSimulator:
     def __init__(self, fmp_api_key: str):
         """실시간 트레이딩 시뮬레이터 초기화"""
         print("=== 실시간 트레이딩 시뮬레이터 ===")
-        print("🔴 과거 데이터 학습 없음")
-        print("🟢 실시간 데이터로만 학습")
+        print(" 과거 데이터 학습 없음")
+        print(" 실시간 데이터로만 학습")
         print(" 실제 매매 시뮬레이션")
         print(" 결과 기반 실시간 학습")
         print()
         print("*** 데이터 소스 확인 ***")
         print(" FMP API 사용 (Financial Modeling Prep)")
         print(" yfinance 사용 금지 (신뢰성 문제)")
-        print("📡 실시간 데이터: FMP Real-time API")
-        print("🚫 과거 데이터 사용 안함")
+        print(" 실시간 데이터: FMP Real-time API")
+        print(" 과거 데이터 사용 안함")
         print()
 
         # 데이터 수집기 초기화
@@ -186,7 +186,7 @@ class RealtimeTradingSimulator:
             self.entry_time = current_time
             self.position_size = self.balance * 0.95  # 95% 투자
 
-            print(f"🟢 매수: {symbol} @ ${current_price:.2f} (신뢰도: {confidence:.3f})")
+            print(f" 매수: {symbol} @ ${current_price:.2f} (신뢰도: {confidence:.3f})")
             print(f"   투자금액: ${self.position_size:,.0f}")
 
         elif self.position is not None:
@@ -220,7 +220,7 @@ class RealtimeTradingSimulator:
                 self.balance += profit_amount
                 self.total_profit += profit_rate
 
-                print(f"🔴 매도: {self.position} @ ${current_price:.2f} ({sell_reason})")
+                print(f" 매도: {self.position} @ ${current_price:.2f} ({sell_reason})")
                 print(f"   수익률: {profit_rate:+.2f}% (${profit_amount:+,.0f})")
                 print(f"   잔고: ${self.balance:,.0f}")
 
@@ -259,7 +259,7 @@ class RealtimeTradingSimulator:
                 'timestamp': datetime.now()
             })
 
-            print(f"📚 학습 데이터 추가: {len(self.recent_features)}개 샘플")
+            print(f" 학습 데이터 추가: {len(self.recent_features)}개 샘플")
 
         # 충분한 데이터가 쌓이면 모델 재학습
         if len(self.recent_features) >= 10:
@@ -324,7 +324,7 @@ def main():
     """메인 실행"""
     print("*** 실시간 트레이딩 시뮬레이터 ***")
     print(" FMP API 실시간 데이터 사용")
-    print("🚫 과거 데이터 학습 없음")
+    print(" 과거 데이터 학습 없음")
     print(" 실제 매매로만 학습")
     print()
 

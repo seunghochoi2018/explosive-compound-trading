@@ -11,7 +11,7 @@ from nvdl_nvdq_smart_trader import NVDLNVDQSmartTrader
 
 def run_backtest():
     """NVDL/NVDQ 백테스트 실행"""
-    print('🧪 NVDL/NVDQ 백테스트 시뮬레이션')
+    print(' NVDL/NVDQ 백테스트 시뮬레이션')
     print('=' * 50)
 
     trader = NVDLNVDQSmartTrader()
@@ -26,7 +26,7 @@ def run_backtest():
 
     # 여러 번 일일 체크를 실행하여 거래 패턴 확인
     for day in range(1, 11):  # 10일간 시뮬레이션
-        print(f'\n📅 Day {day} 거래 시뮬레이션')
+        print(f'\n Day {day} 거래 시뮬레이션')
         print('-' * 40)
 
         # 일일 체크 실행

@@ -22,14 +22,14 @@ class RestartManager:
             try:
                 subprocess.run(['taskkill', '/F', '/IM', 'ollama.exe'],
                              capture_output=True, timeout=30)
-                print(f"  ✓ Ollama 프로세스 종료 (시도 {attempt+1})")
+                print(f"   Ollama 프로세스 종료 (시도 {attempt+1})")
                 break
             except subprocess.TimeoutExpired:
-                print(f"  ⚠ Ollama 종료 timeout (시도 {attempt+1}/3)")
+                print(f"   Ollama 종료 timeout (시도 {attempt+1}/3)")
                 if attempt < 2:
                     time.sleep(5)
             except Exception as e:
-                print(f"  ⚠ Ollama 종료 실패: {e}")
+                print(f"   Ollama 종료 실패: {e}")
                 break
 
         # Python 트레이더 프로세스 종료 (현재 스크립트 제외)
@@ -49,15 +49,15 @@ class RestartManager:
                             try:
                                 subprocess.run(['taskkill', '/F', '/PID', pid],
                                              capture_output=True, timeout=5)
-                                print(f"  ✓ Python PID {pid} 종료")
+                                print(f"   Python PID {pid} 종료")
                             except:
                                 pass
         except Exception as e:
-            print(f"  ⚠ Python 종료 실패: {e}")
+            print(f"   Python 종료 실패: {e}")
 
         # 정리 대기
         time.sleep(5)
-        print("  ✓ 프로세스 정리 완료")
+        print("   프로세스 정리 완료")
 
     def start_ollama(self):
         """Ollama 서버 시작 (두 포트 - 코드3: 11434, 코드4: 11435)"""
@@ -68,11 +68,11 @@ class RestartManager:
             bat_path = r"C:\Users\user\Documents\코드3\start_ollama_11434.bat"
             if os.path.exists(bat_path):
                 subprocess.Popen(['start', 'cmd', '/k', bat_path], shell=True)
-                print("  ✓ Ollama 11434 (ETH) 시작")
+                print("   Ollama 11434 (ETH) 시작")
             else:
-                print(f"  ⚠ {bat_path} 파일 없음")
+                print(f"   {bat_path} 파일 없음")
         except Exception as e:
-            print(f"  ⚠ Ollama 11434 시작 실패: {e}")
+            print(f"   Ollama 11434 시작 실패: {e}")
 
         time.sleep(3)
 
@@ -82,15 +82,15 @@ class RestartManager:
             if os.path.exists(ps_path):
                 subprocess.Popen(['powershell', '-File', ps_path],
                                creationflags=subprocess.CREATE_NEW_CONSOLE)
-                print("  ✓ Ollama 11435 (KIS) 시작")
+                print("   Ollama 11435 (KIS) 시작")
             else:
-                print(f"  ⚠ {ps_path} 파일 없음")
+                print(f"   {ps_path} 파일 없음")
         except Exception as e:
-            print(f"  ⚠ Ollama 11435 시작 실패: {e}")
+            print(f"   Ollama 11435 시작 실패: {e}")
 
         # Ollama 초기화 대기
         time.sleep(10)
-        print("  ✓ Ollama 서버 시작 완료")
+        print("   Ollama 서버 시작 완료")
 
     def start_bots(self):
         """트레이딩 봇 시작"""
@@ -103,11 +103,11 @@ class RestartManager:
                 subprocess.Popen(['python', eth_bot_path],
                                cwd=r"C:\Users\user\Documents\코드3",
                                creationflags=subprocess.CREATE_NEW_CONSOLE)
-                print("  ✓ ETH 봇 시작")
+                print("   ETH 봇 시작")
             else:
-                print(f"  ⚠ {eth_bot_path} 파일 없음")
+                print(f"   {eth_bot_path} 파일 없음")
         except Exception as e:
-            print(f"  ⚠ ETH 봇 시작 실패: {e}")
+            print(f"   ETH 봇 시작 실패: {e}")
 
         time.sleep(5)
 
@@ -118,14 +118,14 @@ class RestartManager:
                 subprocess.Popen(['python', kis_bot_path],
                                cwd=r"C:\Users\user\Documents\코드4",
                                creationflags=subprocess.CREATE_NEW_CONSOLE)
-                print("  ✓ KIS 봇 시작")
+                print("   KIS 봇 시작")
             else:
-                print(f"  ⚠ {kis_bot_path} 파일 없음")
+                print(f"   {kis_bot_path} 파일 없음")
         except Exception as e:
-            print(f"  ⚠ KIS 봇 시작 실패: {e}")
+            print(f"   KIS 봇 시작 실패: {e}")
 
         time.sleep(5)
-        print("  ✓ 트레이딩 봇 시작 완료")
+        print("   트레이딩 봇 시작 완료")
 
     def perform_restart(self):
         """전체 재시작 수행"""

@@ -407,7 +407,7 @@ class SOXLSOXSTradingBot:
         # 이미 해당 종목을 보유 중인지 체크
         positions = self.get_positions()
         if target_symbol in positions:
-            print(f"[{self.timestamp()}] ℹ️ {target_symbol} 이미 보유 중")
+            print(f"[{self.timestamp()}] ℹ {target_symbol} 이미 보유 중")
             return
 
         # 매수 실행
@@ -450,7 +450,7 @@ class SOXLSOXSTradingBot:
         self.initial_balance = balance + position_value
 
         print(f"\n[{self.timestamp()}]  USD 잔고: ${balance:.2f}")
-        print(f"[{self.timestamp()}] 📦 보유 포지션: {len(positions)}개")
+        print(f"[{self.timestamp()}]  보유 포지션: {len(positions)}개")
         for symbol, pos in positions.items():
             print(f"  - {symbol}: {pos['qty']}주 @ ${pos['avg_price']:.2f}")
 
@@ -477,7 +477,7 @@ class SOXLSOXSTradingBot:
                 time.sleep(CHECK_INTERVAL)
 
         except KeyboardInterrupt:
-            print(f"\n[{self.timestamp()}] ⛔ 사용자 중단")
+            print(f"\n[{self.timestamp()}]  사용자 중단")
 
             # 최종 수익 현황 표시
             self.display_profit_status()

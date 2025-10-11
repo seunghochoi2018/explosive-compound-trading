@@ -299,7 +299,7 @@ class LLMNVDLTrader:
     def load_trade_history(self):
         """
         ====================================================================
-        📌 학습 모델 보호 시스템 (절대 중요!)
+         학습 모델 보호 시스템 (절대 중요!)
         ====================================================================
 
         주석: 사용자 요청 "여태 학습한 모델 갑자기 날아가면 안되니까"
@@ -447,7 +447,7 @@ class LLMNVDLTrader:
         self.trade_history.append(trade_record)
         self.save_trade_history()
 
-        result_emoji = "✓수익" if portfolio_change > 0 else "✗손실"
+        result_emoji = "수익" if portfolio_change > 0 else "손실"
         print(f"[LEARNING] 거래 기록: {symbol} | 가격손익: {pnl_pct:+.2f}% | 포트폴리오: ${portfolio_before:.2f}→${portfolio_after:.2f} (${portfolio_change:+.2f}, {portfolio_change_pct:+.3f}%) ({result_emoji})")
 
     def get_learning_examples(self, limit: int = 50) -> str:

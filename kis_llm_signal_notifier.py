@@ -69,15 +69,15 @@ class TelegramNotifier:
 
         # 이모지 선택
         if signal == 'BULL':
-            emoji = "🟢"
+            emoji = ""
             action = "매수 신호"
             target = "SOXL"
         elif signal == 'BEAR':
-            emoji = "🔴"
+            emoji = ""
             action = "매도/공매도 신호"
             target = "SOXS"
         else:
-            emoji = "⚪"
+            emoji = ""
             action = "대기"
             target = "없음"
 
@@ -138,7 +138,7 @@ class TelegramNotifier:
  **분석 모델**: 14b × 2 병렬 LLM
  **전략**: 추세돌파 감지
 
-💼 **현재 포지션**: {initial_position or '없음'}
+ **현재 포지션**: {initial_position or '없음'}
  **USD 현금**: ${usd_cash:.2f}
 
  매매 신호 알림을 시작합니다.

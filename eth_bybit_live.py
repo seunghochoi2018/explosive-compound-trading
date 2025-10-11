@@ -94,7 +94,7 @@ class ETHBybitLiveTrader:
         print(" 순수 시장 학습 시스템 초기화 완료")
 
         # 연결 테스트
-        print("\n🔌 API 연결 테스트 중...")
+        print("\n API 연결 테스트 중...")
         test_result = self.api.test_connection()
         if test_result.get("retCode") == 0:
             print(" API 연결 성공!")
@@ -261,7 +261,7 @@ class ETHBybitLiveTrader:
             }
             with open('eth_learning_data.json', 'w') as f:
                 json.dump(data, f, indent=2)
-            print("💾 학습 데이터 저장 완료")
+            print(" 학습 데이터 저장 완료")
         except Exception as e:
             print(f" 학습 데이터 저장 실패: {e}")
 
@@ -272,9 +272,9 @@ class ETHBybitLiveTrader:
                 data = json.load(f)
                 self.pattern_weights = data.get('pattern_weights', {})
                 self.trade_results = data.get('trade_results', [])
-                print(f"📚 학습 데이터 로드: {len(self.pattern_weights)} 패턴")
+                print(f" 학습 데이터 로드: {len(self.pattern_weights)} 패턴")
         except:
-            print("📚 새로운 학습 시작")
+            print(" 새로운 학습 시작")
 
     def generate_signal(self):
         """추세감지 + 학습 기반 신호 생성"""
@@ -322,7 +322,7 @@ class ETHBybitLiveTrader:
 
             if self.initial_balance is None:
                 self.initial_balance = current_balance
-                print(f"🏦 초기 ETH 잔고: {self.initial_balance:.4f} ETH")
+                print(f" 초기 ETH 잔고: {self.initial_balance:.4f} ETH")
 
             # 성장률 계산
             if self.initial_balance > 0:
@@ -347,7 +347,7 @@ class ETHBybitLiveTrader:
             current_price = self.get_current_price()
 
             if current_price:
-                print(f"💹 ETH 가격: ${current_price:.2f}")
+                print(f" ETH 가격: ${current_price:.2f}")
 
             # 포지션이 있을 때
             if position:
@@ -393,7 +393,7 @@ class ETHBybitLiveTrader:
 
                 # 신호 생성
                 signal = self.generate_signal()
-                print(f"📡 신호: {signal}")
+                print(f" 신호: {signal}")
 
                 if signal != "HOLD" and current_balance > 0.001:  # 최소 0.001 ETH
                     # 거래 수량 계산
@@ -401,7 +401,7 @@ class ETHBybitLiveTrader:
                     qty = round(qty, 4)  # ETH는 소수점 4자리
 
                     if qty > 0.001:
-                        print(f"📝 주문: {signal} {qty} ETH (${current_price * qty:.2f})")
+                        print(f" 주문: {signal} {qty} ETH (${current_price * qty:.2f})")
                         self.place_order(signal, qty)
 
         except Exception as e:
@@ -470,13 +470,13 @@ class ETHBybitLiveTrader:
         print("\n" + "=" * 50)
         print("ETH BYBIT LIVE TRADING 시작!")
         print(" 15분봉 87% 정확도 추세감지 + 복리효과 적용")
-        print("🚨 추세변환 시 즉시 청산 후 새 방향 진입")
+        print(" 추세변환 시 즉시 청산 후 새 방향 진입")
         print("  ETHUSD 실거래 중 - ETH 잔고 사용")
         print("Ctrl+C로 중단")
         print("=" * 50)
 
         # 레버리지 설정
-        print(f"\n⚙️ {self.strategy['leverage']}x 레버리지 설정 중...")
+        print(f"\n {self.strategy['leverage']}x 레버리지 설정 중...")
         self.set_leverage()
 
         try:

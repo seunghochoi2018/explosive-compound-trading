@@ -231,12 +231,12 @@ def analyze_soxl_vs_soxs(soxl_data: List[Dict], soxs_data: List[Dict]):
         print("\n" + "="*80)
 
         if soxl_best['annual_return'] >= 100:
-            print("[SOXL] 연 100% 달성! ✓")
+            print("[SOXL] 연 100% 달성! ")
         else:
             print(f"[SOXL] 연 {soxl_best['annual_return']:.1f}% (목표 미달)")
 
         if soxs_best['annual_return'] >= 100:
-            print("[SOXS] 연 100% 달성! ✓")
+            print("[SOXS] 연 100% 달성! ")
         else:
             print(f"[SOXS] 연 {soxs_best['annual_return']:.1f}% (목표 미달)")
 

@@ -508,24 +508,24 @@ class NVDLNVDQSignalNotifier:
         emoji_map = {
             'NVDL': '',
             'NVDQ': '',
-            'BUY': '🟢',
-            'SELL': '🔴',
-            'HOLD': '🟡'
+            'BUY': '',
+            'SELL': '',
+            'HOLD': ''
         }
 
         risk_emoji = {
-            'LOW': '🟢',
-            'MEDIUM': '🟡',
-            'HIGH': '🔴'
+            'LOW': '',
+            'MEDIUM': '',
+            'HIGH': ''
         }
 
         # 기본 신호 정보
         message_parts = [
-            f"{emoji_map.get(signal.action, '🔸')} **거래 신호 발생**",
+            f"{emoji_map.get(signal.action, '')} **거래 신호 발생**",
             "",
             f" **종목**: {signal.symbol} {emoji_map.get(signal.symbol, '')}",
             f" **액션**: {signal.action}",
-            f"💪 **신뢰도**: {signal.confidence:.1%}",
+            f" **신뢰도**: {signal.confidence:.1%}",
             f" **현재가**: ${signal.current_price:.2f}",
             ""
         ]
@@ -535,10 +535,10 @@ class NVDLNVDQSignalNotifier:
             leverage_text = "3배 레버리지" if signal.symbol == "NVDL" else "2배 역 레버리지"
             message_parts.extend([
                 f" **목표가**: ${signal.target_price:.2f}",
-                f"🛡️ **손절가**: ${signal.stop_loss:.2f}",
+                f" **손절가**: ${signal.stop_loss:.2f}",
                 f" **예상수익**: {signal.expected_return:+.1f}% ({leverage_text})",
                 f"⏰ **예상보유**: {signal.holding_period}",
-                f"{risk_emoji.get(signal.risk_level, '🟡')} **위험도**: {signal.risk_level}",
+                f"{risk_emoji.get(signal.risk_level, '')} **위험도**: {signal.risk_level}",
                 ""
             ])
 
@@ -588,17 +588,17 @@ class NVDLNVDQSignalNotifier:
         if signal.action == "BUY":
             message_parts.extend([
                 " **거래 가이드**:",
-                f"1️⃣ {signal.symbol} 시장가 매수",
-                f"2️⃣ 목표가 ${signal.target_price:.2f}에서 익절",
-                f"3️⃣ 손절가 ${signal.stop_loss:.2f}에서 손절",
-                f"4️⃣ 최대 보유기간: {signal.holding_period}",
+                f"1⃣ {signal.symbol} 시장가 매수",
+                f"2⃣ 목표가 ${signal.target_price:.2f}에서 익절",
+                f"3⃣ 손절가 ${signal.stop_loss:.2f}에서 손절",
+                f"4⃣ 최대 보유기간: {signal.holding_period}",
                 ""
             ])
 
         message_parts.extend([
             f"⏰ **발신시간**: {signal.timestamp.strftime('%H:%M:%S')}",
             "",
-            "📝 *이 신호는 참고용이며, 투자 책임은 본인에게 있습니다.*"
+            " *이 신호는 참고용이며, 투자 책임은 본인에게 있습니다.*"
         ])
 
         return "\n".join(message_parts)
@@ -651,11 +651,11 @@ class NVDLNVDQSignalNotifier:
 
     def run_signal_monitor(self):
         """신호 모니터링 실행"""
-        print("\n📡 신호 모니터링 시작")
+        print("\n 신호 모니터링 시작")
 
         # 시작 알림
         start_message = f"""
-📡 **NVDL/NVDQ 신호 알림 시작**
+ **NVDL/NVDQ 신호 알림 시작**
 
  **모니터링 대상**: NVDL, NVDQ
 ⏰ **체크 간격**: {self.config['check_interval']//60}분
@@ -664,8 +664,8 @@ class NVDLNVDQSignalNotifier:
  **학습 기능**: 활성화 (신호 결과 추적)
 
  **신호 해석**:
-- 🟢 BUY: 해당 종목 매수 추천
-- 🟡 HOLD: 현재 보유 유지 또는 관망
+-  BUY: 해당 종목 매수 추천
+-  HOLD: 현재 보유 유지 또는 관망
 -  NVDL: 3x 레버리지 NVIDIA ETF (상승 시 수익)
 -  NVDQ: 2x 역 레버리지 NASDAQ ETF (하락 시 수익)
 
@@ -714,15 +714,15 @@ class NVDLNVDQSignalNotifier:
                 time.sleep(self.config['check_interval'])
 
         except KeyboardInterrupt:
-            print("\n⏹️ 사용자에 의한 중단")
+            print("\n⏹ 사용자에 의한 중단")
         except Exception as e:
             print(f"\n 시스템 오류: {e}")
             self.telegram.notify_error("신호 모니터링 시스템 오류", str(e))
         finally:
             self.running = False
             self.save_signal_results()
-            self.telegram.send_message("⏹️ **신호 알림 중단**\n\n시스템이 안전하게 종료되었습니다.")
-            print("🔚 신호 모니터링 종료")
+            self.telegram.send_message("⏹ **신호 알림 중단**\n\n시스템이 안전하게 종료되었습니다.")
+            print(" 신호 모니터링 종료")
 
     def run(self):
         """메인 실행 함수"""
@@ -765,7 +765,7 @@ class NVDLNVDQSignalNotifier:
             results_file = self.learning_data_path / 'signal_results.pkl'
             with open(results_file, 'wb') as f:
                 pickle.dump(self.signal_results, f)
-            print(f"💾 {len(self.signal_results)}개 신호 결과 저장 완료")
+            print(f" {len(self.signal_results)}개 신호 결과 저장 완료")
         except Exception as e:
             print(f" 신호 결과 저장 실패: {e}")
 
@@ -783,7 +783,7 @@ class NVDLNVDQSignalNotifier:
             market_features=signal.analysis
         )
         self.active_signals[signal.signal_id] = signal_result
-        print(f"📝 활성 신호 추가: {signal.symbol} {signal.action}")
+        print(f" 활성 신호 추가: {signal.symbol} {signal.action}")
 
     def track_active_signals(self):
         """활성 신호 결과 추적"""
@@ -856,12 +856,12 @@ class NVDLNVDQSignalNotifier:
     def send_signal_result_notification(self, result: SignalResult, title: str):
         """신호 결과 알림 전송"""
         try:
-            emoji = "" if result.success else "😔"
+            emoji = "" if result.success else ""
             outcome_emoji = {
                 'TARGET_HIT': '',
                 'STOP_LOSS': '',
                 'TIME_EXIT': '⏰',
-                'USER_EXIT': '👤'
+                'USER_EXIT': ''
             }
 
             message = f"""
@@ -870,7 +870,7 @@ class NVDLNVDQSignalNotifier:
 {outcome_emoji.get(result.outcome, '')} **신호 결과**:
  **종목**: {result.symbol}
  **액션**: {result.action}
-💪 **신뢰도**: {result.confidence:.1%}
+ **신뢰도**: {result.confidence:.1%}
 
  **진입가**: ${result.entry_price:.2f}
  **청산가**: ${result.actual_exit_price:.2f}
@@ -1069,7 +1069,7 @@ class NVDLNVDQSignalNotifier:
 
             message += f"""
 
-⚙️ **모델 조정**:
+ **모델 조정**:
 • 현재 최소 신뢰도: {self.config['min_confidence']:.1%}
 • 다음 학습: 24시간 후
 

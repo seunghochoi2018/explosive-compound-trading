@@ -67,10 +67,10 @@ def main():
 
     print("\n=== 테스트 완료 ===")
     print("수정 사항:")
-    print("✓ GradientBoosting, LogisticRegression 학습 문제 해결")
-    print("✓ 신뢰도 계산 로직 개선 (최소 0.1 보장)")
-    print("✓ 모델 자동 재학습 기능 추가")
-    print("✓ 신호 생성 민감도 향상")
+    print(" GradientBoosting, LogisticRegression 학습 문제 해결")
+    print(" 신뢰도 계산 로직 개선 (최소 0.1 보장)")
+    print(" 모델 자동 재학습 기능 추가")
+    print(" 신호 생성 민감도 향상")
 
 if __name__ == "__main__":
     main()

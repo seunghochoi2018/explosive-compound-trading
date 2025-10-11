@@ -55,10 +55,16 @@ class LLMMarketAnalyzer:
         Args:
             model_name: 사용할 LLM 모델명 (기본값: qwen2.5:1.5b - 빠른 응답)
         """
+        import os
         print("=== LLM 시장 분석 시스템 ===")
 
         self.model_name = model_name
-        self.ollama_url = "http://localhost:11435"  # KIS 전용 Ollama 서버
+        # 환경변수에서 OLLAMA_HOST 읽기 (기본값: localhost:11434)
+        ollama_host = os.getenv('OLLAMA_HOST', '127.0.0.1:11434')
+        if not ollama_host.startswith('http'):
+            ollama_host = f'http://{ollama_host}'
+        self.ollama_url = ollama_host
+        print(f"[LLM] Ollama 서버: {self.ollama_url}")
 
         # 분석 프롬프트 템플릿
         self.analysis_prompts = {

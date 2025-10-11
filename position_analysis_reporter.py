@@ -292,7 +292,7 @@ class PositionAnalysisReporter:
 
         # 1. 기본 통계
         report_sections.append(" **NVDL/NVDQ 포지션 변경 주기 분석 보고서**")
-        report_sections.append(f"📅 분석 날짜: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        report_sections.append(f" 분석 날짜: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         report_sections.append("")
 
         # 2. 전체 거래 통계
@@ -334,7 +334,7 @@ class PositionAnalysisReporter:
         # 5. 시뮬레이션 결과
         simulation_results = self.simulate_different_intervals()
         if simulation_results:
-            report_sections.append("🧪 **시뮬레이션 결과 (상위 3개)**")
+            report_sections.append(" **시뮬레이션 결과 (상위 3개)**")
 
             # 샤프 비율 기준 정렬
             sorted_results = sorted(
@@ -468,7 +468,7 @@ def main():
     reporter.send_analysis_report()
 
     # 권장사항 출력
-    print(f"\n📋 권장 체크 주기: {reporter.get_recommended_check_interval()}시간")
+    print(f"\n 권장 체크 주기: {reporter.get_recommended_check_interval()}시간")
     print(f" 예상 포지션 변경 빈도: {reporter.get_position_change_frequency_estimate()}")
 
 if __name__ == "__main__":

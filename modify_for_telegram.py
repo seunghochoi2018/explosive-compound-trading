@@ -60,18 +60,18 @@ class TelegramNotifier:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         if action == 'BUY':
-            emoji = "🟢"
+            emoji = ""
             action_text = "매수 신호"
         elif action == 'SELL':
-            emoji = "🔴"
+            emoji = ""
             action_text = "매도 신호"
         else:
-            emoji = "🔵"
+            emoji = ""
             action_text = action
 
         position_info = ""
         if current_position:
-            position_info = f"\\n\\n💼 **현재 포지션**: {current_position} (손익 {current_pnl_pct:+.2f}%)"
+            position_info = f"\\n\\n **현재 포지션**: {current_position} (손익 {current_pnl_pct:+.2f}%)"
 
         message = f"""
 {emoji} **LLM 매매 신호**
@@ -94,7 +94,7 @@ class TelegramNotifier:
     def notify_position_change(self, old_pos: str, new_pos: str, pnl_pct: float):
         """포지션 변경 감지 알림"""
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        result = "🟢 수익" if pnl_pct > 0 else "🔴 손실"
+        result = " 수익" if pnl_pct > 0 else " 손실"
 
         message = f"""
  **포지션 변경 감지!**

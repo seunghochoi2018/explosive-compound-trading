@@ -129,18 +129,18 @@ class TelegramNotifier:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         if action == 'BUY':
-            emoji = "🟢"
+            emoji = ""
             action_text = "매수 신호"
         elif action == 'SELL':
-            emoji = "🔴"
+            emoji = ""
             action_text = "매도 신호"
         else:
-            emoji = "🔵"
+            emoji = ""
             action_text = action
 
         position_info = ""
         if current_position:
-            position_info = f"\n\n💼 **현재 포지션**: {current_position} (손익 {current_pnl_pct:+.2f}%)"
+            position_info = f"\n\n **현재 포지션**: {current_position} (손익 {current_pnl_pct:+.2f}%)"
 
         message = f"""
 {emoji} **LLM 매매 신호**

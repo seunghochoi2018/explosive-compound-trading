@@ -466,7 +466,7 @@ class SelfImprovementEngine:
 
         # 적용된 개선
         if applied:
-            report += f"\n🔧 <b>자동 개선 적용</b>\n"
+            report += f"\n <b>자동 개선 적용</b>\n"
             for imp in applied:
                 report += f"   [{imp['grade']}급] {imp['description']}\n"
 

@@ -124,7 +124,7 @@ class AdaptiveLearningTrader(NVDLNVDQTradingModel):
             # 중립 패턴도 약하게 학습
             if profit_pct > 0:
                 self.success_patterns.append(pattern)
-                print(f"➖ 중립 패턴 학습: {symbol} +{profit_pct:.2f}%")
+                print(f" 중립 패턴 학습: {symbol} +{profit_pct:.2f}%")
 
         # 통계 업데이트
         self._update_learning_stats(profit_pct, is_winning)

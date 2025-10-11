@@ -131,7 +131,7 @@ class NVDLNVDQAdaptiveAutoTrader:
         print("=" * 70)
         print(" NVDL/NVDQ 24시간 적응형 자동매매 시스템")
         print(" 실시간 학습 + 거래 주기 최적화")
-        print("🌙 미국 장시간 24시간 자동 거래")
+        print(" 미국 장시간 24시간 자동 거래")
         print("=" * 70)
 
         # 기본 설정
@@ -625,7 +625,7 @@ class NVDLNVDQAdaptiveAutoTrader:
                 time.sleep(sleep_time)
 
         except KeyboardInterrupt:
-            print("\n⏹️ 사용자에 의한 중단")
+            print("\n⏹ 사용자에 의한 중단")
         except Exception as e:
             print(f"\n 시스템 오류: {e}")
             self.telegram.notify_error("자동매매 시스템 오류", str(e))
@@ -635,14 +635,14 @@ class NVDLNVDQAdaptiveAutoTrader:
 
             # 종료 알림
             self.telegram.send_message(
-                f"⏹️ **자동매매 중단**\n\n"
+                f"⏹ **자동매매 중단**\n\n"
                 f"실행 시간: {datetime.now() - self.start_time}\n"
                 f"총 거래: {self.total_trades}회\n"
                 f"승률: {self.get_win_rate():.1f}%\n"
                 f"총 수익: {self.total_profit:+.2f}%"
             )
 
-            print("🔚 24시간 자동매매 종료")
+            print(" 24시간 자동매매 종료")
 
     def send_status_update(self):
         """상태 업데이트 전송"""
@@ -654,7 +654,7 @@ class NVDLNVDQAdaptiveAutoTrader:
         status_message = f"""
  **자동매매 상태 업데이트**
 
-⏱️ **가동 시간**: {uptime_str}
+⏱ **가동 시간**: {uptime_str}
  **현재 주기**: {self.frequency_manager.current_optimal_frequency}
  **포지션**: {self.trading_state.position or '없음'}
  **현재 PnL**: {current_pnl:+.2f}%

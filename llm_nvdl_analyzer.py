@@ -68,7 +68,7 @@ class NVDLLLMAnalyzer:
 - 포지션 손익: {position_pnl}%
 - 보유 시간: {holding_time}
 
-[과거 거래 학습 데이터] 📚 Few-shot Learning
+[과거 거래 학습 데이터]  Few-shot Learning
 사용자 요청: "과거 실제데이터를 학습해서 판단하는게 훨씬 좋지않아?"
 {learning_examples}
 

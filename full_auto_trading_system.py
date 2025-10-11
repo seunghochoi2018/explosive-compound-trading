@@ -179,8 +179,8 @@ class FullAutoTradingSystem:
                         f" 종목: {symbol}\n"
                         f" 수량: {result.get('quantity')}주\n"
                         f" 가격: ${result.get('price', 0):.2f}\n"
-                        f"🔗 주문ID: {result.get('order_id')}\n"
-                        f"💪 신뢰도: {confidence:.1%}"
+                        f" 주문ID: {result.get('order_id')}\n"
+                        f" 신뢰도: {confidence:.1%}"
                     )
 
                     return True
@@ -214,7 +214,7 @@ class FullAutoTradingSystem:
                         f" 청산가: ${result.get('price', 0):.2f}\n"
                         f" 수익: {pnl_pct:+.2f}%\n"
                         f" 누적 수익: {self.integrated_state['api_profit']:+.2f}%\n"
-                        f"🔗 주문ID: {result.get('order_id')}"
+                        f" 주문ID: {result.get('order_id')}"
                     )
 
                     return True
@@ -258,7 +258,7 @@ class FullAutoTradingSystem:
                 if current_loss > self.safety_config['emergency_stop_loss']:
                     print(f" 긴급 손절 임계값 초과: {current_loss:.2f}%")
                     self.telegram.send_message(
-                        f"🚨 **긴급 손절 작동**\n\n"
+                        f" **긴급 손절 작동**\n\n"
                         f"현재 손실: {current_loss:.2f}%\n"
                         f"임계값: {self.safety_config['emergency_stop_loss']}%\n"
                         f"새로운 포지션 진입 차단"
@@ -424,7 +424,7 @@ class FullAutoTradingSystem:
                 time.sleep(sleep_time)
 
         except KeyboardInterrupt:
-            print("\n⏹️ 사용자에 의한 중단")
+            print("\n⏹ 사용자에 의한 중단")
         except Exception as e:
             print(f"\n 시스템 오류: {e}")
             self.telegram.notify_error("자동매매 시스템 오류", str(e))
@@ -442,7 +442,7 @@ class FullAutoTradingSystem:
         summary_message = f"""
  **일일 거래 요약**
 
-📅 **날짜**: {datetime.now().strftime('%Y-%m-%d')}
+ **날짜**: {datetime.now().strftime('%Y-%m-%d')}
 
  **실제 API 거래**:
 - 거래 횟수: {api_trades}회
@@ -482,7 +482,7 @@ class FullAutoTradingSystem:
 - API 수익: {self.integrated_state['api_profit']:+.2f}%
 - 동기화 오류: {self.integrated_state['trade_sync_errors']}회
 
-⏱️ **가동 시간**: {datetime.now() - self.start_time}
+⏱ **가동 시간**: {datetime.now() - self.start_time}
  **최적 주기**: {self.adaptive_trader.frequency_manager.current_optimal_frequency}
 
  **상태**: 정상 운영 중
@@ -507,14 +507,14 @@ class FullAutoTradingSystem:
 
             # 종료 알림
             self.telegram.send_message(
-                f"⏹️ **완전 자동매매 종료**\n\n"
+                f"⏹ **완전 자동매매 종료**\n\n"
                 f"실행 시간: {datetime.now() - self.start_time}\n"
                 f"실제 거래: {self.integrated_state['total_api_trades']}회\n"
                 f"최종 수익: {self.integrated_state['api_profit']:+.2f}%\n"
                 f"시스템이 안전하게 종료되었습니다."
             )
 
-            print("🔚 완전 자동매매 시스템 종료")
+            print(" 완전 자동매매 시스템 종료")
 
         except Exception as e:
             print(f"정리 작업 오류: {e}")

@@ -192,9 +192,9 @@ def format_position_message(bybit_positions, kis_positions):
 
     # Bybit ETH 포지션
     if bybit_positions:
-        msg += "🔷 <b>Bybit ETH</b>\n"
+        msg += " <b>Bybit ETH</b>\n"
         for pos in bybit_positions:
-            pnl_emoji = "🟢" if pos['pnl_pct'] >= 0 else "🔴"
+            pnl_emoji = "" if pos['pnl_pct'] >= 0 else ""
             pnl_sign = "+" if pos['pnl_pct'] >= 0 else ""
 
             side_emoji = "" if pos['side'] == 'Buy' else ""
@@ -205,9 +205,9 @@ def format_position_message(bybit_positions, kis_positions):
 
     # KIS 주식 포지션
     if kis_positions:
-        msg += "🔶 <b>KIS 주식</b>\n"
+        msg += " <b>KIS 주식</b>\n"
         for pos in kis_positions:
-            pnl_emoji = "🟢" if pos['pnl_pct'] >= 0 else "🔴"
+            pnl_emoji = "" if pos['pnl_pct'] >= 0 else ""
             pnl_sign = "+" if pos['pnl_pct'] >= 0 else ""
 
             msg += f"{pnl_emoji} <b>{pos['symbol']}</b>\n"
@@ -231,7 +231,7 @@ def main():
     print("="*60)
 
     # 시작 알림
-    send_telegram("🛡️ <b>통합 포지션 모니터 시작</b>\n\nBybit ETH + KIS 주식\n30초마다 체크 중...")
+    send_telegram(" <b>통합 포지션 모니터 시작</b>\n\nBybit ETH + KIS 주식\n30초마다 체크 중...")
 
     last_bybit_position = None
     last_kis_position = None
@@ -305,14 +305,14 @@ def main():
 
                     if pnl <= CRITICAL_LOSS_THRESHOLD:
                         if alert_key not in last_alert_time or (current_time - last_alert_time[alert_key]) > 1800:  # 30분마다
-                            msg = f"🚨 <b>긴급! [{exchange}] {symbol} 큰 손실</b>\n\n"
+                            msg = f" <b>긴급! [{exchange}] {symbol} 큰 손실</b>\n\n"
                             msg += f"손익: {pnl:.2f}%\n"
                             msg += f"손실: ${pos['pnl_usd']:.2f}\n"
                             msg += f"진입: ${pos['entry_price']:.2f} → ${pos['current_price']:.2f}\n\n"
                             msg += f" 즉시 확인 필요!"
                             send_telegram(msg)
                             last_alert_time[alert_key] = current_time
-                            print(f"  🚨 긴급 알림 전송! [{exchange}] {symbol}")
+                            print(f"   긴급 알림 전송! [{exchange}] {symbol}")
 
                     elif pnl <= ALERT_LOSS_THRESHOLD:
                         if alert_key not in last_alert_time or (current_time - last_alert_time[alert_key]) > 3600:  # 1시간마다
@@ -340,7 +340,7 @@ def main():
 
         except KeyboardInterrupt:
             print("\n\n모니터 종료")
-            send_telegram("🛡️ 통합 포지션 모니터 종료")
+            send_telegram(" 통합 포지션 모니터 종료")
             break
         except Exception as e:
             print(f"에러: {e}")

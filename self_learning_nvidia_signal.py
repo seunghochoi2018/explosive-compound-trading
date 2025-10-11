@@ -442,7 +442,7 @@ class SelfLearningNVIDIASignal:
             if symbol in self.last_signals:
                 last_time = self.last_signals[symbol]['timestamp']
                 if (datetime.now() - last_time).seconds < self.config['cooldown_period']:
-                    logger.info(f"⏸️ {symbol} 쿨다운 중")
+                    logger.info(f"⏸ {symbol} 쿨다운 중")
                     continue
 
             # 신호 전송
@@ -503,7 +503,7 @@ class SelfLearningNVIDIASignal:
                 time.sleep(self.config['check_interval'])
 
             except KeyboardInterrupt:
-                logger.info("\n👋 사용자 중단 - 프로그램 종료")
+                logger.info("\n 사용자 중단 - 프로그램 종료")
                 break
             except Exception as e:
                 logger.error(f" 시스템 오류: {e}")

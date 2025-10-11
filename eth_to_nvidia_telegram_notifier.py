@@ -309,12 +309,12 @@ class ETHToNVIDIAMapper:
 
         # 이모지 및 포맷팅 (사용자 친화적)
         direction_emoji = "" if recommendation['eth_signal'] == 'LONG' else ""
-        confidence_emoji = "🟢" if recommendation['confidence'] >= 80 else "🟡"
+        confidence_emoji = "" if recommendation['confidence'] >= 80 else ""
 
         message = f"""
 {direction_emoji} **ETH → NVIDIA 포지션 알림**
 
-🕐 **시간**: {timestamp}
+ **시간**: {timestamp}
  **ETH 가격**: ${eth_data['price']:.2f} ({eth_data['change_24h']:+.2f}%)
 
  **추천 포지션**:

@@ -462,9 +462,9 @@ class EnsembleLLMAnalyzer:
             # [NEW] 중기 추세 반전 분석
             reversal_alert = ""
             if current_direction == "BULL" and decline_from_peak < -2.0:
-                reversal_alert = f" 🔴BULL포지션인데 고점대비 {abs(decline_from_peak):.1f}%하락!"
+                reversal_alert = f" BULL포지션인데 고점대비 {abs(decline_from_peak):.1f}%하락!"
             if current_direction == "BEAR" and decline_from_peak > -0.5:
-                reversal_alert = f" 🟢BEAR포지션인데 하락없음 - 반전?"
+                reversal_alert = f" BEAR포지션인데 하락없음 - 반전?"
 
             data_desc = f" {trend}({change:+.1f}%) {recent_prices}{reversal_alert}"
 
@@ -477,7 +477,7 @@ class EnsembleLLMAnalyzer:
             # [NEW] 전략 레이어에 추세 반전 신호 강조
             reversal_info = ""
             if decline_from_peak < -2.0 and current_direction == "BULL":
-                reversal_info = f" 🚨BULL→BEAR전환고려! 고점${recent_peak:.1f}에서{abs(decline_from_peak):.1f}%하락"
+                reversal_info = f" BULL→BEAR전환고려! 고점${recent_peak:.1f}에서{abs(decline_from_peak):.1f}%하락"
             elif momentum_weakening > 1.5:
                 reversal_info = f" 추세약화{momentum_weakening:.1f}% 전환신호"
             elif pattern_signal == "하락_패턴" and current_direction == "BULL":
@@ -521,7 +521,7 @@ class EnsembleLLMAnalyzer:
 
         position_info = ""
         if position != 'NONE':
-            position_info = f"\n🔵현재포지션: {position} | PNL: {position_pnl:+.2f}%"
+            position_info = f"\n현재포지션: {position} | PNL: {position_pnl:+.2f}%"
 
         # [NEW] 손실 거래 패턴 경고 (최근 10개 거래에서 손실 패턴 추출)
         loss_patterns = []

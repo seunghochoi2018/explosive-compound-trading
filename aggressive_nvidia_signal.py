@@ -85,7 +85,7 @@ class AggressiveNVIDIASignal:
         # NVDD (인버스)
         elif symbol == "NVDD":
             if change_percent >= self.min_change:
-                signal = f"🔻 NVDD 상승 (NVIDIA 하락) {change_percent:+.2f}%"
+                signal = f" NVDD 상승 (NVIDIA 하락) {change_percent:+.2f}%"
             elif change_percent <= -self.min_change:
                 signal = f" NVDD 하락 (NVIDIA 상승) {change_percent:+.2f}%"
 
@@ -106,7 +106,7 @@ class AggressiveNVIDIASignal:
             }
             response = requests.post(url, json=payload, timeout=5)
             if response.status_code == 200:
-                logger.info(f"📨 텔레그램 전송: {message}")
+                logger.info(f" 텔레그램 전송: {message}")
             else:
                 logger.error(f"텔레그램 전송 실패: {response.status_code}")
         except Exception as e:
@@ -187,7 +187,7 @@ NVDD: ${nvdd_data['price']:.2f} ({nvdd_data['change_percent']:+.2f}%)
                 time.sleep(self.check_interval)
 
             except KeyboardInterrupt:
-                logger.info("\n👋 종료")
+                logger.info("\n 종료")
                 break
             except Exception as e:
                 logger.error(f"오류: {e}")

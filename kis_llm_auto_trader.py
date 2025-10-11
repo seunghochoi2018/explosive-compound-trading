@@ -1884,11 +1884,11 @@ JSON 형식으로 답변:
                 self.trailing_stop_loss = -3.5  # 초기 -3.5% (백테스팅 최적)
 
             if old_stop != self.trailing_stop_loss:
-                print(f"  🔼 손절선 상향: {old_stop:.1f}% → {self.trailing_stop_loss:.1f}%")
+                print(f"   손절선 상향: {old_stop:.1f}% → {self.trailing_stop_loss:.1f}%")
 
             # 트레일링 스탑 체크
             if current_pnl_pct < self.trailing_stop_loss:
-                print(f"  🚨 트레일링 스탑 발동!")
+                print(f"   트레일링 스탑 발동!")
                 print(f"     현재 PNL: {current_pnl_pct:.2f}% < 손절선: {self.trailing_stop_loss:.1f}%")
                 print(f"     최고 PNL: {self.max_pnl:.2f}%")
 

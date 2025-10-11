@@ -83,7 +83,7 @@ class NVDLNVDQMultiTimeframeOptimizer:
         self.load_progress()
 
         print(f" 총 {len(self.models)}개 모델 생성 완료")
-        print(f"💎 시간주기: {list(self.timeframes.keys())}")
+        print(f" 시간주기: {list(self.timeframes.keys())}")
         print(f" 심볼: {self.symbols}")
         print(f" 전략: {list(self.strategies.keys())}")
 
@@ -699,7 +699,7 @@ class NVDLNVDQMultiTimeframeOptimizer:
             # 종료 알림
             final_profit = (self.current_balance / self.initial_balance - 1) * 100
             end_message = (
-                f"⏹️ **NVDL/NVDQ 다중 시간주기 최적화 종료**\n\n"
+                f"⏹ **NVDL/NVDQ 다중 시간주기 최적화 종료**\n\n"
                 f" 최종 잔고: ${self.current_balance:,.2f}\n"
                 f" 총 수익률: {final_profit:+.2f}%\n"
                 f" 총 사이클: {cycle_count}회\n"
@@ -708,7 +708,7 @@ class NVDLNVDQMultiTimeframeOptimizer:
             print("=== 종료 알림 ===")
             print(end_message)
 
-            print(f"\n🔚 최적화 완료!")
+            print(f"\n 최적화 완료!")
             print(f" 최종 수익률: {final_profit:+.2f}%")
 
 def main():

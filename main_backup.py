@@ -28,7 +28,7 @@ def print_banner():
     print("=" * 70)
     print(" NVDL/NVDQ 텔레그램 알림 봇")
     print(" AI 기반 레버리지 ETF 거래 시스템")
-    print("💬 실시간 텔레그램 알림")
+    print(" 실시간 텔레그램 알림")
     print("=" * 70)
     print(" NVDL: 3x 레버리지 NVIDIA ETF (상승 시 수익)")
     print(" NVDQ: 2x 역 레버리지 NASDAQ ETF (하락 시 수익)")
@@ -138,7 +138,7 @@ def run_model_training(api_key: str):
         print(" 모델 학습 완료!")
 
         # 테스트 신호 생성
-        print("\n🧪 신호 테스트:")
+        print("\n 신호 테스트:")
         action, symbol, confidence = model.get_portfolio_signal()
         print(f"현재 추천: {action} {symbol} (신뢰도: {confidence:.2f})")
 
@@ -171,7 +171,7 @@ def run_telegram_bot(api_key: str, auto_trading: bool = False):
     try:
         bot.run()
     except KeyboardInterrupt:
-        print("\n⏹️ 사용자에 의한 중단")
+        print("\n⏹ 사용자에 의한 중단")
     except Exception as e:
         print(f"\n 봇 실행 오류: {e}")
 
@@ -247,14 +247,14 @@ def main():
             run_telegram_bot(args.api_key, args.auto_trading)
 
     except KeyboardInterrupt:
-        print("\n⏹️ 사용자에 의한 중단")
+        print("\n⏹ 사용자에 의한 중단")
     except Exception as e:
         print(f"\n 실행 오류: {e}")
     finally:
         end_time = datetime.now()
         duration = end_time - start_time
         print(f"\n⏰ 종료 시간: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"⏱️ 실행 시간: {duration}")
+        print(f"⏱ 실행 시간: {duration}")
 
 if __name__ == "__main__":
     main()

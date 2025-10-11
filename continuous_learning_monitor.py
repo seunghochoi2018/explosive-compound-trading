@@ -173,21 +173,21 @@ class ContinuousLearningMonitor:
         # 큰 손실 많으면
         if len(big_losses) >= 3:
             suggestions.append(
-                "🔧 큰 손실 3건 이상 발생\n"
+                " 큰 손실 3건 이상 발생\n"
                 "→ 동적 손절 강화 권장 (-2% → -1.5%)"
             )
 
         # 장기 보유 손실 많으면
         if len(long_hold_losses) >= 5:
             suggestions.append(
-                "🔧 120분 이상 보유 손실 5건 이상\n"
+                " 120분 이상 보유 손실 5건 이상\n"
                 "→ 최대 보유시간 단축 권장 (120분 → 60분)"
             )
 
         # 빠른 손실 많으면
         if len(fast_losses) >= 5:
             suggestions.append(
-                "🔧 빠른 손실 5건 이상\n"
+                " 빠른 손실 5건 이상\n"
                 "→ 최소 신뢰도 상향 권장 (75% → 80%)"
             )
 
