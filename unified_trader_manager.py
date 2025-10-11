@@ -119,10 +119,12 @@ GPU_OPTIMIZATION = {
 
 # ===== 리소스 모니터링 설정 =====
 # 포트별 메모리 제한 (사용자 설정)
+# 이유: 14b 모델은 6-8GB 사용, 9GB로 여유 있게 설정
+# GPU 100% 활용 + 빠른 응답 (5-10초)
 MEMORY_LIMITS = {
     11434: 9 * 1024,  # ETH: 9GB (14b 모델용)
     11435: 9 * 1024,  # KIS: 9GB (14b 모델용)
-    11436: 12 * 1024,  # 자기개선: 12GB (32b 모델용)
+    11436: 9 * 1024,  # 자기개선: 9GB (14b 모델용, 사용자 요청으로 32b→14b 변경)
 }
 MAX_CPU_PERCENT = 5.0  # 정상 상태 CPU: 5% 이하
 RESPONSE_TIMEOUT = 10  # API 응답 타임아웃: 10초
@@ -1287,14 +1289,35 @@ def check_trading_health(trader_name, history_file):
                 'alert': True
             }
 
-        # 최근 1시간 거래
-        one_hour_ago = datetime.now() - timedelta(hours=1)
-        recent_trades = []
+        # ===== 다차원 거래 분석 =====
+        # 1시간, 6시간, 24시간 단위로 거래 빈도 체크
+
+        now = datetime.now()
+        one_hour_ago = now - timedelta(hours=1)
+        six_hours_ago = now - timedelta(hours=6)
+        one_day_ago = now - timedelta(hours=24)
+
+        recent_1h = []
+        recent_6h = []
+        recent_24h = []
+
+        # 마지막 거래 시간 찾기
+        last_trade_time = None
+
         for t in trades:
             try:
                 trade_time = datetime.fromisoformat(t.get('timestamp', ''))
+
                 if trade_time >= one_hour_ago:
-                    recent_trades.append(t)
+                    recent_1h.append(t)
+                if trade_time >= six_hours_ago:
+                    recent_6h.append(t)
+                if trade_time >= one_day_ago:
+                    recent_24h.append(t)
+
+                # 마지막 거래 시간 추적
+                if last_trade_time is None or trade_time > last_trade_time:
+                    last_trade_time = trade_time
             except:
                 continue
 
@@ -1304,18 +1327,38 @@ def check_trading_health(trader_name, history_file):
         wins = len([t for t in trades if t.get('profit_pct', 0) > 0])
         win_rate = wins / total_trades * 100 if total_trades > 0 else 0
 
-        # 최근 1시간 거래 분석
-        recent_count = len(recent_trades)
-        recent_return = sum([t.get('profit_pct', 0) for t in recent_trades]) if recent_trades else 0
+        # 거래 빈도 분석
+        count_1h = len(recent_1h)
+        count_6h = len(recent_6h)
+        count_24h = len(recent_24h)
 
-        # 경고 조건
+        # 마지막 거래 이후 경과 시간
+        hours_since_last_trade = 0
+        if last_trade_time:
+            hours_since_last_trade = (now - last_trade_time).total_seconds() / 3600
+
+        # 경고 조건 (다층 분석)
         alert = False
         warnings = []
+        critical = False  # 심각한 문제
 
-        # 1. 1시간 동안 거래 없음 (ETH는 1분, KIS는 2분 주기라 최소 30건 이상 예상)
-        if recent_count == 0:
-            warnings.append("1시간 동안 거래 없음")
+        # ===== 거래 빈도 모니터링 (계층적 알람) =====
+
+        # 1. **24시간 거래 없음** (심각) - 임계값 문제 의심
+        if hours_since_last_trade >= 24:
+            warnings.append(f"[심각] {hours_since_last_trade:.0f}시간 동안 거래 없음 → 임계값 너무 높음 의심")
             alert = True
+            critical = True
+
+        # 2. **6시간 거래 없음** (경고) - 시장 상황 or 임계값 문제
+        elif hours_since_last_trade >= 6:
+            warnings.append(f"[경고] {hours_since_last_trade:.0f}시간 동안 거래 없음")
+            alert = True
+
+        # 3. **1시간 거래 없음** (정보) - 정상 범위일 수 있음
+        elif count_1h == 0 and trader_name == "ETH":
+            # ETH는 활발하게 거래해야 하므로 1시간도 체크
+            warnings.append("[정보] 1시간 동안 거래 없음 (정상 범위 가능)")
 
         # 2. 총 수익률이 음수 (손실 누적)
         if total_return < -5:
@@ -1327,18 +1370,49 @@ def check_trading_health(trader_name, history_file):
             warnings.append(f"승률 {win_rate:.0f}%")
             alert = True
 
-        message = f"{trader_name}: 거래 {total_trades}건, 수익 {total_return:+.2f}%, 승률 {win_rate:.0f}%, 최근1h {recent_count}건"
+        message = f"{trader_name}: 거래 {total_trades}건, 수익 {total_return:+.2f}%, 승률 {win_rate:.0f}%, 최근24h {count_24h}건"
+
+        # ===== 텔레그램 알림 (24시간 거래 없음) =====
+        if critical and hours_since_last_trade >= 24:
+            # 전략 파일에서 현재 임계값 확인
+            confidence_info = ""
+            try:
+                strategy_file = f"C:\\Users\\user\\Documents\\코드3\\eth_current_strategy.json" if trader_name == "ETH" else f"C:\\Users\\user\\Documents\\코드4\\kis_current_strategy.json"
+                with open(strategy_file, 'r', encoding='utf-8') as f:
+                    strategy = json.load(f)
+                    min_conf = strategy.get('min_confidence', 'N/A')
+                    confidence_info = f"\n현재 임계값: {min_conf}%"
+            except:
+                pass
+
+            telegram.send_message(
+                f"[CRITICAL] <b>{trader_name} 거래 중단 감지</b>\n\n"
+                f"마지막 거래: {hours_since_last_trade:.0f}시간 전\n"
+                f"총 거래: {total_trades}건\n"
+                f"승률: {win_rate:.0f}%{confidence_info}\n\n"
+                f"<b>원인 분석:</b>\n"
+                f"1. 임계값 너무 높음 (80%+)\n"
+                f"2. 최근 고신뢰도 거래만 성공 → 잘못 학습\n"
+                f"3. 샘플 편향으로 인한 과적합\n\n"
+                f"<b>조치:</b>\n"
+                f"임계값 최적화 알고리즘 재계산 중\n"
+                f"(수수료 + 기대값 기반 최적화)",
+                priority="important"
+            )
 
         return {
-            'status': 'healthy' if not alert else 'warning',
+            'status': 'critical' if critical else ('warning' if alert else 'healthy'),
             'total_trades': total_trades,
             'total_return': total_return,
             'win_rate': win_rate,
-            'recent_count': recent_count,
-            'recent_return': recent_return,
+            'recent_count': count_1h,
+            'recent_count_24h': count_24h,
+            'hours_since_last_trade': hours_since_last_trade,
+            'recent_return': sum([t.get('profit_pct', 0) for t in recent_1h]) if recent_1h else 0,
             'message': message,
             'warnings': warnings,
-            'alert': alert
+            'alert': alert,
+            'critical': critical
         }
 
     except FileNotFoundError:
