@@ -508,10 +508,23 @@ class ExplosiveKISTrader:
 
         return (False, "", False)
 
-    def place_order(self, symbol: str, side: str, qty: int) -> bool:
-        """주문 실행"""
+    def place_order(self, symbol: str, side: str, qty: int, current_price: float = 0) -> bool:
+        """
+        주문 실행
+
+        [FIX] 2025-10-11: OVRS_ORD_UNPR="0" 오류 수정
+        - 시장가 주문인데도 현재가를 입력해야 함
+        - KIS API 문서와 실제 동작 불일치 (APBK1507 에러)
+        """
         try:
             import requests
+
+            # 현재가 조회 (미전달 시)
+            if current_price <= 0:
+                current_price = self.get_current_price(symbol)
+                if current_price <= 0:
+                    print(f"[ERROR] {symbol} 가격 조회 실패, 주문 불가")
+                    return False
 
             #  KIS API는 티커명 직접 사용 (SOXL/SOXS)
             url = f"{self.base_url}/uapi/overseas-stock/v1/trading/order"
@@ -529,9 +542,11 @@ class ExplosiveKISTrader:
                 "OVRS_EXCG_CD": "NASD",
                 "PDNO": symbol,  #  티커명 직접 사용 (SOXL/SOXS)
                 "ORD_QTY": str(qty),
-                "OVRS_ORD_UNPR": "0",  # 시장가
+                "OVRS_ORD_UNPR": str(current_price),  # ✅ 수정: 시장가인데도 현재가 입력 필수!
                 "ORD_SVR_DVSN_CD": "0"
             }
+
+            print(f"[주문 데이터] {symbol} {side} {qty}주 @ ${current_price:.2f}")
 
             response = requests.post(url, headers=headers, json=data, timeout=10)
 
