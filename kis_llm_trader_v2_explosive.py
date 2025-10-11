@@ -43,17 +43,17 @@ class ExplosiveKISTrader:
         # KIS API 설정
         self.load_kis_config()
 
-        #  2-티어 LLM 시스템 (최종 업그레이드)
-        # 1. 14b 실시간 모니터: 매 5분마다 상시 감시 (빠른 체크)
-        # 2. 32b 메인 분석기: 15분마다 깊은 분석 (3배 레버리지 고급 판단)
+        #  2-티어 LLM 시스템 (GPU 최적화)
+        # 1. 7b 실시간 모니터: 매 5분마다 상시 감시 (GPU 완전 로드, 1-2초)
+        # 2. 14b 메인 분석기: 15분마다 깊은 분석 (3배 레버리지 신중 판단)
         print("\n[LLM 시스템 초기화]")
-        print("  14b 실시간 모니터 로딩 중...")
-        self.realtime_monitor = LLMMarketAnalyzer(model_name="qwen2.5:14b")
-        print("  [OK] 14b 모니터 준비 완료 (5분 주기)")
+        print("  7b 실시간 모니터 로딩 중...")
+        self.realtime_monitor = LLMMarketAnalyzer(model_name="qwen2.5:7b")
+        print("  [OK] 7b 모니터 준비 완료 (GPU 완전 로드, 1-2초)")
 
-        print("  32b 메인 분석기 로딩 중... (SOXL/SOXS 전문)")
-        self.main_analyzer = LLMMarketAnalyzer(model_name="qwen2.5:32b")
-        print("  [OK] 32b 분석기 준비 완료 (3배 레버리지 고급 판단)")
+        print("  14b 메인 분석기 로딩 중... (SOXL/SOXS 전문)")
+        self.main_analyzer = LLMMarketAnalyzer(model_name="qwen2.5:14b")
+        print("  [OK] 14b 분석기 준비 완료 (중요한 판단)")
 
         self.last_deep_analysis_time = 0
         self.DEEP_ANALYSIS_INTERVAL = 15 * 60  # 15분 (SOXL/SOXS는 3배 레버리지, 신중하게)
@@ -105,8 +105,8 @@ class ExplosiveKISTrader:
         print(f"  최대 보유시간: {self.MAX_HOLDING_TIME/3600:.1f}시간")
         print(f"  동적 손절: {self.DYNAMIC_STOP_LOSS}%")
         print(f"  최소 신뢰도: {self.MIN_CONFIDENCE}%")
-        print(f"  14b 모니터: 임계값 없음 (LLM 자율 판단)")
-        print(f"  32b 메인 분석: 15분마다 (3배 레버리지 신중)")
+        print(f"  7b 모니터 (GPU): 임계값 없음 (LLM 자율 판단)")
+        print(f"  14b 메인 분석: 15분마다 (3배 레버리지 신중)")
 
         # 마지막 LLM 분석
         self.last_llm_signal = None
@@ -118,11 +118,11 @@ class ExplosiveKISTrader:
 
         # 텔레그램 알림 (6시간마다만)
         self.telegram.send_message(
-            f"[START] SOXL 복리 폭발 전략 시작\n\n"
+            f"[START] KIS GPU 최적화 트레이더 시작\n\n"
             f"초기 잔고: ${self.initial_balance:,.2f}\n"
             f"최대 보유: 10시간\n"
             f"동적 손절: {self.DYNAMIC_STOP_LOSS}%\n"
-            f"14b 모니터 + 32b 분석 (15분 주기)\n"
+            f"7b 모니터 (GPU) + 14b 분석 (15분)\n"
             f"임계값 없음 - LLM 자율 판단\n"
             f"3배 레버리지 신중한 거래",
             priority="routine"
@@ -596,33 +596,33 @@ class ExplosiveKISTrader:
                     monitor_duration = (datetime.now() - monitor_start).total_seconds()
                     print(f"[{datetime.now().strftime('%H:%M:%S')}] [OK] 7b 모니터: {monitor_signal} ({monitor_duration:.1f}초)")
 
-                    # 임계값 없음 - 32b가 15분마다 정기 실행 (3배 레버리지는 신중하게)
+                    # 임계값 없음 - 14b가 15분마다 정기 실행 (3배 레버리지는 신중하게)
                     emergency_detected = False
 
-                #  2단계: 32b 메인 분석 (15분마다 - 3배 레버리지 신중)
+                #  2단계: 14b 메인 분석 (15분마다 - 3배 레버리지 신중)
                 current_time = time.time()
                 need_deep_analysis = (current_time - self.last_deep_analysis_time) >= self.DEEP_ANALYSIS_INTERVAL or emergency_detected
 
                 if need_deep_analysis and soxl_price > 0:
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}]  32b 메인 분석 시작 (15분 주기)...")
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}]  14b 메인 분석 시작 (15분 주기)...")
                     deep_start = datetime.now()
 
-                    # 32b로 깊은 분석 (간단 구현 - 추세 기반)
+                    # 14b로 깊은 분석 (간단 구현 - 추세 기반)
                     deep_signal = 'BULL' if trend == 'BULL' else ('BEAR' if trend == 'BEAR' else 'NEUTRAL')
 
                     deep_duration = (datetime.now() - deep_start).total_seconds()
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}] [OK] 32b 분석: {deep_signal} ({deep_duration:.1f}초)")
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}] [OK] 14b 분석: {deep_signal} ({deep_duration:.1f}초)")
 
                     # 메인 분석 결과 사용
                     llm_signal = deep_signal
                     self.last_deep_analysis_time = current_time
 
                 else:
-                    # 메인 분석이 없으면 14b 모니터 신호 사용
+                    # 메인 분석이 없으면 7b 모니터 신호 사용
                     llm_signal = monitor_signal if soxl_price > 0 else 'NEUTRAL'
                     if soxl_price > 0:
                         mins_until_deep = int((self.DEEP_ANALYSIS_INTERVAL - (current_time - self.last_deep_analysis_time)) / 60)
-                        print(f"[{datetime.now().strftime('%H:%M:%S')}]  32b 분석까지 {mins_until_deep}분 대기 (14b 신호 사용)")
+                        print(f"[{datetime.now().strftime('%H:%M:%S')}]  14b 분석까지 {mins_until_deep}분 대기 (7b 신호 사용)")
 
                 self.last_llm_signal = llm_signal
                 print(f"[{datetime.now().strftime('%H:%M:%S')}] [TARGET] 최종 신호: {llm_signal}")
@@ -681,7 +681,7 @@ class ExplosiveKISTrader:
                 time.sleep(300)
 
     def get_ensemble_signal(self, trend: str) -> str:
-        """14b  2 앙상블 LLM 신호"""
+        """7b + 14b 앙상블 LLM 신호"""
         # 간단 구현 (추세 기반)
         return 'BULL' if trend == 'BULL' else ('BEAR' if trend == 'BEAR' else 'NEUTRAL')
 
