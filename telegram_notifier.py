@@ -48,14 +48,14 @@ class TelegramNotifier:
             """.strip(),
 
             'trade_result': """
-💼 **거래 완료**
+ **거래 완료**
 
  **종목**: {symbol}
  **수익률**: {profit_pct:+.2f}%
  **진입가**: ${entry_price:.2f}
  **청산가**: ${exit_price:.2f}
 
-⏱️ **보유시간**: {holding_time}
+⏱ **보유시간**: {holding_time}
  **결과**: {result}
 
  **누적 수익**: {total_profit:+.2f}%
@@ -63,11 +63,11 @@ class TelegramNotifier:
             """.strip(),
 
             'signal_alert': """
-🚨 **거래 신호 발생**
+ **거래 신호 발생**
 
  **종목**: {symbol}
 [SIGNAL] **신호**: {signal}
-💪 **신뢰도**: {confidence:.1%}
+ **신뢰도**: {confidence:.1%}
 
  **현재가**: ${current_price:.2f}
  **기술분석**:
@@ -81,9 +81,9 @@ class TelegramNotifier:
             'daily_summary': """
  **일일 거래 요약**
 
-📅 **날짜**: {date}
+ **날짜**: {date}
 
-💼 **거래 현황**:
+ **거래 현황**:
   - 총 거래: {total_trades}회
   - 수익 거래: {winning_trades}회
   - 손실 거래: {losing_trades}회
@@ -101,21 +101,21 @@ class TelegramNotifier:
             'error_alert': """
  **시스템 오류 알림**
 
-🚨 **오류 유형**: {error_type}
-📝 **내용**: {error_message}
+ **오류 유형**: {error_type}
+ **내용**: {error_message}
 ⏰ **발생 시간**: {timestamp}
 
-🔧 **권장 조치**: {recommendation}
+ **권장 조치**: {recommendation}
             """.strip(),
 
             'system_status': """
  **시스템 상태 체크**
 
-🟢 **상태**: {status}
+ **상태**: {status}
  **가동 시간**: {uptime}
 [SIGNAL] **마지막 신호**: {last_signal}
 
-💹 **포트폴리오**:
+ **포트폴리오**:
   - 현재 포지션: {current_position}
   - 진입 시간: {entry_time}
   - 수익률: {current_pnl:+.2f}%
@@ -144,24 +144,42 @@ class TelegramNotifier:
         self.recent_messages = []
         self.max_recent_messages = 50
 
+        # 일반 상태 알림 시간 제한 (6시간)
+        self.last_routine_notification_time = 0
+        self.routine_notification_interval = 6 * 3600  # 6시간
+
         print(f"봇 토큰: {self.bot_token[:20]}...")
         print(f"채팅 ID: {self.chat_id}")
         print("설정된 알림 유형:", [k for k, v in self.notification_settings.items() if v])
+        print("일반 알림 주기: 6시간")
 
-    def send_message(self, message: str, disable_notification: bool = False) -> bool:
+    def send_message(self, message: str, disable_notification: bool = False, priority: str = "important") -> bool:
         """
         텔레그램 메시지 전송
 
         Args:
             message: 전송할 메시지
             disable_notification: 무음 알림 여부
+            priority: 메시지 우선순위
+                - "routine": 일반 상태 알림 (6시간마다만 전송)
+                - "important": 거래/이슈 알림 (항상 전송)
+                - "emergency": 긴급 알림 (항상 전송)
 
         Returns:
             전송 성공 여부
         """
         try:
-            # 중복 메시지 체크
-            if message in self.recent_messages:
+            # 우선순위 체크
+            current_time = time.time()
+            if priority == "routine":
+                # 일반 알림은 6시간마다만 전송
+                if current_time - self.last_routine_notification_time < self.routine_notification_interval:
+                    print(f"[텔레그램] 일반 알림 생략 (다음 전송까지: {(self.routine_notification_interval - (current_time - self.last_routine_notification_time))/3600:.1f}시간)")
+                    return True
+                self.last_routine_notification_time = current_time
+
+            # 중복 메시지 체크 (긴급 알림은 중복 체크 안 함)
+            if priority != "emergency" and message in self.recent_messages:
                 return True
 
             url = f"{self.api_url}/sendMessage"
@@ -209,7 +227,7 @@ class TelegramNotifier:
         if not self.notification_settings['trade_result']:
             return True
 
-        result = "🟢 수익" if profit_pct > 0 else "🔴 손실"
+        result = " 수익" if profit_pct > 0 else " 손실"
 
         message = self.templates['trade_result'].format(
             symbol=symbol,
@@ -306,7 +324,7 @@ class TelegramNotifier:
     def test_connection(self) -> bool:
         """텔레그램 연결 테스트"""
         try:
-            test_message = f"🧪 **연결 테스트**\n\n⏰ 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n NVDL/NVDQ 알림 봇이 정상 작동 중입니다."
+            test_message = f" **연결 테스트**\n\n⏰ 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n NVDL/NVDQ 알림 봇이 정상 작동 중입니다."
             return self.send_message(test_message)
         except Exception as e:
             print(f"텔레그램 연결 테스트 실패: {e}")
