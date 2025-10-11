@@ -82,18 +82,18 @@ ALLOWED_PORTS = [OLLAMA_PORT_ETH, OLLAMA_PORT_KIS, OLLAMA_PORT_IMPROVEMENT]  # �
 
 # 트레이더 설정
 ETH_TRADER_DIR = r"C:\Users\user\Documents\코드3"
-ETH_TRADER_SCRIPT = r"C:\Users\user\Documents\코드3\llm_eth_trader_v4_3tier.py"  #  3-Tier 실시간 (Websocket+7b+32b)
+ETH_TRADER_SCRIPT = r"C:\Users\user\Documents\코드3\llm_eth_trader_v4_3tier.py"  #  3-Tier 실시간 (Websocket+7b+14b, GPU 최적화)
 ETH_PYTHON = r"C:\Users\user\PycharmProjects\PythonProject\.venv\Scripts\python.exe"
 
 KIS_TRADER_DIR = r"C:\Users\user\Documents\코드4"
-KIS_TRADER_SCRIPT = r"C:\Users\user\Documents\코드4\kis_llm_trader_v2_explosive.py"  # 폭발 전략 (14b+16b 듀얼)
+KIS_TRADER_SCRIPT = r"C:\Users\user\Documents\코드4\kis_llm_trader_v2_explosive.py"  # 폭발 전략 (7b+14b, GPU 최적화)
 KIS_PYTHON = r"C:\Users\user\AppData\Local\Programs\Python\Python311\python.exe"
 
-# 모델 전략 (최종 업그레이드 - 2025-10-11)
-# ETH: 14b 실시간(60초, 특이사항) + 32b 메인(15분, 진입/청산) ← 암호화폐 고급 판단
-# KIS: 14b 실시간(5분, 특이사항) + 32b 메인(15분, 진입/청산) ← 3배 레버리지 고급 판단
-# 통합 매니저: 32b 감시자(5분 자동진단, 임계값 감지) + 16b 자기개선(10분)
-# 철학: 실시간은 빠른 체크, 메인은 똑똑한 결정
+# 모델 전략 (GPU 최적화 - RTX 2060 6GB)
+# ETH: 7b 필터(1-2초, GPU) + 14b 메인(5-10초, 진입/청산) ← 빠른 암호화폐 트레이딩
+# KIS: 7b 모니터(1-2초, GPU) + 14b 메인(5-10초, 진입/청산) ← 3배 레버리지 신중 판단
+# 통합 매니저: 14b 감시자(5분, GPU 5-10초) + 7b 자기개선(10분, GPU 1-2초)
+# 철학: GPU 100% 활용, 빠른 체크 + 신중한 결정
 
 # ===== 리소스 모니터링 설정 =====
 MAX_MEMORY_MB = 10 * 1024  # Ollama 메모리 상한: 10GB
@@ -110,18 +110,18 @@ TRADING_CHECK_INTERVAL = 5 * 60  # 5분마다 거래 현황 체크 (빠른 감�
 ETH_TRADE_HISTORY = r"C:\Users\user\Documents\코드3\eth_trade_history.json"
 KIS_TRADE_HISTORY = r"C:\Users\user\Documents\코드4\kis_trade_history.json"
 
-#  자기개선 엔진 설정 (통합) - 16b 단독 (메모리 최적화)
+#  자기개선 엔진 설정 (통합) - 7b GPU 최적화
 SELF_IMPROVEMENT_INTERVAL = 10 * 60  # 10분마다 자기개선 (적극적 학습)
 IMPROVEMENT_REPORT_INTERVAL = 6 * 60 * 60  # 6시간마다 텔레그램 리포트
 TELEGRAM_ALERT_INTERVAL = 6 * 60 * 60  # 6시간마다만 텔레그램 알림
 OLLAMA_IMPROVEMENT_HOST = f"http://127.0.0.1:{OLLAMA_PORT_IMPROVEMENT}"
-OLLAMA_IMPROVEMENT_MODEL = "deepseek-coder-v2:16b"  # 단독 모델
-OLLAMA_IMPROVEMENT_TIMEOUT = 300  #  5분으로 증가 (Triple Validation용)
+OLLAMA_IMPROVEMENT_MODEL = "qwen2.5:7b"  # GPU 완전 로드 (1-2초)
+OLLAMA_IMPROVEMENT_TIMEOUT = 60  # 7b는 빠르므로 1분으로 단축
 
-#  32b LLM 감시 시스템 (전체 시스템 모니터링)
-OVERSIGHT_LLM_MODEL = "qwen2.5:32b"  # 강력한 32b 모델
-OVERSIGHT_CHECK_INTERVAL = 30 * 60  # 30분마다 전체 시스템 분석
-oversight_llm = None  # 32b LLM 인스턴스 (초기화는 main에서)
+#  14b LLM 감시 시스템 (전체 시스템 모니터링, GPU 최적화)
+OVERSIGHT_LLM_MODEL = "qwen2.5:14b"  # GPU 활용 (5-10초)
+OVERSIGHT_CHECK_INTERVAL = 5 * 60  # 5분마다 전체 시스템 분석 (빠른 감시)
+oversight_llm = None  # 14b LLM 인스턴스 (초기화는 main에서)
 
 # 자기개선 상태 추적
 improvement_history_eth = []
