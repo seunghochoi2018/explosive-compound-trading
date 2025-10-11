@@ -55,10 +55,16 @@ class LLMMarketAnalyzer:
         Args:
             model_name: 사용할 LLM 모델명 (기본값: qwen2.5:1.5b - 빠른 응답)
         """
+        import os
         print("=== LLM 시장 분석 시스템 ===")
 
         self.model_name = model_name
-        self.ollama_url = "http://localhost:11435"  # KIS 전용 Ollama 서버
+        # 환경변수에서 OLLAMA_HOST 읽기 (기본값: localhost:11434)
+        ollama_host = os.getenv('OLLAMA_HOST', '127.0.0.1:11434')
+        if not ollama_host.startswith('http'):
+            ollama_host = f'http://{ollama_host}'
+        self.ollama_url = ollama_host
+        print(f"[LLM] Ollama 서버: {self.ollama_url}")
 
         # 분석 프롬프트 템플릿
         self.analysis_prompts = {
@@ -70,7 +76,7 @@ class LLMMarketAnalyzer:
 2. "똑똑한 LLM이 알아서 하라고"
 3. "좋은 모델을 쓰는 의미가 없잖아 - 조건으로 잡으면 안된다"
 4. "포지션 자주 바꾸지 말고 큰 추세를 타라"
-5. **"ETH 잔고가 계속 늘어나게끔 학습"** ⭐ 중요!
+5. **"ETH 잔고가 계속 늘어나게끔 학습"**  중요!
    - 사용자: "잔고기준으로 체크하면안돼? 이더잔고를 계속체크하니까 잔고가 계속 늘어나게끔 학습하면되잖아"
    - 사용자: "그럼 자연스레 수수료도 인식할꺼고"
    - 과거 거래 데이터에는 실제 ETH 잔고 변화가 기록됨
@@ -92,18 +98,18 @@ class LLMMarketAnalyzer:
 
 거래량: {volume_pattern}
 
-[현재 포지션 상태] ⭐ 중요!
+[현재 포지션 상태]  중요!
 - 포지션: {current_position}
 - 수익률: {position_pnl}%
 - 진입 이후 가격 변화: {price_move_since_entry}%
 
-[🧠 대량 학습 전략] ⭐⭐⭐ 절대 규칙! 반드시 준수! ⭐⭐⭐
+[ 대량 학습 전략]  절대 규칙! 반드시 준수! 
 주석: 사용자 요청 "대량학습한 전략들로만 거래해 손실패턴회피 승리패턴 우선"
 {learned_strategies}
 
-⚠️⚠️⚠️ 위 전략은 21,362개 거래에서 학습한 검증된 규칙입니다!
-⚠️⚠️⚠️ 반드시 위 전략의 조건을 확인하고 판단하세요!
-⚠️⚠️⚠️ 전략과 맞지 않으면 절대 거래하지 마세요!
+ 위 전략은 21,362개 거래에서 학습한 검증된 규칙입니다!
+ 반드시 위 전략의 조건을 확인하고 판단하세요!
+ 전략과 맞지 않으면 절대 거래하지 마세요!
 
 - **손실 패턴 회피**: 위 전략에서 "피해야 할 조건"이 하나라도 맞으면 → 거래 금지!
 - **승리 패턴 우선**: 위 전략에서 "매수/매도 조건"이 모두 맞을 때만 → 거래 실행!
@@ -310,7 +316,7 @@ RISK_LEVEL: [LOW/MEDIUM/HIGH]
 
     def query_llm(self, prompt: str, temperature: float = 0.1) -> str:
         """
-        🤖 LLM 질의 - 사용자 요청 반영: 연결 오류 시 자동 복구
+         LLM 질의 - 사용자 요청 반영: 연결 오류 시 자동 복구
 
         사용자 요구사항: "왜 종료돼 계속 돌아가야지"
         - HTTPConnectionError 발생 시 자동 재시도

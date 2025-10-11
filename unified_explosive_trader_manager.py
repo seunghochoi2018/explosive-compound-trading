@@ -72,7 +72,7 @@ class UnifiedExplosiveManager:
 
         print("\n[초기화 완료]")
         self.telegram.send_message(
-            "🚀 통합 매니저 시작\n\n"
+            " 통합 매니저 시작\n\n"
             "전략: Ollama 메모리 관리\n"
             "ETH: 복리 +4,654%\n"
             "KIS: 연 +2,634%"
@@ -139,7 +139,7 @@ class UnifiedExplosiveManager:
             print(f"[OK] ETH 봇 PID: {self.eth_process.pid}")
             self.log(f"ETH 봇 시작 (PID: {self.eth_process.pid})")
 
-            self.telegram.send_message("✅ ETH 봇 시작")
+            self.telegram.send_message(" ETH 봇 시작")
 
             return True
 
@@ -170,7 +170,7 @@ class UnifiedExplosiveManager:
             print(f"[OK] KIS 봇 PID: {self.kis_process.pid}")
             self.log(f"KIS 봇 시작 (PID: {self.kis_process.pid})")
 
-            self.telegram.send_message("✅ KIS 봇 시작")
+            self.telegram.send_message(" KIS 봇 시작")
 
             return True
 
@@ -227,7 +227,7 @@ class UnifiedExplosiveManager:
             self.log(f"연속 학습기 시작 (PID: {self.learner_process.pid})")
 
             self.telegram.send_message(
-                "🧠 연속 학습 시작\n\n"
+                " 연속 학습 시작\n\n"
                 "백그라운드에서 과거 데이터 분석\n"
                 "획기적 전략 발견 시 자동 교체"
             )
@@ -272,12 +272,12 @@ class UnifiedExplosiveManager:
         5. 반복
 
         이유:
-        - 3분 교대 → 각 봇이 6분마다 기회 포착 ⚡
+        - 3분 교대 → 각 봇이 6분마다 기회 포착 
         - 신호 놓칠 확률 최소화
         - 메모리 안전하게 관리
         - 1시간에 각 봇이 10번 체크!
         """
-        print("\n[전략] ⚡ 초고속 순차 실행 모드")
+        print("\n[전략]  초고속 순차 실행 모드")
         print("  ETH 3분 → KIS 3분 → 빠른 교대")
         print("  각 봇이 6분마다 신호 체크")
         print("  1시간에 각 봇 10회 기회!")
@@ -299,7 +299,7 @@ class UnifiedExplosiveManager:
                 print(f"{'='*80}")
 
                 # 1. ETH 3분
-                print(f"\n[{datetime.now().strftime('%H:%M:%S')}] ⚡ ETH 봇 실행 (3분)")
+                print(f"\n[{datetime.now().strftime('%H:%M:%S')}]  ETH 봇 실행 (3분)")
                 self.start_eth_bot()
                 eth_runs += 1
 
@@ -322,7 +322,7 @@ class UnifiedExplosiveManager:
                 time.sleep(3)
 
                 # 3. KIS 3분
-                print(f"\n[{datetime.now().strftime('%H:%M:%S')}] ⚡ KIS 봇 실행 (3분)")
+                print(f"\n[{datetime.now().strftime('%H:%M:%S')}]  KIS 봇 실행 (3분)")
                 self.start_kis_bot()
                 kis_runs += 1
 
@@ -349,7 +349,7 @@ class UnifiedExplosiveManager:
                 # 30분마다 텔레그램 알림 (10사이클 = 60분)
                 if cycle % 10 == 0:
                     self.telegram.send_message(
-                        f"⚡ 1시간 완료\n"
+                        f" 1시간 완료\n"
                         f"사이클: {cycle}\n"
                         f"ETH: {eth_runs}회 (6분마다)\n"
                         f"KIS: {kis_runs}회 (6분마다)"
@@ -431,7 +431,7 @@ class UnifiedExplosiveManager:
                 pass
 
         print("[OK] 정리 완료")
-        self.telegram.send_message("⚠️ 통합 매니저 종료")
+        self.telegram.send_message(" 통합 매니저 종료")
 
     def log(self, message: str):
         """로그 저장"""

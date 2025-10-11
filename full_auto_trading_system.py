@@ -39,9 +39,9 @@ class FullAutoTradingSystem:
             simulation_mode: 시뮬레이션 모드 여부
         """
         print("=" * 70)
-        print("🚀 NVDL/NVDQ 완전 자동매매 시스템")
-        print("📈 실제 API 연동 + 24시간 자동 거래")
-        print("🧠 실시간 학습 + 적응형 최적화")
+        print(" NVDL/NVDQ 완전 자동매매 시스템")
+        print(" 실제 API 연동 + 24시간 자동 거래")
+        print(" 실시간 학습 + 적응형 최적화")
         print("=" * 70)
 
         self.fmp_api_key = fmp_api_key
@@ -86,7 +86,7 @@ class FullAutoTradingSystem:
             'sync_check_interval': 300,  # 동기화 체크 간격 (초)
         }
 
-        print("✅ 완전 자동매매 시스템 초기화 완료")
+        print(" 완전 자동매매 시스템 초기화 완료")
 
     def sync_positions(self) -> bool:
         """AI 모델과 실제 API 포지션 동기화"""
@@ -103,7 +103,7 @@ class FullAutoTradingSystem:
 
             # 불일치 처리
             if api_position != ai_position:
-                print(f"⚠️ 포지션 불일치 감지!")
+                print(f" 포지션 불일치 감지!")
 
                 if api_position and not ai_position:
                     # API에는 포지션이 있는데 AI는 없음 -> AI 상태 동기화
@@ -139,7 +139,7 @@ class FullAutoTradingSystem:
 
                 # 텔레그램 알림
                 self.telegram.send_message(
-                    f"⚠️ **포지션 동기화**\n\n"
+                    f" **포지션 동기화**\n\n"
                     f"API 포지션: {api_position}\n"
                     f"AI 포지션: {ai_position}\n"
                     f"→ {api_position or '없음'}로 동기화 완료"
@@ -157,7 +157,7 @@ class FullAutoTradingSystem:
     def execute_real_trade(self, action: str, symbol: str, confidence: float) -> bool:
         """실제 거래 실행"""
         try:
-            print(f"\n🔄 실제 거래 실행: {action} {symbol}")
+            print(f"\n 실제 거래 실행: {action} {symbol}")
 
             # 안전 체크
             if not self.safety_check(action, symbol):
@@ -171,21 +171,21 @@ class FullAutoTradingSystem:
                     self.integrated_state['total_api_trades'] += 1
                     self.integrated_state['last_trade_time'] = datetime.now()
 
-                    print(f"✅ {symbol} 실제 포지션 진입 성공")
+                    print(f" {symbol} 실제 포지션 진입 성공")
 
                     # 텔레그램 알림
                     self.telegram.send_message(
-                        f"📈 **실제 거래 실행**\n\n"
-                        f"🎯 종목: {symbol}\n"
-                        f"📊 수량: {result.get('quantity')}주\n"
-                        f"💰 가격: ${result.get('price', 0):.2f}\n"
-                        f"🔗 주문ID: {result.get('order_id')}\n"
-                        f"💪 신뢰도: {confidence:.1%}"
+                        f" **실제 거래 실행**\n\n"
+                        f" 종목: {symbol}\n"
+                        f" 수량: {result.get('quantity')}주\n"
+                        f" 가격: ${result.get('price', 0):.2f}\n"
+                        f" 주문ID: {result.get('order_id')}\n"
+                        f" 신뢰도: {confidence:.1%}"
                     )
 
                     return True
                 else:
-                    print(f"❌ {symbol} 실제 포지션 진입 실패: {result.get('error')}")
+                    print(f" {symbol} 실제 포지션 진입 실패: {result.get('error')}")
                     self.telegram.notify_error(
                         f"{symbol} 포지션 진입 실패",
                         result.get('error', '알 수 없는 오류')
@@ -204,22 +204,22 @@ class FullAutoTradingSystem:
                     pnl_pct = result.get('pnl_pct', 0)
                     self.integrated_state['api_profit'] += pnl_pct
 
-                    print(f"✅ {symbol} 실제 포지션 청산 성공: {pnl_pct:+.2f}%")
+                    print(f" {symbol} 실제 포지션 청산 성공: {pnl_pct:+.2f}%")
 
                     # 텔레그램 알림
                     self.telegram.send_message(
-                        f"📊 **실제 거래 완료**\n\n"
-                        f"🎯 종목: {symbol}\n"
-                        f"📊 수량: {result.get('quantity')}주\n"
-                        f"💰 청산가: ${result.get('price', 0):.2f}\n"
-                        f"💵 수익: {pnl_pct:+.2f}%\n"
-                        f"💰 누적 수익: {self.integrated_state['api_profit']:+.2f}%\n"
-                        f"🔗 주문ID: {result.get('order_id')}"
+                        f" **실제 거래 완료**\n\n"
+                        f" 종목: {symbol}\n"
+                        f" 수량: {result.get('quantity')}주\n"
+                        f" 청산가: ${result.get('price', 0):.2f}\n"
+                        f" 수익: {pnl_pct:+.2f}%\n"
+                        f" 누적 수익: {self.integrated_state['api_profit']:+.2f}%\n"
+                        f" 주문ID: {result.get('order_id')}"
                     )
 
                     return True
                 else:
-                    print(f"❌ {symbol} 실제 포지션 청산 실패: {result.get('error')}")
+                    print(f" {symbol} 실제 포지션 청산 실패: {result.get('error')}")
                     self.telegram.notify_error(
                         f"{symbol} 포지션 청산 실패",
                         result.get('error', '알 수 없는 오류')
@@ -236,14 +236,14 @@ class FullAutoTradingSystem:
         try:
             # 일일 거래 횟수 체크
             if self.integrated_state['total_api_trades'] >= self.safety_config['max_daily_trades']:
-                print(f"❌ 일일 최대 거래 횟수 초과: {self.integrated_state['total_api_trades']}")
+                print(f" 일일 최대 거래 횟수 초과: {self.integrated_state['total_api_trades']}")
                 return False
 
             # 거래 간격 체크
             if self.integrated_state['last_trade_time']:
                 time_diff = (datetime.now() - self.integrated_state['last_trade_time']).total_seconds()
                 if time_diff < self.safety_config['max_trade_frequency']:
-                    print(f"❌ 최소 거래 간격 미충족: {time_diff:.0f}초")
+                    print(f" 최소 거래 간격 미충족: {time_diff:.0f}초")
                     return False
 
             # 긴급 손절 체크
@@ -256,9 +256,9 @@ class FullAutoTradingSystem:
                         current_loss += abs(pos['unrealized_pnl_pct'])
 
                 if current_loss > self.safety_config['emergency_stop_loss']:
-                    print(f"❌ 긴급 손절 임계값 초과: {current_loss:.2f}%")
+                    print(f" 긴급 손절 임계값 초과: {current_loss:.2f}%")
                     self.telegram.send_message(
-                        f"🚨 **긴급 손절 작동**\n\n"
+                        f" **긴급 손절 작동**\n\n"
                         f"현재 손실: {current_loss:.2f}%\n"
                         f"임계값: {self.safety_config['emergency_stop_loss']}%\n"
                         f"새로운 포지션 진입 차단"
@@ -267,7 +267,7 @@ class FullAutoTradingSystem:
 
             # 시장 개장 시간 체크 (옵션)
             if not self.api_manager.is_market_open():
-                print("❌ 시장 비개장 시간")
+                print(" 시장 비개장 시간")
                 return False
 
             return True
@@ -345,23 +345,23 @@ class FullAutoTradingSystem:
 
     def run(self):
         """메인 실행 루프"""
-        print("\n🚀 완전 자동매매 시스템 시작")
+        print("\n 완전 자동매매 시스템 시작")
 
         # 초기 시스템 로드
         self.adaptive_trader.load_state()
 
         # 데이터 준비
-        print("📊 데이터 및 모델 준비 중...")
+        print(" 데이터 및 모델 준비 중...")
         if not self.adaptive_trader.data_collector.load_data():
             self.adaptive_trader.data_collector.collect_all_data()
             self.adaptive_trader.data_collector.calculate_all_features()
             self.adaptive_trader.data_collector.save_data()
 
         if not self.adaptive_trader.trading_model.mass_learning():
-            print("❌ 모델 학습 실패")
+            print(" 모델 학습 실패")
             return
 
-        print("✅ 시스템 준비 완료!")
+        print(" 시스템 준비 완료!")
 
         # 초기 계좌 상태
         self.api_manager.print_account_status()
@@ -369,16 +369,16 @@ class FullAutoTradingSystem:
         # 시작 알림
         mode_text = "시뮬레이션" if self.simulation_mode else "실제 거래"
         start_message = f"""
-🚀 **완전 자동매매 시작**
+ **완전 자동매매 시작**
 
-⚡ **모드**: {mode_text}
-🎯 **대상**: NVDL/NVDQ
-🧠 **AI 모델**: 학습 완료
-📊 **거래 주기**: 적응형 최적화
+ **모드**: {mode_text}
+ **대상**: NVDL/NVDQ
+ **AI 모델**: 학습 완료
+ **거래 주기**: 적응형 최적화
 
 ⏰ **시작**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
-🔔 실시간 거래 알림을 보내드립니다!
+ 실시간 거래 알림을 보내드립니다!
         """.strip()
 
         self.telegram.send_message(start_message)
@@ -424,9 +424,9 @@ class FullAutoTradingSystem:
                 time.sleep(sleep_time)
 
         except KeyboardInterrupt:
-            print("\n⏹️ 사용자에 의한 중단")
+            print("\n⏹ 사용자에 의한 중단")
         except Exception as e:
-            print(f"\n❌ 시스템 오류: {e}")
+            print(f"\n 시스템 오류: {e}")
             self.telegram.notify_error("자동매매 시스템 오류", str(e))
         finally:
             self.running = False
@@ -440,24 +440,24 @@ class FullAutoTradingSystem:
         ai_profit = self.adaptive_trader.daily_profit
 
         summary_message = f"""
-📊 **일일 거래 요약**
+ **일일 거래 요약**
 
-📅 **날짜**: {datetime.now().strftime('%Y-%m-%d')}
+ **날짜**: {datetime.now().strftime('%Y-%m-%d')}
 
-🤖 **실제 API 거래**:
+ **실제 API 거래**:
 - 거래 횟수: {api_trades}회
 - 수익률: {api_profit:+.2f}%
 
-🧠 **AI 시뮬레이션**:
+ **AI 시뮬레이션**:
 - 거래 횟수: {ai_trades}회
 - 수익률: {ai_profit:+.2f}%
 
-📈 **누적 성과**:
+ **누적 성과**:
 - 총 거래: {self.adaptive_trader.total_trades}회
 - 승률: {self.adaptive_trader.get_win_rate():.1f}%
 - 총 수익: {self.adaptive_trader.total_profit:+.2f}%
 
-⚡ **시스템 상태**: 정상 운영 중
+ **시스템 상태**: 정상 운영 중
         """.strip()
 
         self.telegram.send_message(summary_message)
@@ -468,24 +468,24 @@ class FullAutoTradingSystem:
         account_info = account_summary.get('account_info', {})
 
         status_message = f"""
-📊 **종합 상태 보고**
+ **종합 상태 보고**
 
-💰 **계좌 현황**:
+ **계좌 현황**:
 - 총 자산: ${account_info.get('equity', 0):,.2f}
 - 현금: ${account_info.get('cash', 0):,.2f}
 - 포트폴리오: ${account_info.get('portfolio_value', 0):,.2f}
 
-🎯 **현재 포지션**: {self.integrated_state['api_position'] or '없음'}
+ **현재 포지션**: {self.integrated_state['api_position'] or '없음'}
 
-📈 **성과 요약**:
+ **성과 요약**:
 - API 거래: {self.integrated_state['total_api_trades']}회
 - API 수익: {self.integrated_state['api_profit']:+.2f}%
 - 동기화 오류: {self.integrated_state['trade_sync_errors']}회
 
-⏱️ **가동 시간**: {datetime.now() - self.start_time}
-📊 **최적 주기**: {self.adaptive_trader.frequency_manager.current_optimal_frequency}
+⏱ **가동 시간**: {datetime.now() - self.start_time}
+ **최적 주기**: {self.adaptive_trader.frequency_manager.current_optimal_frequency}
 
-⚡ **상태**: 정상 운영 중
+ **상태**: 정상 운영 중
         """.strip()
 
         self.telegram.send_message(status_message)
@@ -496,7 +496,7 @@ class FullAutoTradingSystem:
             # 모든 포지션 청산 (선택적)
             positions = self.api_manager.get_positions()
             if positions:
-                print("⚠️ 시스템 종료 시 포지션이 있습니다.")
+                print(" 시스템 종료 시 포지션이 있습니다.")
                 choice = input("모든 포지션을 청산하시겠습니까? (y/N): ").lower()
                 if choice == 'y':
                     results = self.api_manager.close_all_positions()
@@ -507,14 +507,14 @@ class FullAutoTradingSystem:
 
             # 종료 알림
             self.telegram.send_message(
-                f"⏹️ **완전 자동매매 종료**\n\n"
+                f"⏹ **완전 자동매매 종료**\n\n"
                 f"실행 시간: {datetime.now() - self.start_time}\n"
                 f"실제 거래: {self.integrated_state['total_api_trades']}회\n"
                 f"최종 수익: {self.integrated_state['api_profit']:+.2f}%\n"
                 f"시스템이 안전하게 종료되었습니다."
             )
 
-            print("🔚 완전 자동매매 시스템 종료")
+            print(" 완전 자동매매 시스템 종료")
 
         except Exception as e:
             print(f"정리 작업 오류: {e}")

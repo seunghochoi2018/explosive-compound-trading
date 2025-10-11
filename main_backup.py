@@ -18,7 +18,7 @@ try:
     from position_analysis_reporter import PositionAnalysisReporter
     from telegram_notifier import TelegramNotifier
 except ImportError as e:
-    print(f"❌ 모듈 임포트 오류: {e}")
+    print(f" 모듈 임포트 오류: {e}")
     print("필요한 Python 패키지를 설치해주세요:")
     print("pip install requests pandas numpy scikit-learn matplotlib seaborn")
     sys.exit(1)
@@ -26,13 +26,13 @@ except ImportError as e:
 def print_banner():
     """시작 배너 출력"""
     print("=" * 70)
-    print("🤖 NVDL/NVDQ 텔레그램 알림 봇")
-    print("📊 AI 기반 레버리지 ETF 거래 시스템")
-    print("💬 실시간 텔레그램 알림")
+    print(" NVDL/NVDQ 텔레그램 알림 봇")
+    print(" AI 기반 레버리지 ETF 거래 시스템")
+    print(" 실시간 텔레그램 알림")
     print("=" * 70)
-    print("📈 NVDL: 3x 레버리지 NVIDIA ETF (상승 시 수익)")
-    print("📉 NVDQ: 2x 역 레버리지 NASDAQ ETF (하락 시 수익)")
-    print("⚡ FMP API + 머신러닝 앙상블 모델")
+    print(" NVDL: 3x 레버리지 NVIDIA ETF (상승 시 수익)")
+    print(" NVDQ: 2x 역 레버리지 NASDAQ ETF (하락 시 수익)")
+    print(" FMP API + 머신러닝 앙상블 모델")
     print("=" * 70)
 
 def check_dependencies():
@@ -50,7 +50,7 @@ def check_dependencies():
             missing_packages.append(package)
 
     if missing_packages:
-        print(f"❌ 누락된 패키지: {', '.join(missing_packages)}")
+        print(f" 누락된 패키지: {', '.join(missing_packages)}")
         print("다음 명령어로 설치하세요:")
         print(f"pip install {' '.join(missing_packages)}")
         return False
@@ -60,7 +60,7 @@ def check_dependencies():
 def validate_api_key(api_key: str) -> bool:
     """FMP API 키 유효성 검증"""
     if not api_key or api_key == "YOUR_API_KEY_HERE":
-        print("❌ FMP API 키가 설정되지 않았습니다!")
+        print(" FMP API 키가 설정되지 않았습니다!")
         print("https://financialmodelingprep.com/developer/docs 에서 API 키를 발급받으세요.")
         return False
 
@@ -70,34 +70,34 @@ def validate_api_key(api_key: str) -> bool:
         url = "https://financialmodelingprep.com/api/v3/quote/AAPL"
         response = requests.get(url, params={'apikey': api_key}, timeout=10)
         if response.status_code == 200:
-            print("✅ FMP API 키 검증 성공")
+            print(" FMP API 키 검증 성공")
             return True
         else:
-            print(f"❌ FMP API 키 검증 실패: {response.status_code}")
+            print(f" FMP API 키 검증 실패: {response.status_code}")
             return False
     except Exception as e:
-        print(f"❌ API 키 검증 오류: {e}")
+        print(f" API 키 검증 오류: {e}")
         return False
 
 def test_telegram_connection() -> bool:
     """텔레그램 연결 테스트"""
-    print("📱 텔레그램 연결 테스트 중...")
+    print(" 텔레그램 연결 테스트 중...")
 
     try:
         telegram = TelegramNotifier()
         if telegram.test_connection():
-            print("✅ 텔레그램 연결 성공")
+            print(" 텔레그램 연결 성공")
             return True
         else:
-            print("❌ 텔레그램 연결 실패")
+            print(" 텔레그램 연결 실패")
             return False
     except Exception as e:
-        print(f"❌ 텔레그램 연결 오류: {e}")
+        print(f" 텔레그램 연결 오류: {e}")
         return False
 
 def run_data_collection(api_key: str):
     """데이터 수집 실행"""
-    print("\n📊 데이터 수집 모드")
+    print("\n 데이터 수집 모드")
 
     from nvdl_nvdq_data_collector import NVDLNVDQDataCollector
 
@@ -117,11 +117,11 @@ def run_data_collection(api_key: str):
     collector.save_data()
     collector.print_summary()
 
-    print("✅ 데이터 수집 완료!")
+    print(" 데이터 수집 완료!")
 
 def run_model_training(api_key: str):
     """모델 학습 실행"""
-    print("\n🧠 모델 학습 모드")
+    print("\n 모델 학습 모드")
 
     from nvdl_nvdq_trading_model import NVDLNVDQTradingModel
 
@@ -135,28 +135,28 @@ def run_model_training(api_key: str):
 
     # 모델 학습
     if model.mass_learning():
-        print("✅ 모델 학습 완료!")
+        print(" 모델 학습 완료!")
 
         # 테스트 신호 생성
-        print("\n🧪 신호 테스트:")
+        print("\n 신호 테스트:")
         action, symbol, confidence = model.get_portfolio_signal()
         print(f"현재 추천: {action} {symbol} (신뢰도: {confidence:.2f})")
 
     else:
-        print("❌ 모델 학습 실패!")
+        print(" 모델 학습 실패!")
 
 def run_analysis_report(api_key: str):
     """분석 보고서 생성"""
-    print("\n📊 분석 보고서 모드")
+    print("\n 분석 보고서 모드")
 
     reporter = PositionAnalysisReporter(api_key)
     reporter.send_analysis_report()
 
-    print("✅ 분석 보고서 전송 완료!")
+    print(" 분석 보고서 전송 완료!")
 
 def run_telegram_bot(api_key: str, auto_trading: bool = False):
     """텔레그램 봇 실행"""
-    print(f"\n🤖 텔레그램 봇 모드 (자동매매: {'ON' if auto_trading else 'OFF'})")
+    print(f"\n 텔레그램 봇 모드 (자동매매: {'ON' if auto_trading else 'OFF'})")
 
     # 사전 검증
     if not validate_api_key(api_key):
@@ -171,9 +171,9 @@ def run_telegram_bot(api_key: str, auto_trading: bool = False):
     try:
         bot.run()
     except KeyboardInterrupt:
-        print("\n⏹️ 사용자에 의한 중단")
+        print("\n⏹ 사용자에 의한 중단")
     except Exception as e:
-        print(f"\n❌ 봇 실행 오류: {e}")
+        print(f"\n 봇 실행 오류: {e}")
 
 def main():
     """메인 함수"""
@@ -247,14 +247,14 @@ def main():
             run_telegram_bot(args.api_key, args.auto_trading)
 
     except KeyboardInterrupt:
-        print("\n⏹️ 사용자에 의한 중단")
+        print("\n⏹ 사용자에 의한 중단")
     except Exception as e:
-        print(f"\n❌ 실행 오류: {e}")
+        print(f"\n 실행 오류: {e}")
     finally:
         end_time = datetime.now()
         duration = end_time - start_time
         print(f"\n⏰ 종료 시간: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"⏱️ 실행 시간: {duration}")
+        print(f"⏱ 실행 시간: {duration}")
 
 if __name__ == "__main__":
     main()

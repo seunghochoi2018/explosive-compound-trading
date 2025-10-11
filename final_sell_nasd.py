@@ -107,7 +107,7 @@ if response.status_code == 200:
                     print(f"msg1: {result.get('msg1')}")
 
                     if result.get('rt_cd') == '0':
-                        print(f"\n✅ 청산 완료!")
+                        print(f"\n 청산 완료!")
                     else:
-                        print(f"\n❌ 실패")
+                        print(f"\n 실패")
                 break

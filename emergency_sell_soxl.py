@@ -103,12 +103,12 @@ if response.status_code == 200:
                     if sell_response.status_code == 200:
                         result = sell_response.json()
                         if result.get('rt_cd') == '0':
-                            print(f"✅ 청산 성공!")
+                            print(f" 청산 성공!")
                             print(f"주문번호: {result.get('output', {}).get('ODNO', 'N/A')}")
                         else:
-                            print(f"❌ 청산 실패: {result.get('msg1', '')}")
+                            print(f" 청산 실패: {result.get('msg1', '')}")
                     else:
-                        print(f"❌ API 오류: {sell_response.status_code}")
+                        print(f" API 오류: {sell_response.status_code}")
                 else:
                     print(f"\n[알림] SOXL 보유 없음")
 

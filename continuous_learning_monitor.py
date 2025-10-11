@@ -54,7 +54,7 @@ class ContinuousLearningMonitor:
 
         print("[OK] 모니터 초기화 완료")
         self.telegram.send_message(
-            "🔍 실시간 모니터 시작\n\n"
+            " 실시간 모니터 시작\n\n"
             "기능:\n"
             "- 거래 실시간 추적\n"
             "- 손실 패턴 자동 감지\n"
@@ -105,7 +105,7 @@ class ContinuousLearningMonitor:
                     'pnl': pnl,
                     'holding_time': holding_time,
                     'reason': trade.get('reason', 'unknown'),
-                    'action': '⚠️ 큰 손실 발생! 패턴 분석 필요',
+                    'action': ' 큰 손실 발생! 패턴 분석 필요',
                     'timestamp': trade.get('timestamp', '')
                 })
 
@@ -116,7 +116,7 @@ class ContinuousLearningMonitor:
                     'asset': asset_name,
                     'pnl': pnl,
                     'holding_time': holding_time,
-                    'action': f'⚠️ {holding_time:.0f}분 보유 후 손실 → 보유시간 줄이기 권장',
+                    'action': f' {holding_time:.0f}분 보유 후 손실 → 보유시간 줄이기 권장',
                     'timestamp': trade.get('timestamp', '')
                 })
 
@@ -127,7 +127,7 @@ class ContinuousLearningMonitor:
                     'asset': asset_name,
                     'pnl': pnl,
                     'holding_time': holding_time,
-                    'action': '⚠️ 빠른 손실 → 진입 타이밍 재검토 필요',
+                    'action': ' 빠른 손실 → 진입 타이밍 재검토 필요',
                     'timestamp': trade.get('timestamp', '')
                 })
 
@@ -138,7 +138,7 @@ class ContinuousLearningMonitor:
                     'asset': asset_name,
                     'pnl': pnl,
                     'holding_time': holding_time,
-                    'action': f'✅ 큰 수익! 이 패턴 강화',
+                    'action': f' 큰 수익! 이 패턴 강화',
                     'timestamp': trade.get('timestamp', '')
                 })
 
@@ -150,7 +150,7 @@ class ContinuousLearningMonitor:
                         'type': 'BALANCE_DECREASE',
                         'asset': asset_name,
                         'change': balance_change,
-                        'action': f'⚠️ 잔고 감소: {balance_change:+.6f}',
+                        'action': f' 잔고 감소: {balance_change:+.6f}',
                         'timestamp': trade.get('timestamp', '')
                     })
 
@@ -173,21 +173,21 @@ class ContinuousLearningMonitor:
         # 큰 손실 많으면
         if len(big_losses) >= 3:
             suggestions.append(
-                "🔧 큰 손실 3건 이상 발생\n"
+                " 큰 손실 3건 이상 발생\n"
                 "→ 동적 손절 강화 권장 (-2% → -1.5%)"
             )
 
         # 장기 보유 손실 많으면
         if len(long_hold_losses) >= 5:
             suggestions.append(
-                "🔧 120분 이상 보유 손실 5건 이상\n"
+                " 120분 이상 보유 손실 5건 이상\n"
                 "→ 최대 보유시간 단축 권장 (120분 → 60분)"
             )
 
         # 빠른 손실 많으면
         if len(fast_losses) >= 5:
             suggestions.append(
-                "🔧 빠른 손실 5건 이상\n"
+                " 빠른 손실 5건 이상\n"
                 "→ 최소 신뢰도 상향 권장 (75% → 80%)"
             )
 
@@ -195,7 +195,7 @@ class ContinuousLearningMonitor:
         if big_wins:
             avg_holding = sum(w['holding_time'] for w in big_wins) / len(big_wins)
             suggestions.append(
-                f"✅ 큰 수익 패턴 발견\n"
+                f" 큰 수익 패턴 발견\n"
                 f"→ 평균 보유시간: {avg_holding:.0f}분\n"
                 f"→ 이 시간대 강화 권장"
             )
@@ -225,7 +225,7 @@ class ContinuousLearningMonitor:
                         for insight in insights:
                             if insight['type'] in ['BIG_LOSS', 'LONG_HOLD_LOSS', 'BALANCE_DECREASE']:
                                 self.telegram.send_message(
-                                    f"📊 ETH 알림\n\n"
+                                    f" ETH 알림\n\n"
                                     f"{insight['action']}\n"
                                     f"PNL: {insight.get('pnl', 0):+.2f}%\n"
                                     f"시간: {insight.get('timestamp', '')[:16]}"
@@ -250,7 +250,7 @@ class ContinuousLearningMonitor:
                         for insight in insights:
                             if insight['type'] in ['BIG_LOSS', 'LONG_HOLD_LOSS', 'BALANCE_DECREASE']:
                                 self.telegram.send_message(
-                                    f"📊 KIS 알림\n\n"
+                                    f" KIS 알림\n\n"
                                     f"{insight['action']}\n"
                                     f"PNL: {insight.get('pnl', 0):+.2f}%\n"
                                     f"시간: {insight.get('timestamp', '')[:16]}"
@@ -283,7 +283,7 @@ class ContinuousLearningMonitor:
                 suggestions = self.generate_improvement_suggestions(recent_insights)
 
                 if suggestions:
-                    report = "📈 1시간 리포트\n\n" + "\n\n".join(suggestions)
+                    report = " 1시간 리포트\n\n" + "\n\n".join(suggestions)
                     self.telegram.send_message(report)
 
         except Exception as e:

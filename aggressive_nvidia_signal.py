@@ -35,7 +35,7 @@ class AggressiveNVIDIASignal:
         self.last_signal_time = {}  # 심볼별 마지막 신호 시간
         self.signal_cooldown = 300  # 5분 쿨다운
 
-        logger.info("🚀 적극적 NVIDIA 신호 시스템 시작")
+        logger.info(" 적극적 NVIDIA 신호 시스템 시작")
 
     def get_stock_price(self, symbol: str) -> Optional[Dict]:
         """주식 가격 조회"""
@@ -56,7 +56,7 @@ class AggressiveNVIDIASignal:
                         "timestamp": datetime.now()
                     }
         except Exception as e:
-            logger.error(f"❌ {symbol} 조회 실패: {e}")
+            logger.error(f" {symbol} 조회 실패: {e}")
         return None
 
     def analyze_signal(self, data: Dict) -> Optional[str]:
@@ -78,16 +78,16 @@ class AggressiveNVIDIASignal:
         # NVDL (3배 레버리지)
         if symbol == "NVDL":
             if change_percent >= self.min_change:
-                signal = f"🚀 NVDL 상승 신호! {change_percent:+.2f}%"
+                signal = f" NVDL 상승 신호! {change_percent:+.2f}%"
             elif change_percent <= -self.min_change:
-                signal = f"📉 NVDL 하락 반등 기회! {change_percent:+.2f}%"
+                signal = f" NVDL 하락 반등 기회! {change_percent:+.2f}%"
 
         # NVDD (인버스)
         elif symbol == "NVDD":
             if change_percent >= self.min_change:
-                signal = f"🔻 NVDD 상승 (NVIDIA 하락) {change_percent:+.2f}%"
+                signal = f" NVDD 상승 (NVIDIA 하락) {change_percent:+.2f}%"
             elif change_percent <= -self.min_change:
-                signal = f"📈 NVDD 하락 (NVIDIA 상승) {change_percent:+.2f}%"
+                signal = f" NVDD 하락 (NVIDIA 상승) {change_percent:+.2f}%"
 
         if signal:
             self.last_signal_time[symbol] = time.time()
@@ -106,7 +106,7 @@ class AggressiveNVIDIASignal:
             }
             response = requests.post(url, json=payload, timeout=5)
             if response.status_code == 200:
-                logger.info(f"📨 텔레그램 전송: {message}")
+                logger.info(f" 텔레그램 전송: {message}")
             else:
                 logger.error(f"텔레그램 전송 실패: {response.status_code}")
         except Exception as e:
@@ -126,9 +126,9 @@ class AggressiveNVIDIASignal:
                 full_message = f"""
 {signal}
 
-💰 현재가: ${nvdl_data['price']:.2f}
-📊 변화율: {nvdl_data['change_percent']:+.2f}%
-📈 거래량: {nvdl_data['volume']:,}
+ 현재가: ${nvdl_data['price']:.2f}
+ 변화율: {nvdl_data['change_percent']:+.2f}%
+ 거래량: {nvdl_data['volume']:,}
 ⏰ 시간: {datetime.now().strftime('%H:%M:%S')}
 
 #NVDL #레버리지 #신호
@@ -145,9 +145,9 @@ class AggressiveNVIDIASignal:
                 full_message = f"""
 {signal}
 
-💰 현재가: ${nvdd_data['price']:.2f}
-📊 변화율: {nvdd_data['change_percent']:+.2f}%
-📈 거래량: {nvdd_data['volume']:,}
+ 현재가: ${nvdd_data['price']:.2f}
+ 변화율: {nvdd_data['change_percent']:+.2f}%
+ 거래량: {nvdd_data['volume']:,}
 ⏰ 시간: {datetime.now().strftime('%H:%M:%S')}
 
 #NVDD #인버스 #신호
@@ -162,7 +162,7 @@ class AggressiveNVIDIASignal:
         if current_time - self.last_status_time > 600:  # 10분마다
             if nvdl_data and nvdd_data:
                 status_message = f"""
-📊 NVIDIA 정기 리포트
+ NVIDIA 정기 리포트
 
 NVDL: ${nvdl_data['price']:.2f} ({nvdl_data['change_percent']:+.2f}%)
 NVDD: ${nvdd_data['price']:.2f} ({nvdd_data['change_percent']:+.2f}%)
@@ -174,9 +174,9 @@ NVDD: ${nvdd_data['price']:.2f} ({nvdd_data['change_percent']:+.2f}%)
 
     def run(self):
         """메인 실행"""
-        logger.info("🚀 적극적 NVIDIA 신호 시스템")
-        logger.info(f"📊 체크 간격: {self.check_interval}초")
-        logger.info(f"🎯 최소 변화율: {self.min_change}%")
+        logger.info(" 적극적 NVIDIA 신호 시스템")
+        logger.info(f" 체크 간격: {self.check_interval}초")
+        logger.info(f" 최소 변화율: {self.min_change}%")
         logger.info("=" * 60)
 
         while True:
@@ -187,7 +187,7 @@ NVDD: ${nvdd_data['price']:.2f} ({nvdd_data['change_percent']:+.2f}%)
                 time.sleep(self.check_interval)
 
             except KeyboardInterrupt:
-                logger.info("\n👋 종료")
+                logger.info("\n 종료")
                 break
             except Exception as e:
                 logger.error(f"오류: {e}")

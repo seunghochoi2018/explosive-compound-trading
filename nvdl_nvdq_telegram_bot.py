@@ -32,9 +32,9 @@ class NVDLNVDQTelegramBot:
             auto_trading: 자동매매 활성화 여부 (기본: False, 알림만)
         """
         print("=" * 60)
-        print("🤖 NVDL/NVDQ 텔레그램 알림 봇")
-        print("📊 레버리지 ETF 전용 AI 거래 시스템")
-        print("💬 실시간 텔레그램 알림")
+        print(" NVDL/NVDQ 텔레그램 알림 봇")
+        print(" 레버리지 ETF 전용 AI 거래 시스템")
+        print(" 실시간 텔레그램 알림")
         print("=" * 60)
 
         # 기본 설정
@@ -44,7 +44,7 @@ class NVDLNVDQTelegramBot:
         self.start_time = datetime.now()
 
         # 컴포넌트 초기화
-        print("\n📡 컴포넌트 초기화 중...")
+        print("\n 컴포넌트 초기화 중...")
         self.data_collector = NVDLNVDQDataCollector(fmp_api_key)
         self.trading_model = NVDLNVDQTradingModel(fmp_api_key)
         self.telegram = TelegramNotifier()
@@ -77,7 +77,7 @@ class NVDLNVDQTelegramBot:
         # 상태 파일
         self.state_file = "nvdl_nvdq_bot_state.json"
 
-        print("✅ 컴포넌트 초기화 완료")
+        print(" 컴포넌트 초기화 완료")
 
     def load_state(self):
         """봇 상태 로드"""
@@ -117,13 +117,13 @@ class NVDLNVDQTelegramBot:
 
     def initialize_system(self):
         """시스템 초기화"""
-        print("\n🔧 시스템 초기화 중...")
+        print("\n 시스템 초기화 중...")
 
         # 1. 상태 로드
         self.load_state()
 
         # 2. 데이터 수집 및 로드
-        print("📊 데이터 로드 중...")
+        print(" 데이터 로드 중...")
         if not self.data_collector.load_data():
             print("새로운 데이터 수집 중...")
             self.data_collector.collect_all_data()
@@ -131,18 +131,18 @@ class NVDLNVDQTelegramBot:
             self.data_collector.save_data()
 
         # 3. AI 모델 학습
-        print("🧠 AI 모델 로드 중...")
+        print(" AI 모델 로드 중...")
         if not self.trading_model.mass_learning():
-            print("❌ 모델 학습 실패")
+            print(" 모델 학습 실패")
             return False
 
         # 4. 텔레그램 연결 테스트
-        print("📱 텔레그램 연결 테스트...")
+        print(" 텔레그램 연결 테스트...")
         if not self.telegram.test_connection():
-            print("❌ 텔레그램 연결 실패")
+            print(" 텔레그램 연결 실패")
             return False
 
-        print("✅ 시스템 초기화 완료!")
+        print(" 시스템 초기화 완료!")
         return True
 
     def check_signals(self):
@@ -185,14 +185,14 @@ class NVDLNVDQTelegramBot:
 
             # 포지션이 실제로 변경되는 경우에만 알림 및 처리
             if should_change_position:
-                print(f"🔄 포지션 변경 감지: {old_position} → {new_position}")
+                print(f" 포지션 변경 감지: {old_position} → {new_position}")
                 self.change_position(old_position, new_position, confidence)
             else:
                 # 포지션 변경 없을 때는 콘솔 로그만
                 if self.current_position:
-                    print(f"📍 포지션 유지: {self.current_position} (변경 없음)")
+                    print(f" 포지션 유지: {self.current_position} (변경 없음)")
                 else:
-                    print(f"💰 현금 유지 (진입 조건 미충족)")
+                    print(f" 현금 유지 (진입 조건 미충족)")
 
             # 신호 기록 업데이트 (알림과 무관하게)
             new_signal = f"{action}_{symbol}" if action == "BUY" else "HOLD"
@@ -219,7 +219,7 @@ class NVDLNVDQTelegramBot:
 
     def change_position(self, old_position: str, new_position: str, confidence: float):
         """포지션 변경 및 알림"""
-        print(f"\n🔄 포지션 변경: {old_position} → {new_position}")
+        print(f"\n 포지션 변경: {old_position} → {new_position}")
 
         # 기존 포지션 청산 시뮬레이션
         if old_position and self.position_entry_price:
@@ -260,13 +260,13 @@ class NVDLNVDQTelegramBot:
         self.position_entry_price = entry_price
         self.position_features = self.data_collector.get_latest_features(symbol)
 
-        print(f"📈 {symbol} 포지션 진입: ${entry_price:.2f}")
+        print(f" {symbol} 포지션 진입: ${entry_price:.2f}")
 
         if self.auto_trading:
             # 실제 거래 실행 코드 (API 연동 필요)
-            print("🤖 자동매매: 실제 주문 실행 (구현 필요)")
+            print(" 자동매매: 실제 주문 실행 (구현 필요)")
         else:
-            print("💬 알림 모드: 수동 거래 권장")
+            print(" 알림 모드: 수동 거래 권장")
 
     def close_position(self, symbol: str, exit_price: float):
         """포지션 청산"""
@@ -304,7 +304,7 @@ class NVDLNVDQTelegramBot:
                 symbol, self.position_entry_price, exit_price, self.position_features
             )
 
-        print(f"📊 {symbol} 포지션 청산: {profit_pct:+.2f}% ({holding_time})")
+        print(f" {symbol} 포지션 청산: {profit_pct:+.2f}% ({holding_time})")
 
         # 텔레그램 알림
         self.telegram.notify_trade_result(
@@ -324,7 +324,7 @@ class NVDLNVDQTelegramBot:
         self.position_features = None
 
         if self.auto_trading:
-            print("🤖 자동매매: 실제 청산 주문 실행 (구현 필요)")
+            print(" 자동매매: 실제 청산 주문 실행 (구현 필요)")
 
     def get_current_price(self, symbol: str) -> Optional[float]:
         """현재가 조회"""
@@ -341,18 +341,18 @@ class NVDLNVDQTelegramBot:
         analysis_parts = []
 
         if symbol == 'NVDL':
-            analysis_parts.append("🟢 NVIDIA 3x 롱 포지션")
-            analysis_parts.append("📈 시장 상승 예상")
+            analysis_parts.append(" NVIDIA 3x 롱 포지션")
+            analysis_parts.append(" 시장 상승 예상")
         elif symbol == 'NVDQ':
-            analysis_parts.append("🔴 NASDAQ 2x 숏 포지션")
-            analysis_parts.append("📉 시장 하락 예상")
+            analysis_parts.append(" NASDAQ 2x 숏 포지션")
+            analysis_parts.append(" 시장 하락 예상")
 
         if confidence > 0.7:
-            analysis_parts.append("💪 매우 강한 신호")
+            analysis_parts.append(" 매우 강한 신호")
         elif confidence > 0.5:
-            analysis_parts.append("👍 강한 신호")
+            analysis_parts.append(" 강한 신호")
         else:
-            analysis_parts.append("⚠️ 약한 신호")
+            analysis_parts.append(" 약한 신호")
 
         return " | ".join(analysis_parts)
 
@@ -423,10 +423,10 @@ class NVDLNVDQTelegramBot:
     def run(self):
         """메인 실행 루프"""
         if not self.initialize_system():
-            print("❌ 시스템 초기화 실패")
+            print(" 시스템 초기화 실패")
             return
 
-        print(f"\n🚀 봇 시작 (자동매매: {'켜짐' if self.auto_trading else '꺼짐'})")
+        print(f"\n 봇 시작 (자동매매: {'켜짐' if self.auto_trading else '꺼짐'})")
         print(f"⏰ 체크 간격: {self.config['check_interval']}초")
 
         self.running = True
@@ -435,9 +435,9 @@ class NVDLNVDQTelegramBot:
 
         # 시작 알림
         self.telegram.send_message(
-            f"🤖 **NVDL/NVDQ 봇 시작**\n\n"
-            f"⚡ 모드: {'자동매매' if self.auto_trading else '알림 전용'}\n"
-            f"📊 현재 포지션: {self.current_position or '없음'}\n"
+            f" **NVDL/NVDQ 봇 시작**\n\n"
+            f" 모드: {'자동매매' if self.auto_trading else '알림 전용'}\n"
+            f" 현재 포지션: {self.current_position or '없음'}\n"
             f"⏰ 시작 시간: {self.start_time.strftime('%Y-%m-%d %H:%M:%S')}"
         )
 
@@ -468,14 +468,14 @@ class NVDLNVDQTelegramBot:
                 time.sleep(self.config['check_interval'])
 
         except KeyboardInterrupt:
-            print("\n⏹️ 사용자에 의한 중단")
+            print("\n⏹ 사용자에 의한 중단")
         except Exception as e:
-            print(f"\n❌ 실행 오류: {e}")
+            print(f"\n 실행 오류: {e}")
             self.telegram.notify_error("봇 실행 오류", str(e))
         finally:
             self.running = False
-            self.telegram.send_message("⏹️ **봇 중단**\n\n시스템이 안전하게 종료되었습니다.")
-            print("🔚 봇 종료")
+            self.telegram.send_message("⏹ **봇 중단**\n\n시스템이 안전하게 종료되었습니다.")
+            print(" 봇 종료")
 
 def main():
     """메인 실행 함수"""
@@ -484,7 +484,7 @@ def main():
     AUTO_TRADING = False  # True로 변경 시 자동매매 활성화
 
     if not FMP_API_KEY or FMP_API_KEY == "YOUR_API_KEY_HERE":
-        print("❌ FMP API 키를 설정해주세요!")
+        print(" FMP API 키를 설정해주세요!")
         return
 
     # 봇 생성 및 실행

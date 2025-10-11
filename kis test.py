@@ -34,14 +34,14 @@ def get_price():
             rt_cd = data.get("rt_cd", "")
             if rt_cd == "0":
                 price = data["output"]["stck_prpr"]
-                print(f"✅ 현재가(TQQQ): {price}")
+                print(f" 현재가(TQQQ): {price}")
             else:
-                print(f"⚠️ API 오류 코드: {data.get('msg_cd')} / {data.get('msg1')}")
+                print(f" API 오류 코드: {data.get('msg_cd')} / {data.get('msg1')}")
         else:
-            print(f"❌ HTTP 오류 발생: {response.status_code}")
+            print(f" HTTP 오류 발생: {response.status_code}")
             print(f"Response: {response.text}")
     except Exception as e:
-        print("❌ 예외 발생:", str(e))
+        print(" 예외 발생:", str(e))
 
 # 자동 재시도 포함 실행
 def run_test_with_retry(retries=3, delay_sec=5):

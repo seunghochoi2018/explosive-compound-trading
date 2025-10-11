@@ -3,13 +3,13 @@
 """
 SOXL/SOXS KIS 자동화 트레이딩 봇 - 트리플 AI 시스템
 
-🎯 핵심 전략:
+ 핵심 전략:
 1. 7b 모델 3개 투입 (추세 분석, 진입 타이밍, 청산 타이밍)
 2. 추세돌파 로직 (빠른 방향 전환)
 3. 수익 보호 청산 (수수료 고려 즉시 청산)
 4. 재진입 로직 (청산 후 방향 재평가)
 
-⚡ 자동화 특화:
+ 자동화 특화:
 - 변동성 높은 SOXL/SOXS 활용
 - 1분 분석 주기 (빠른 대응)
 - 수익 나면 즉시 청산 (수수료 고려)
@@ -103,12 +103,12 @@ class TripleAIAnalyzer:
 
         prompt = f"""당신은 SOXL/SOXS 반도체 레버리지 ETF 추세 분석 전문가입니다.
 
-📊 최근 10분 데이터:
+ 최근 10분 데이터:
 - SOXL 추세: {soxl_trend:+.2f}%
 - SOXS 추세: {soxs_trend:+.2f}%
 - 변동성: {soxl_volatility:.2f}%
 
-🎯 임무: 현재 시장 추세 방향 결정
+ 임무: 현재 시장 추세 방향 결정
 
 규칙:
 1. SOXL 상승 > +2% → LONG
@@ -168,20 +168,20 @@ class TripleAIAnalyzer:
 
         prompt = f"""당신은 SOXL/SOXS 진입 타이밍 전문가입니다.
 
-📊 현재 상황:
+ 현재 상황:
 - 추세: {trend}
 - 현재가: ${current_price:.2f}
 - 5분 변화: {price_change:+.2f}%
 - 모멘텀: {momentum_pct:+.3f}%
 
-🎯 임무: 진입 시점 결정
+ 임무: 진입 시점 결정
 
 규칙:
 1. LONG 추세 + 가격 상승 모멘텀 → ENTER
 2. SHORT 추세 + 가격 하락 모멘텀 → ENTER
 3. 추세와 모멘텀 불일치 → WAIT
 
-🧠 과거 학습 데이터:
+ 과거 학습 데이터:
 {learning_examples}
 
 응답 형식 (JSON):
@@ -217,7 +217,7 @@ class TripleAIAnalyzer:
         역할: 수익 보호 및 손실 제한
         출력: EXIT(청산), HOLD(보유)
 
-        ⚠️ 핵심: 수익이 나면 즉시 청산! (수수료 고려)
+         핵심: 수익이 나면 즉시 청산! (수수료 고려)
         """
         pnl_pct = (current_price - entry_price) / entry_price * 100
 
@@ -227,7 +227,7 @@ class TripleAIAnalyzer:
 
         prompt = f"""당신은 SOXL/SOXS 청산 타이밍 전문가입니다.
 
-📊 현재 포지션:
+ 현재 포지션:
 - 종목: {position}
 - 진입가: ${entry_price:.2f}
 - 현재가: ${current_price:.2f}
@@ -236,9 +236,9 @@ class TripleAIAnalyzer:
 - 보유 시간: {holding_minutes}분
 - 추세 변경: {'예' if trend_changed else '아니오'}
 
-🎯 임무: 청산 시점 결정
+ 임무: 청산 시점 결정
 
-⚠️ 핵심 규칙:
+ 핵심 규칙:
 1. 순수익 > 0% → 즉시 EXIT (수익 보호!)
 2. 추세 변경 → 즉시 EXIT (방향 전환)
 3. 손실 < -2% → 즉시 EXIT (손절)
@@ -550,7 +550,7 @@ class SOXLSOXSKISBot:
         recent_trades = self.trade_history[-limit:] if len(self.trade_history) > limit else self.trade_history
 
         for i, trade in enumerate(recent_trades, 1):
-            result = "✓" if trade['result'] == 'WIN' else "✗"
+            result = "" if trade['result'] == 'WIN' else ""
             examples.append(
                 f"{i}. {trade['symbol']} ${trade['entry_price']:.2f}→${trade['exit_price']:.2f} "
                 f"({trade['pnl_pct']:+.2f}%) {trade['holding_minutes']}분 {result}"
@@ -677,7 +677,7 @@ class SOXLSOXSKISBot:
         if self.last_trend and self.last_trend != current_trend and current_trend != 'NEUTRAL':
             trend_changed = True
             self.stats['direction_changes'] += 1
-            print(f"[⚠️ 추세 변경] {self.last_trend} → {current_trend}")
+            print(f"[ 추세 변경] {self.last_trend} → {current_trend}")
 
         self.last_trend = current_trend
 
@@ -708,10 +708,10 @@ class SOXLSOXSKISBot:
 
                 if pnl_pct > 0:
                     self.stats['wins'] += 1
-                    print(f"[✅ 수익] {self.current_position} {pnl_pct:+.2f}%")
+                    print(f"[ 수익] {self.current_position} {pnl_pct:+.2f}%")
                 else:
                     self.stats['losses'] += 1
-                    print(f"[❌ 손실] {self.current_position} {pnl_pct:+.2f}%")
+                    print(f"[ 손실] {self.current_position} {pnl_pct:+.2f}%")
 
                 # 포지션 초기화
                 self.current_position = None
@@ -750,7 +750,7 @@ class SOXLSOXSKISBot:
                 self.current_position = target_symbol
                 self.entry_price = target_price
                 self.entry_time = datetime.now()
-                print(f"[🚀 진입] {target_symbol} @ ${target_price:.2f}")
+                print(f"[ 진입] {target_symbol} @ ${target_price:.2f}")
 
     def print_status(self, soxl_price: float, soxs_price: float):
         """현재 상태 출력"""

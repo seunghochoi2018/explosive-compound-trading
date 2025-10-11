@@ -225,7 +225,7 @@ def generate_html():
             if validation_status:
                 pending = [f"{k}: {v}/3" for k, v in validation_status.items() if v < 3]
                 if pending:
-                    validation_text = f'<div style="color: #d29922; font-size: 11px; margin-top: 4px;">🔍 검증 중: {", ".join(pending[:2])}</div>'
+                    validation_text = f'<div style="color: #d29922; font-size: 11px; margin-top: 4px;"> 검증 중: {", ".join(pending[:2])}</div>'
 
             eth_insights_html += f"""
             <div style="padding: 8px; border-bottom: 1px solid #21262d;">
@@ -251,12 +251,12 @@ def generate_html():
             if validation_status:
                 pending = [f"{k.replace('_', ' ')}: {v}/3" for k, v in validation_status.items() if v < 3]
                 if pending:
-                    validation_text = f'<div style="color: #d29922; font-size: 11px; margin-top: 4px;">🔍 검증 중: {", ".join(pending[:2])}</div>'
+                    validation_text = f'<div style="color: #d29922; font-size: 11px; margin-top: 4px;"> 검증 중: {", ".join(pending[:2])}</div>'
 
                 # 검증 완료 항목
                 completed = [f"{k.replace('_', ' ')}" for k, v in validation_status.items() if v >= 3]
                 if completed:
-                    validation_text += f'<div style="color: #3fb950; font-size: 11px; margin-top: 2px;">✅ 검증 완료: {", ".join(completed[:2])}</div>'
+                    validation_text += f'<div style="color: #3fb950; font-size: 11px; margin-top: 2px;"> 검증 완료: {", ".join(completed[:2])}</div>'
 
             kis_insights_html += f"""
             <div style="padding: 8px; border-bottom: 1px solid #21262d;">
@@ -402,7 +402,7 @@ def generate_html():
 </head>
 <body>
     <div class="container">
-        <h1>🚀 트레이딩 시스템 대시보드</h1>
+        <h1> 트레이딩 시스템 대시보드</h1>
 
         <div class="countdown">
             <div id="analysis-countdown">⏰ 다음 분석: 계산 중...</div>
@@ -412,7 +412,7 @@ def generate_html():
         <div class="grid">
             <!-- ETH Trader -->
             <div class="status-box">
-                <h2>📈 ETH Trader</h2>
+                <h2> ETH Trader</h2>
                 <div class="metric">
                     <span class="metric-label">총 거래</span>
                     <span class="metric-value ok">{len(eth_trades)}건</span>
@@ -430,7 +430,7 @@ def generate_html():
                     <span class="metric-value">{len(eth_insights)}건</span>
                 </div>
 
-                <h3 style="color: #58a6ff; margin-top: 20px; font-size: 18px;">💼 현재 포지션</h3>
+                <h3 style="color: #58a6ff; margin-top: 20px; font-size: 18px;"> 현재 포지션</h3>
                 {eth_position_html}
 
                 <h3 style="color: #8b949e; margin-top: 20px; font-size: 16px;">최근 10건 거래</h3>
@@ -446,7 +446,7 @@ def generate_html():
 
             <!-- KIS Trader -->
             <div class="status-box">
-                <h2>📊 KIS Trader (SOXL/TQQQ)</h2>
+                <h2> KIS Trader (SOXL/TQQQ)</h2>
                 <div class="metric">
                     <span class="metric-label">총 거래</span>
                     <span class="metric-value ok">{len(kis_trades)}건</span>
@@ -464,7 +464,7 @@ def generate_html():
                     <span class="metric-value">{len(kis_insights)}건</span>
                 </div>
 
-                <h3 style="color: #58a6ff; margin-top: 20px; font-size: 18px;">💼 현재 포지션</h3>
+                <h3 style="color: #58a6ff; margin-top: 20px; font-size: 18px;"> 현재 포지션</h3>
                 {kis_position_html}
 
                 <h3 style="color: #8b949e; margin-top: 20px; font-size: 16px;">최근 10건 거래</h3>
@@ -480,7 +480,7 @@ def generate_html():
         </div>
 
         <div class="status-box">
-            <h2>⚙️ 시스템 설정</h2>
+            <h2> 시스템 설정</h2>
             <div class="metric">
                 <span class="metric-label">거래 모니터링</span>
                 <span class="metric-value">15분 주기</span>
@@ -500,7 +500,7 @@ def generate_html():
         </div>
 
         <div class="status-box">
-            <h2>🔧 프로세스 상태</h2>
+            <h2> 프로세스 상태</h2>
             <div class="metric">
                 <span class="metric-label">Python 프로세스</span>
                 <span class="metric-value {'ok' if python_count == 3 else 'warn'}">{python_count}개 (예상: 3개)</span>
@@ -516,8 +516,8 @@ def generate_html():
         </div>
 
         <div class="refresh-info">
-            ✨ 자동 새로고침: 10초마다 | 수동: F5<br>
-            📍 파일 위치: C:\\Users\\user\\Documents\\코드5\\status.html
+             자동 새로고침: 10초마다 | 수동: F5<br>
+             파일 위치: C:\\Users\\user\\Documents\\코드5\\status.html
         </div>
     </div>
 
@@ -575,5 +575,5 @@ if __name__ == "__main__":
             print("\n\n종료됨")
             break
         except Exception as e:
-            print(f"[{datetime.now().strftime('%H:%M:%S')}] ✗ 오류: {e}")
+            print(f"[{datetime.now().strftime('%H:%M:%S')}]  오류: {e}")
             time.sleep(10)

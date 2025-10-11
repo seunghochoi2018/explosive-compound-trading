@@ -308,21 +308,21 @@ class ETHToNVIDIAMapper:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         # 이모지 및 포맷팅 (사용자 친화적)
-        direction_emoji = "📈" if recommendation['eth_signal'] == 'LONG' else "📉"
-        confidence_emoji = "🟢" if recommendation['confidence'] >= 80 else "🟡"
+        direction_emoji = "" if recommendation['eth_signal'] == 'LONG' else ""
+        confidence_emoji = "" if recommendation['confidence'] >= 80 else ""
 
         message = f"""
 {direction_emoji} **ETH → NVIDIA 포지션 알림**
 
-🕐 **시간**: {timestamp}
-💰 **ETH 가격**: ${eth_data['price']:.2f} ({eth_data['change_24h']:+.2f}%)
+ **시간**: {timestamp}
+ **ETH 가격**: ${eth_data['price']:.2f} ({eth_data['change_24h']:+.2f}%)
 
-🎯 **추천 포지션**:
-📊 **종목**: {recommendation['symbol']} ({recommendation['name']})
-📈 **액션**: {recommendation['action']}
-🧠 **근거**: {recommendation['rationale']}
+ **추천 포지션**:
+ **종목**: {recommendation['symbol']} ({recommendation['name']})
+ **액션**: {recommendation['action']}
+ **근거**: {recommendation['rationale']}
 
-📊 **신호 분석**:
+ **신호 분석**:
 • ETH 방향: {recommendation['eth_signal']}
 • 매수 신호: {recommendation['eth_buy_signal']:.1f}
 • 매도 신호: {recommendation['eth_sell_signal']:.1f}
@@ -330,9 +330,9 @@ class ETHToNVIDIAMapper:
 
 {confidence_emoji} **신뢰도**: {recommendation['confidence']:.1f}%
 
-💡 **분석 요약**: {recommendation['reasoning']}
+ **분석 요약**: {recommendation['reasoning']}
 
-⚠️ **주의사항**:
+ **주의사항**:
 - 이는 자동화된 분석 결과입니다
 - 투자 전 추가 검토를 권장합니다
 - 리스크 관리를 철저히 하세요
@@ -359,13 +359,13 @@ class ETHToNVIDIAMapper:
             success = self.telegram.send_message(message)
 
             if success:
-                print(f"[TELEGRAM] ✅ 알림 전송 성공: {recommendation['symbol']} {recommendation['action']}")
+                print(f"[TELEGRAM]  알림 전송 성공: {recommendation['symbol']} {recommendation['action']}")
 
                 # 마지막 신호 기록
                 self.last_signal = f"{recommendation['symbol']}_{recommendation['eth_signal']}"
                 self.last_signal_time = datetime.now()
             else:
-                print("[TELEGRAM] ❌ 알림 전송 실패")
+                print("[TELEGRAM]  알림 전송 실패")
 
         except Exception as e:
             print(f"[ERROR] 텔레그램 전송 오류: {e}")

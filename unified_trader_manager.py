@@ -35,19 +35,19 @@ class TelegramNotifier:
             return False
 
     def notify_system_start(self):
-        message = "🚀 <b>통합 트레이더 시스템 시작</b>\n\n✅ ETH Trader\n✅ KIS Trader\n✅ Ollama 관리자"
+        message = " <b>통합 트레이더 시스템 시작</b>\n\n ETH Trader\n KIS Trader\n Ollama 관리자"
         self.send_message(message)
 
     def notify_system_error(self, error_msg: str):
-        message = f"⚠️ <b>시스템 오류</b>\n\n{error_msg}"
+        message = f" <b>시스템 오류</b>\n\n{error_msg}"
         self.send_message(message)
 
     def notify_position_change(self, trader: str, action: str, details: str):
-        message = f"🔄 <b>{trader} 포지션 변경</b>\n\n{action}\n{details}"
+        message = f" <b>{trader} 포지션 변경</b>\n\n{action}\n{details}"
         self.send_message(message)
 
     def notify_ollama_restart(self, trader: str, reason: str):
-        message = f"🔧 <b>{trader} Ollama 재시작</b>\n\n사유: {reason}"
+        message = f" <b>{trader} Ollama 재시작</b>\n\n사유: {reason}"
         self.send_message(message)
 
 telegram = TelegramNotifier()
@@ -340,7 +340,7 @@ def llm_backtest_on_historical_data(trader_name, symbol, historical_data):
         colored_print(f"[BACKGROUND LEARNING #{learning_session_count}] 합의 실패 - 전략 탐색 보류", "yellow")
         return []
 
-    colored_print(f"[BACKGROUND LEARNING #{learning_session_count}] ✅ 새로운 인사이트 발견!", "green")
+    colored_print(f"[BACKGROUND LEARNING #{learning_session_count}]  새로운 인사이트 발견!", "green")
     colored_print(f"  {validation['final_decision'][:200]}...", "cyan")
 
     # 간단한 전략 추출
@@ -408,12 +408,12 @@ def auto_validate_and_apply_strategy(trader_name, strategies, validation_dict, s
 
         current_count = validation_dict[strategy_type]['count']
 
-        colored_print(f"[{trader_name}] 🔍 전략 '{strategy_type}' 발견 횟수: {current_count}/{VALIDATION_THRESHOLD}", "cyan")
+        colored_print(f"[{trader_name}]  전략 '{strategy_type}' 발견 횟수: {current_count}/{VALIDATION_THRESHOLD}", "cyan")
 
         # 검증 완료 조건: N번 이상 발견
         if current_count >= VALIDATION_THRESHOLD:
-            colored_print(f"[{trader_name}] ✅ 전략 '{strategy_type}' 검증 완료! ({current_count}번 발견)", "green")
-            colored_print(f"[{trader_name}] 🚀 자동 적용 시작...", "green")
+            colored_print(f"[{trader_name}]  전략 '{strategy_type}' 검증 완료! ({current_count}번 발견)", "green")
+            colored_print(f"[{trader_name}]  자동 적용 시작...", "green")
 
             # 자동 적용
             result = apply_strategy_improvements(
@@ -425,7 +425,7 @@ def auto_validate_and_apply_strategy(trader_name, strategies, validation_dict, s
 
             if result:
                 applied.extend(result)
-                colored_print(f"[{trader_name}] 🎉 전략 '{strategy_type}' 자동 적용 완료!", "green")
+                colored_print(f"[{trader_name}]  전략 '{strategy_type}' 자동 적용 완료!", "green")
 
                 # 검증 완료된 전략은 카운터 리셋 (중복 적용 방지)
                 validation_dict[strategy_type]['count'] = 0
@@ -454,7 +454,7 @@ def background_learning_worker():
                 eth_strategies = llm_backtest_on_historical_data("ETH", "ETHUSD", eth_historical)
 
                 if eth_strategies:
-                    colored_print(f"[ETH] 💡 {len(eth_strategies)}개 새로운 전략 발견!", "cyan")
+                    colored_print(f"[ETH]  {len(eth_strategies)}개 새로운 전략 발견!", "cyan")
 
                     # ⭐ 자동 검증 및 적용 시스템 실행
                     global validated_strategies_eth
@@ -467,7 +467,7 @@ def background_learning_worker():
                     )
 
                     if applied:
-                        colored_print(f"[ETH] 🎉 {len(applied)}개 전략 자동 적용 완료!", "green")
+                        colored_print(f"[ETH]  {len(applied)}개 전략 자동 적용 완료!", "green")
 
                     # 인사이트 기록 (히스토리 보관용)
                     import json
@@ -501,7 +501,7 @@ def background_learning_worker():
                 soxl_strategies = llm_backtest_on_historical_data("KIS", "SOXL", soxl_historical)
 
                 if soxl_strategies:
-                    colored_print(f"[KIS] 💡 {len(soxl_strategies)}개 새로운 전략 발견!", "cyan")
+                    colored_print(f"[KIS]  {len(soxl_strategies)}개 새로운 전략 발견!", "cyan")
 
                     # ⭐ 자동 검증 및 적용 시스템 실행
                     global validated_strategies_kis
@@ -514,7 +514,7 @@ def background_learning_worker():
                     )
 
                     if applied:
-                        colored_print(f"[KIS] 🎉 {len(applied)}개 전략 자동 적용 완료!", "green")
+                        colored_print(f"[KIS]  {len(applied)}개 전략 자동 적용 완료!", "green")
 
                     # 인사이트 기록 (히스토리 보관용)
                     import json
@@ -739,7 +739,7 @@ def guardian_cleanup_rogue_ollama():
     if not procs:
         return
 
-    # ⚠️ Ollama는 각 모델마다 별도의 runner 프로세스를 생성함
+    #  Ollama는 각 모델마다 별도의 runner 프로세스를 생성함
     # runner 프로세스는 랜덤 포트를 사용하므로 포트로 구분 불가능!
     # 대신 메모리 기준으로만 판단 (15GB 초과만 정리)
 
@@ -854,7 +854,7 @@ def ask_llm_triple_validation(primary_prompt: str, validator1_prompt: str, valid
     agreement_count = sum([True, val1_agree, val2_agree])  # Primary는 항상 True
     consensus = agreement_count >= 2
 
-    colored_print(f"[TRIPLE VALIDATION] 합의 여부: {'✅ 동의 {}/3'.format(agreement_count) if consensus else '❌ 불일치'}",
+    colored_print(f"[TRIPLE VALIDATION] 합의 여부: {' 동의 {}/3'.format(agreement_count) if consensus else ' 불일치'}",
                   "green" if consensus else "yellow")
 
     total_time = time.time() - primary_start
@@ -931,7 +931,7 @@ def analyze_losing_trades_for_patterns(trader_name: str, trades: list, error_pat
             'timestamp': datetime.now().isoformat()
         }
         new_patterns.append(pattern)
-        colored_print(f"[{trader_name}] 🔍 패턴 발견: {pattern['description']}", "yellow")
+        colored_print(f"[{trader_name}]  패턴 발견: {pattern['description']}", "yellow")
 
     # 패턴 2: 긴 보유 시간 (60분 이상 보유 후 손실)
     long_hold_losses = [l for l in recent_losses if l.get('holding_time_sec', 0) > 3600]  # 60분 = 3600초
@@ -943,7 +943,7 @@ def analyze_losing_trades_for_patterns(trader_name: str, trades: list, error_pat
             'timestamp': datetime.now().isoformat()
         }
         new_patterns.append(pattern)
-        colored_print(f"[{trader_name}] 🔍 패턴 발견: {pattern['description']}", "yellow")
+        colored_print(f"[{trader_name}]  패턴 발견: {pattern['description']}", "yellow")
 
     # 패턴 3: 낮은 신뢰도 진입 (신뢰도 < 70%)
     low_conf_losses = [l for l in recent_losses if l.get('confidence', 100) < 70]
@@ -955,7 +955,7 @@ def analyze_losing_trades_for_patterns(trader_name: str, trades: list, error_pat
             'timestamp': datetime.now().isoformat()
         }
         new_patterns.append(pattern)
-        colored_print(f"[{trader_name}] 🔍 패턴 발견: {pattern['description']}", "yellow")
+        colored_print(f"[{trader_name}]  패턴 발견: {pattern['description']}", "yellow")
 
     # 기존 패턴에 추가
     error_patterns.extend(new_patterns)
@@ -973,7 +973,7 @@ def llm_analyze_trades_for_improvement(trader_name, trades, performance, error_p
     if error_patterns is not None:
         new_patterns = analyze_losing_trades_for_patterns(trader_name, trades, error_patterns)
         if new_patterns:
-            colored_print(f"[{trader_name}] 📚 새로운 오류 패턴 {len(new_patterns)}개 학습 완료", "cyan")
+            colored_print(f"[{trader_name}]  새로운 오류 패턴 {len(new_patterns)}개 학습 완료", "cyan")
 
     # 최근 20건만 분석
     recent_trades = trades[-20:]
@@ -993,7 +993,7 @@ def llm_analyze_trades_for_improvement(trader_name, trades, performance, error_p
         error_lines = []
         for err in recent_errors:
             error_lines.append(f"- {err.get('description', '알 수 없음')}")
-        error_context = "\n\n## ⚠️ 최근 발견된 실패 패턴\n" + "\n".join(error_lines)
+        error_context = "\n\n##  최근 발견된 실패 패턴\n" + "\n".join(error_lines)
         error_context += "\n\n위 패턴을 고려하여 개선안을 제시하세요."
 
     # ⭐ Option 1: Triple Validation - 3가지 프롬프트 생성
@@ -1054,10 +1054,10 @@ def llm_analyze_trades_for_improvement(trader_name, trades, performance, error_p
     # 합의가 있을 때만 분석 결과 사용
     if validation_result['consensus']:
         llm_response = validation_result['final_decision']
-        colored_print(f"[{trader_name}] ✅ 3중 검증 합의 ({validation_result['agreement_count']}/3)", "green")
+        colored_print(f"[{trader_name}]  3중 검증 합의 ({validation_result['agreement_count']}/3)", "green")
         colored_print(f"[{trader_name}] [LLM 인사이트] {llm_response[:150]}...", "magenta")
     else:
-        colored_print(f"[{trader_name}] ⚠️ 3중 검증 불일치 - 개선안 보류", "yellow")
+        colored_print(f"[{trader_name}]  3중 검증 불일치 - 개선안 보류", "yellow")
         return []  # 합의 없으면 개선 안 함 (안전)
 
     # 간단한 키워드 기반 개선안 추출
@@ -1269,7 +1269,7 @@ def apply_strategy_improvements(trader_name, strategy_file, improvements, improv
                 'applied': applied
             })
 
-            colored_print(f"[{trader_name}] ✅ {len(applied)}개 개선사항 적용 완료", "green")
+            colored_print(f"[{trader_name}]  {len(applied)}개 개선사항 적용 완료", "green")
 
         return applied
 
@@ -1499,40 +1499,40 @@ def main():
 
                 # ETH 상태
                 if eth_health['alert']:
-                    colored_print(f"⚠️  [ETH] {eth_health['message']}", "red")
+                    colored_print(f"  [ETH] {eth_health['message']}", "red")
                     if eth_health.get('warnings'):
                         for w in eth_health['warnings']:
                             colored_print(f"    - {w}", "yellow")
                 else:
-                    colored_print(f"✅ [ETH] {eth_health['message']}", "green")
+                    colored_print(f" [ETH] {eth_health['message']}", "green")
 
                 # KIS 상태
                 if kis_health['alert']:
-                    colored_print(f"⚠️  [KIS] {kis_health['message']}", "red")
+                    colored_print(f"  [KIS] {kis_health['message']}", "red")
                     if kis_health.get('warnings'):
                         for w in kis_health['warnings']:
                             colored_print(f"    - {w}", "yellow")
                 else:
-                    colored_print(f"✅ [KIS] {kis_health['message']}", "green")
+                    colored_print(f" [KIS] {kis_health['message']}", "green")
 
                 # ⭐ 텔레그램 알림은 6시간마다만
                 if (current_time - last_telegram_alert) >= TELEGRAM_ALERT_INTERVAL:
                     # 종합 리포트 텔레그램 전송
-                    report = f"📊 <b>거래 현황 리포트</b>\n\n"
+                    report = f" <b>거래 현황 리포트</b>\n\n"
                     report += f"<b>ETH:</b> {eth_health['message']}\n"
                     report += f"<b>KIS:</b> {kis_health['message']}\n\n"
 
                     if eth_health['alert'] or kis_health['alert']:
-                        report += "⚠️ 문제 감지 - 자기개선 엔진이 분석 중입니다"
+                        report += " 문제 감지 - 자기개선 엔진이 분석 중입니다"
                     else:
-                        report += "✅ 모든 봇 정상 작동 중"
+                        report += " 모든 봇 정상 작동 중"
 
                     telegram.send_message(report)
                     last_telegram_alert = current_time
-                    colored_print("📱 텔레그램 알림 전송 완료 (다음 알림: 6시간 후)", "cyan")
+                    colored_print(" 텔레그램 알림 전송 완료 (다음 알림: 6시간 후)", "cyan")
                 else:
                     time_until_next = (TELEGRAM_ALERT_INTERVAL - (current_time - last_telegram_alert)) / 3600
-                    colored_print(f"📱 텔레그램 알림 생략 (다음 알림: {time_until_next:.1f}시간 후)", "yellow")
+                    colored_print(f" 텔레그램 알림 생략 (다음 알림: {time_until_next:.1f}시간 후)", "yellow")
 
                 colored_print("="*70 + "\n", "cyan")
                 last_trading_check = current_time
@@ -1602,7 +1602,7 @@ def main():
                 if (current_time - last_improvement_report) >= IMPROVEMENT_REPORT_INTERVAL:
                     total_improvements = len(improvement_history_eth) + len(improvement_history_kis)
                     if total_improvements > 0:
-                        report = f"🧠 <b>자기개선 리포트</b>\n\n"
+                        report = f" <b>자기개선 리포트</b>\n\n"
                         report += f"총 개선 횟수: {total_improvements}회\n"
                         report += f"ETH: {len(improvement_history_eth)}회\n"
                         report += f"KIS: {len(improvement_history_kis)}회\n\n"

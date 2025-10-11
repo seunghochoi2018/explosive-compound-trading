@@ -28,9 +28,9 @@ class AdaptiveLearningTrader(NVDLNVDQTradingModel):
         super().__init__(fmp_api_key)
 
         print("=== 적응형 학습 트레이더 ===")
-        print("✅ 승리 패턴 강화")
-        print("❌ 패배 패턴 회피")
-        print("🔄 실시간 학습")
+        print(" 승리 패턴 강화")
+        print(" 패배 패턴 회피")
+        print(" 실시간 학습")
 
         # 패턴 메모리 확장
         self.winning_patterns = deque(maxlen=50000)  # 승리 패턴만
@@ -108,7 +108,7 @@ class AdaptiveLearningTrader(NVDLNVDQTradingModel):
             for name in self.model_weights:
                 self.model_weights[name] *= self.learning_params['win_weight_multiplier']
 
-            print(f"✅ 승리 패턴 학습: {symbol} +{profit_pct:.2f}% (보유: {holding_time:.1f}시간)")
+            print(f" 승리 패턴 학습: {symbol} +{profit_pct:.2f}% (보유: {holding_time:.1f}시간)")
 
         elif is_losing:
             # 패배 패턴 저장 (회피 학습용)
@@ -118,13 +118,13 @@ class AdaptiveLearningTrader(NVDLNVDQTradingModel):
             for name in self.model_weights:
                 self.model_weights[name] /= self.learning_params['loss_weight_divisor']
 
-            print(f"❌ 패배 패턴 학습: {symbol} {profit_pct:.2f}% (보유: {holding_time:.1f}시간)")
+            print(f" 패배 패턴 학습: {symbol} {profit_pct:.2f}% (보유: {holding_time:.1f}시간)")
 
         else:
             # 중립 패턴도 약하게 학습
             if profit_pct > 0:
                 self.success_patterns.append(pattern)
-                print(f"➖ 중립 패턴 학습: {symbol} +{profit_pct:.2f}%")
+                print(f" 중립 패턴 학습: {symbol} +{profit_pct:.2f}%")
 
         # 통계 업데이트
         self._update_learning_stats(profit_pct, is_winning)
@@ -179,7 +179,7 @@ class AdaptiveLearningTrader(NVDLNVDQTradingModel):
 
     def adaptive_learning(self):
         """적응형 점진적 학습"""
-        print("🔄 적응형 학습 시작...")
+        print(" 적응형 학습 시작...")
 
         # 승리 패턴과 패배 패턴 준비
         X_win = []
@@ -239,7 +239,7 @@ class AdaptiveLearningTrader(NVDLNVDQTradingModel):
             except Exception as e:
                 print(f"[{name}] 학습 오류: {e}")
 
-        print(f"✅ 적응형 학습 완료 - 승률: {self.learning_stats['win_rate']:.1f}%")
+        print(f" 적응형 학습 완료 - 승률: {self.learning_stats['win_rate']:.1f}%")
 
     def get_enhanced_signal(self) -> Tuple[str, str, float]:
         """패턴 학습이 강화된 신호 생성"""
@@ -276,7 +276,7 @@ class AdaptiveLearningTrader(NVDLNVDQTradingModel):
     def display_learning_status(self):
         """학습 상태 표시"""
         print("\n" + "="*50)
-        print("📊 적응형 학습 상태")
+        print(" 적응형 학습 상태")
         print("="*50)
         print(f"총 패턴 수: {self.learning_stats['total_patterns']}")
         print(f"승리 패턴: {self.learning_stats['winning_patterns']}")

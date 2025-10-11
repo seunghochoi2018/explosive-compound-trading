@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-⚠️ [매우 중요] 코드 수정 후 반드시 봇 재시작 필요!
+ [매우 중요] 코드 수정 후 반드시 봇 재시작 필요!
 ================================================================================
 - Python은 시작 시 코드를 메모리에 로드합니다
 - 파일을 수정해도 실행 중인 봇은 이전 코드를 사용합니다
 - 새 코드 적용하려면 반드시 봇을 중지하고 재시작해야 합니다!
 
-⚠️ [즉시 알림 규칙] - 적극적으로 알려주세요!
+ [즉시 알림 규칙] - 적극적으로 알려주세요!
 ================================================================================
 다음 사항을 발견하면 사용자에게 즉시 알립니다:
 
@@ -32,7 +32,7 @@
    - 불필요하거나 방해되는 기능
    - 더 나은 구현 방법
 
-⚠️ 중요: 수동적으로 기다리지 말 것!
+ 중요: 수동적으로 기다리지 말 것!
 - 사용자가 물어보기 전에 먼저 발견하고 알릴 것
 - 한 가지 문제를 수정할 때, 관련된 다른 문제도 함께 확인할 것
   예: SOXS 거래소 코드 수정 → SOXL도 즉시 확인
@@ -153,7 +153,7 @@ if hasattr(sys.stderr, 'buffer') and not isinstance(sys.stderr, io.TextIOWrapper
 시장가: 현재가 입력 (예: "40.17") + ORD_DVSN = "00"
 지정가: 지정가 입력 (예: "45.50") + ORD_DVSN = "01"
 
-⚠️ 주의: 문서에는 "0"이라고 되어 있지만, 실제로는 현재가 필요!
+ 주의: 문서에는 "0"이라고 되어 있지만, 실제로는 현재가 필요!
 - "0"을 보내면 "$0.01 미만" 오류 발생
 - 시장가 주문이지만 현재가를 입력해야 함
 - ORD_DVSN = "00"으로 시장가 구분
@@ -841,7 +841,7 @@ class KISLLMTrader:
 
                 if rt_cd == '0':
                     order_no = result.get('output', {}).get('ODNO', 'N/A')
-                    print(f"✅ [주문 성공] 주문번호: {order_no}")
+                    print(f" [주문 성공] 주문번호: {order_no}")
                     return {
                         'success': True,
                         'order_no': order_no,
@@ -849,14 +849,14 @@ class KISLLMTrader:
                         'quantity': quantity
                     }
                 else:
-                    print(f"❌ [주문 실패] {msg} (rt_cd: {rt_cd})")
+                    print(f" [주문 실패] {msg} (rt_cd: {rt_cd})")
                     return {'success': False, 'message': msg}
             else:
-                print(f"❌ [주문 실패] HTTP {response.status_code}")
+                print(f" [주문 실패] HTTP {response.status_code}")
                 return {'success': False, 'message': f'HTTP {response.status_code}'}
 
         except Exception as e:
-            print(f"❌ [주문 예외] {e}")
+            print(f" [주문 예외] {e}")
             import traceback
             traceback.print_exc()
             return {'success': False, 'message': str(e)}
@@ -1185,12 +1185,12 @@ JSON 형식으로 답변:
             if optimal_timing_pattern:
                 recommendation = optimal_timing_pattern.get('recommendation', '')
                 learning_note = optimal_timing_pattern.get('learning_note', '')
-                timing_learning += f"\n✅ 과거 성공 패턴:\n   {learning_note}\n   → {recommendation}"
+                timing_learning += f"\n 과거 성공 패턴:\n   {learning_note}\n   → {recommendation}"
 
             if noise_pattern:
                 warning = noise_pattern.get('warning', '')
                 learning_note = noise_pattern.get('learning_note', '')
-                timing_learning += f"\n❌ 노이즈 패턴 (피해야 함):\n   {learning_note}\n   → {warning}"
+                timing_learning += f"\n 노이즈 패턴 (피해야 함):\n   {learning_note}\n   → {warning}"
 
             # 현재 상황과 과거 패턴 비교
             timing_comparison = ""
@@ -1383,7 +1383,7 @@ JSON 형식으로 답변:
             # 최고 PNL 갱신
             if current_pnl_pct > self.max_pnl:
                 self.max_pnl = current_pnl_pct
-                print(f"  📈 최고 PNL 갱신: {self.max_pnl:.2f}%")
+                print(f"   최고 PNL 갱신: {self.max_pnl:.2f}%")
 
             # 최고 PNL에 따라 손절선 상향 조정 (수익 보호)
             old_stop = self.trailing_stop_loss
@@ -1397,11 +1397,11 @@ JSON 형식으로 답변:
                 self.trailing_stop_loss = -3.0  # 초기 -3% (노이즈 필터)
 
             if old_stop != self.trailing_stop_loss:
-                print(f"  🔼 손절선 상향: {old_stop:.1f}% → {self.trailing_stop_loss:.1f}%")
+                print(f"   손절선 상향: {old_stop:.1f}% → {self.trailing_stop_loss:.1f}%")
 
             # 트레일링 스탑 체크
             if current_pnl_pct < self.trailing_stop_loss:
-                print(f"  🚨 트레일링 스탑 발동!")
+                print(f"   트레일링 스탑 발동!")
                 print(f"     현재 PNL: {current_pnl_pct:.2f}% < 손절선: {self.trailing_stop_loss:.1f}%")
                 print(f"     최고 PNL: {self.max_pnl:.2f}%")
 
@@ -1409,7 +1409,7 @@ JSON 형식으로 답변:
                 sell_result = self.sell_all(current_position)
 
                 if not sell_result['success']:
-                    print(f"  ❌ 매도 실패: {sell_result['message']}")
+                    print(f"   매도 실패: {sell_result['message']}")
                     print("  → 다음 사이클에 재시도")
                     return
 
@@ -1521,7 +1521,7 @@ JSON 형식으로 답변:
                         # 충분한 수익, 전환 OK
                         should_switch = True
                         net_profit = current_pnl_pct - ROUND_TRIP_FEE
-                        print(f"\n[🎯 방향 전환 감지!]")
+                        print(f"\n[ 방향 전환 감지!]")
                         print(f"  이전 방향: {self.current_llm_direction}")
                         print(f"  새 방향: {signal}")
                         print(f"  현재 손익: {current_pnl_pct:+.2f}% (실질: {net_profit:+.2f}%)")
@@ -1531,7 +1531,7 @@ JSON 형식으로 답변:
                     elif confidence >= 70:
                         # 신뢰도 높으면 작은 수익도 OK
                         should_switch = True
-                        print(f"\n[🎯 방향 전환 감지!] (고신뢰도)")
+                        print(f"\n[ 방향 전환 감지!] (고신뢰도)")
                         print(f"  이전 방향: {self.current_llm_direction}")
                         print(f"  새 방향: {signal}")
                         print(f"  현재 손익: {current_pnl_pct:+.2f}%")
@@ -1548,7 +1548,7 @@ JSON 형식으로 답변:
                 # 손실 중 전환 - 손실 차단 우선
                 elif current_pnl_pct < 0:
                     should_switch = True
-                    print(f"\n[🎯 손실 차단 전환!]")
+                    print(f"\n[ 손실 차단 전환!]")
                     print(f"  이전 방향: {self.current_llm_direction}")
                     print(f"  새 방향: {signal}")
                     print(f"  현재 손익: {current_pnl_pct:+.2f}%")
@@ -1558,7 +1558,7 @@ JSON 형식으로 답변:
                 else:
                     # PNL = 0
                     should_switch = True
-                    print(f"\n[🎯 방향 전환 감지!]")
+                    print(f"\n[ 방향 전환 감지!]")
                     print(f"  → 포지션 전환: {current_position} → {target_symbol}")
             else:
                 print(f"\n[포지션 유지]")
@@ -1572,7 +1572,7 @@ JSON 형식으로 답변:
             sell_result = self.sell_all(current_position)
 
             if not sell_result['success']:
-                print(f"  ❌ 매도 실패: {sell_result['message']}")
+                print(f"   매도 실패: {sell_result['message']}")
                 print("  → 다음 사이클에 재시도")
                 return
 
@@ -1632,11 +1632,11 @@ JSON 형식으로 답변:
             buy_result = self.buy_max(target_symbol)
 
             if not buy_result['success']:
-                print(f"  ❌ 매수 실패: {buy_result['message']}")
+                print(f"   매수 실패: {buy_result['message']}")
                 print("  → 다음 사이클에 재시도")
                 return
 
-            print(f"  ✅ 매수 완료: {buy_result.get('quantity', '?')}주")
+            print(f"   매수 완료: {buy_result.get('quantity', '?')}주")
 
             # LLM 방향 업데이트 (새 포지션 방향으로)
             self.current_llm_direction = signal

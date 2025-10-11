@@ -682,11 +682,11 @@ class NVDLNVDQTradingModel:
 def main():
     """메인 실행 함수"""
     print("*** 데이터 소스 확인 ***")
-    print("✅ FMP API 사용 (Financial Modeling Prep)")
-    print("❌ yfinance 사용 금지 (신뢰성 문제)")
-    print("📡 실시간 데이터: FMP Real-time API")
-    print("📊 히스토리 데이터: FMP Historical API")
-    print("🔒 데이터 수집: nvdl_nvdq_data_collector.py만 사용")
+    print(" FMP API 사용 (Financial Modeling Prep)")
+    print(" yfinance 사용 금지 (신뢰성 문제)")
+    print(" 실시간 데이터: FMP Real-time API")
+    print(" 히스토리 데이터: FMP Historical API")
+    print(" 데이터 수집: nvdl_nvdq_data_collector.py만 사용")
     print()
 
     FMP_API_KEY = "5j69XWnoSpoBvEY0gKSUTB0zXcr0z2KI"

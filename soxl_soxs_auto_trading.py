@@ -218,15 +218,15 @@ class SOXLSOXSTradingBot:
             if response.status_code == 200:
                 result = response.json()
                 if result.get("rt_cd") == "0":
-                    print(f"[{self.timestamp()}] ✅ {symbol} 매수 성공: {qty}주 @ ${current_price:.2f}")
+                    print(f"[{self.timestamp()}]  {symbol} 매수 성공: {qty}주 @ ${current_price:.2f}")
                     return True
                 else:
                     error_msg = result.get('msg1', 'Unknown error')
-                    print(f"[{self.timestamp()}] ❌ {symbol} 매수 실패: {error_msg}")
+                    print(f"[{self.timestamp()}]  {symbol} 매수 실패: {error_msg}")
             else:
-                print(f"[{self.timestamp()}] ❌ {symbol} 매수 HTTP 오류: {response.status_code}")
+                print(f"[{self.timestamp()}]  {symbol} 매수 HTTP 오류: {response.status_code}")
         except Exception as e:
-            print(f"[{self.timestamp()}] ❌ {symbol} 매수 예외: {e}")
+            print(f"[{self.timestamp()}]  {symbol} 매수 예외: {e}")
         return False
 
     def sell_order(self, symbol, qty):
@@ -270,15 +270,15 @@ class SOXLSOXSTradingBot:
             if response.status_code == 200:
                 result = response.json()
                 if result.get("rt_cd") == "0":
-                    print(f"[{self.timestamp()}] ✅ {symbol} 매도 성공: {qty}주 @ ${current_price:.2f}")
+                    print(f"[{self.timestamp()}]  {symbol} 매도 성공: {qty}주 @ ${current_price:.2f}")
                     return True
                 else:
                     error_msg = result.get('msg1', 'Unknown error')
-                    print(f"[{self.timestamp()}] ❌ {symbol} 매도 실패: {error_msg}")
+                    print(f"[{self.timestamp()}]  {symbol} 매도 실패: {error_msg}")
             else:
-                print(f"[{self.timestamp()}] ❌ {symbol} 매도 HTTP 오류: {response.status_code}")
+                print(f"[{self.timestamp()}]  {symbol} 매도 HTTP 오류: {response.status_code}")
         except Exception as e:
-            print(f"[{self.timestamp()}] ❌ {symbol} 매도 예외: {e}")
+            print(f"[{self.timestamp()}]  {symbol} 매도 예외: {e}")
         return False
 
     def detect_trend(self):
@@ -338,7 +338,7 @@ class SOXLSOXSTradingBot:
         total_profit_with_unrealized = self.total_profit + unrealized_profit
 
         print(f"\n{'='*70}")
-        print(f"📈 수익 현황")
+        print(f" 수익 현황")
         print(f"{'='*70}")
         print(f"초기 잔고:     ${self.initial_balance:.2f}")
         print(f"현재 잔고:     ${current_balance:.2f}")
@@ -367,12 +367,12 @@ class SOXLSOXSTradingBot:
 
             # 손절 체크
             if profit_rate <= STOP_LOSS:
-                print(f"[{self.timestamp()}] 🛑 {symbol} 손절 발동: {profit_rate*100:.2f}%")
+                print(f"[{self.timestamp()}]  {symbol} 손절 발동: {profit_rate*100:.2f}%")
                 self.sell_order(symbol, qty)
 
             # 익절 체크
             elif profit_rate >= TAKE_PROFIT:
-                print(f"[{self.timestamp()}] 💰 {symbol} 익절 발동: {profit_rate*100:.2f}%")
+                print(f"[{self.timestamp()}]  {symbol} 익절 발동: {profit_rate*100:.2f}%")
                 self.sell_order(symbol, qty)
 
     def execute_strategy(self):
@@ -380,14 +380,14 @@ class SOXLSOXSTradingBot:
         trend = self.detect_trend()
 
         if not trend:
-            print(f"[{self.timestamp()}] ⚠️ 추세 감지 실패")
+            print(f"[{self.timestamp()}]  추세 감지 실패")
             return
 
-        print(f"[{self.timestamp()}] 📊 현재 추세: {trend.upper()}")
+        print(f"[{self.timestamp()}]  현재 추세: {trend.upper()}")
 
         # 추세 전환 감지
         if self.last_trend and self.last_trend != trend:
-            print(f"[{self.timestamp()}] 🔄 추세 전환 감지: {self.last_trend.upper()} → {trend.upper()}")
+            print(f"[{self.timestamp()}]  추세 전환 감지: {self.last_trend.upper()} → {trend.upper()}")
 
             # 기존 포지션 청산
             positions = self.get_positions()
@@ -407,7 +407,7 @@ class SOXLSOXSTradingBot:
         # 이미 해당 종목을 보유 중인지 체크
         positions = self.get_positions()
         if target_symbol in positions:
-            print(f"[{self.timestamp()}] ℹ️ {target_symbol} 이미 보유 중")
+            print(f"[{self.timestamp()}] ℹ {target_symbol} 이미 보유 중")
             return
 
         # 매수 실행
@@ -419,7 +419,7 @@ class SOXLSOXSTradingBot:
             qty = int(invest_amount / current_price)
 
             if qty > 0:
-                print(f"[{self.timestamp()}] 🎯 {target_symbol} 매수 준비: {qty}주 (${invest_amount:.2f})")
+                print(f"[{self.timestamp()}]  {target_symbol} 매수 준비: {qty}주 (${invest_amount:.2f})")
                 self.buy_order(target_symbol, qty)
 
     def run(self):
@@ -449,12 +449,12 @@ class SOXLSOXSTradingBot:
 
         self.initial_balance = balance + position_value
 
-        print(f"\n[{self.timestamp()}] 💵 USD 잔고: ${balance:.2f}")
-        print(f"[{self.timestamp()}] 📦 보유 포지션: {len(positions)}개")
+        print(f"\n[{self.timestamp()}]  USD 잔고: ${balance:.2f}")
+        print(f"[{self.timestamp()}]  보유 포지션: {len(positions)}개")
         for symbol, pos in positions.items():
             print(f"  - {symbol}: {pos['qty']}주 @ ${pos['avg_price']:.2f}")
 
-        print(f"\n[{self.timestamp()}] 🚀 자동매매 시작...\n")
+        print(f"\n[{self.timestamp()}]  자동매매 시작...\n")
 
         # 수익 현황 표시 카운터
         status_counter = 0
@@ -477,7 +477,7 @@ class SOXLSOXSTradingBot:
                 time.sleep(CHECK_INTERVAL)
 
         except KeyboardInterrupt:
-            print(f"\n[{self.timestamp()}] ⛔ 사용자 중단")
+            print(f"\n[{self.timestamp()}]  사용자 중단")
 
             # 최종 수익 현황 표시
             self.display_profit_status()

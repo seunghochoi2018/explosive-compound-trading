@@ -49,7 +49,7 @@ class LLMAnalyzer:
 
     def __init__(self):
         self.ollama_url = "http://localhost:11434/api/generate"
-        self.model = "qwen2.5:14b"  # 🧠 가장 똑똑한 14B 모델로 업그레이드!
+        self.model = "qwen2.5:14b"  #  가장 똑똑한 14B 모델로 업그레이드!
 
     def analyze_nvidia_signals(self, nvdl_price: float, nvdd_price: float,
                              nvdl_indicators: Dict, nvdd_indicators: Dict) -> str:
@@ -61,32 +61,32 @@ class LLMAnalyzer:
         nvdl_trend = nvdl_indicators.get('trend_direction', '중립')
         nvdd_trend = nvdd_indicators.get('trend_direction', '중립')
 
-        # 🧠 14B 모델 전용 복리효과 극대화 NVIDIA 추세 감지 프롬프트
-        prompt = f"""🧠 당신은 qwen2.5:14B 모델의 최고 지능을 활용하는 NVIDIA 복리 전문 AI 트레이더입니다.
+        #  14B 모델 전용 복리효과 극대화 NVIDIA 추세 감지 프롬프트
+        prompt = f""" 당신은 qwen2.5:14B 모델의 최고 지능을 활용하는 NVIDIA 복리 전문 AI 트레이더입니다.
 
-📊 현재 NVIDIA 레버리지 ETF 분석:
+ 현재 NVIDIA 레버리지 ETF 분석:
 - NVDL (3배 레버리지): ${nvdl_price:.2f}
 - NVDD (인버스): ${nvdd_price:.2f}
 - NVDL RSI: {nvdl_rsi:.1f} | NVDD RSI: {nvdd_rsi:.1f}
 - NVDL 추세: {nvdl_trend} | NVDD 추세: {nvdd_trend}
 
-🎯 복리효과 극대화 목표:
+ 복리효과 극대화 목표:
 1. 레버리지 ETF 추세 전환 조기 감지 → 즉시 신호 발송
 2. 작은 움직임도 3배 레버리지로 증폭되므로 정확한 타이밍이 복리의 핵심
 3. 손실 방지가 가장 중요 (3배 레버리지에서 손실은 더 크게 확대)
 
-🔍 14B 모델 지능 활용 포인트:
+ 14B 모델 지능 활용 포인트:
 - NVIDIA 반도체 생태계와 AI 트렌드 상관관계 분석
 - 레버리지 ETF 특성을 고려한 변곡점 감지
 - 복리 관점에서 최적 진입/청산 시점 예측
 
-⚡ 핵심 질문: 지금이 NVIDIA 추세 전환의 시작점인가?
+ 핵심 질문: 지금이 NVIDIA 추세 전환의 시작점인가?
 
 NVDL_BUY - 14B 지능으로 NVIDIA 상승 추세 감지, 복리를 위한 NVDL 매수 신호
 NVDD_BUY - NVIDIA 하락 추세 감지, NVDD 매수로 하락장에서도 복리 기회
 HOLD - 추세 지속 확신, 더 큰 복리 기회 대기
 
-🎯 14B 모델 최종 판단:"""
+ 14B 모델 최종 판단:"""
 
         try:
             response = requests.post(
@@ -297,25 +297,25 @@ class NVDLNVDQLLMSignalNotifier:
         """신호 메시지 포맷팅"""
 
         # 이모지 설정
-        action_emoji = "🟢" if signal.action == "BUY" else "🔴"
-        risk_emoji = {"LOW": "🟢", "MEDIUM": "🟡", "HIGH": "🔴"}[signal.risk_level]
+        action_emoji = "" if signal.action == "BUY" else ""
+        risk_emoji = {"LOW": "", "MEDIUM": "", "HIGH": ""}[signal.risk_level]
 
         # 가격 변화 방향 계산
         price_change = ((signal.target_price - signal.current_price) / signal.current_price) * 100
-        price_emoji = "📈" if price_change > 0 else "📉"
+        price_emoji = "" if price_change > 0 else ""
 
         message_parts = [
             f"{action_emoji} **{signal.symbol} {signal.action} 신호**",
             "",
-            f"💰 **현재가**: ${signal.current_price:.2f}",
-            f"🎯 **목표가**: ${signal.target_price:.2f} ({price_change:+.1f}%)",
-            f"🛡️ **손절가**: ${signal.stop_loss:.2f}",
-            f"📊 **신뢰도**: {signal.confidence:.1%}",
+            f" **현재가**: ${signal.current_price:.2f}",
+            f" **목표가**: ${signal.target_price:.2f} ({price_change:+.1f}%)",
+            f" **손절가**: ${signal.stop_loss:.2f}",
+            f" **신뢰도**: {signal.confidence:.1%}",
             f"{risk_emoji} **리스크**: {signal.risk_level}",
             f"⏰ **보유기간**: {signal.holding_period}",
-            f"💵 **예상수익**: {signal.expected_return:.1f}%",
+            f" **예상수익**: {signal.expected_return:.1f}%",
             "",
-            "📈 **기술적 분석**:",
+            " **기술적 분석**:",
             f"• RSI: {signal.analysis['rsi']:.1f}",
             f"• 추세: {signal.analysis['trend']}",
             f"• 모멘텀: {signal.analysis['momentum']:.3f}",
@@ -323,13 +323,13 @@ class NVDLNVDQLLMSignalNotifier:
             f"• 지지선: ${signal.analysis['support']:.2f}",
             f"• 저항선: ${signal.analysis['resistance']:.2f}",
             "",
-            "🤖 **AI 분석**:",
+            " **AI 분석**:",
             f"{signal.llm_analysis}",
             "",
-            f"🕒 **발생시간**: {signal.timestamp.strftime('%H:%M:%S')}",
+            f" **발생시간**: {signal.timestamp.strftime('%H:%M:%S')}",
             f"🆔 **신호ID**: {signal.signal_id}",
             "",
-            "📝 *이 신호는 참고용이며, 투자 책임은 본인에게 있습니다.*"
+            " *이 신호는 참고용이며, 투자 책임은 본인에게 있습니다.*"
         ]
 
         return "\n".join(message_parts)

@@ -120,9 +120,9 @@ def monitor_ollama():
 
             # 상태 출력
             if killed:
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] ⚠️  정리: {', '.join(killed)}")
+                print(f"[{datetime.now().strftime('%H:%M:%S')}]   정리: {', '.join(killed)}")
             if kept:
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ 유지: {', '.join(kept)}")
+                print(f"[{datetime.now().strftime('%H:%M:%S')}]  유지: {', '.join(kept)}")
 
             time.sleep(10)  # 10초마다 체크
 

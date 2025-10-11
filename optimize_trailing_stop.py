@@ -113,10 +113,10 @@ def analyze_kis_trades():
     print("  특성: 높은 변동성, 큰 수익/손실 폭")
     print("  노이즈 수준: -2~-3% 일간 변동 흔함")
     print()
-    print("  ✅ 권장 초기 손절선: -4.0%")
+    print("   권장 초기 손절선: -4.0%")
     print("     이유: 작은 손실(-2~-3%) 필터, 큰 손실(-15~-28%) 방지")
     print()
-    print("  ✅ 권장 트레일링 스탑:")
+    print("   권장 트레일링 스탑:")
     print("     +5% 수익 → 손절선 +1% (4% 수익 보장)")
     print("     +10% 수익 → 손절선 +5% (8% 수익 보장)")
     print("     +20% 수익 → 손절선 +12% (15% 수익 보장)")
@@ -153,10 +153,10 @@ def analyze_eth_trades():
             print("  특성: 초고 레버리지, 빠른 청산 위험")
             print("  노이즈 수준: -1~-2% 변동으로도 25배 확대")
             print()
-            print("  ✅ 권장 초기 손절선: -2.5%")
+            print("   권장 초기 손절선: -2.5%")
             print("     이유: 25x 레버리지 = 실제 -0.1% = -2.5% 손실")
             print()
-            print("  ✅ 권장 트레일링 스탑:")
+            print("   권장 트레일링 스탑:")
             print("     +3% 수익 → 손절선 0% (본전 보장)")
             print("     +5% 수익 → 손절선 +2%")
             print("     +10% 수익 → 손절선 +6%")
@@ -210,7 +210,7 @@ def analyze_eth_trades():
         avg_loss = statistics.mean(loss_pnls) if loss_pnls else -5.0
         recommended_stop = max(avg_loss * 0.5, -3.0)  # 평균 손실의 50% 또는 -3%
 
-        print(f"  ✅ 권장 초기 손절선: {recommended_stop:.1f}%")
+        print(f"   권장 초기 손절선: {recommended_stop:.1f}%")
         print(f"     (25x 레버리지 감안, 실제 ETH 가격 {recommended_stop/25:.2f}% 하락)")
 
         return {

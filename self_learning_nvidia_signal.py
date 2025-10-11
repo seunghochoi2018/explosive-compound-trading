@@ -174,7 +174,7 @@ class SelfLearningNVIDIASignal:
 
         self.load_weights()
 
-        logger.info("🧠 자가학습 NVIDIA 신호 시스템 초기화 완료")
+        logger.info(" 자가학습 NVIDIA 신호 시스템 초기화 완료")
 
     def load_weights(self):
         """가중치 로드"""
@@ -183,7 +183,7 @@ class SelfLearningNVIDIASignal:
                 data = json.load(f)
                 self.weights = data.get('weights', self.weights)
                 accuracy = data.get('accuracy_rate', 0)
-                logger.info(f"📊 학습된 가중치 로드 (정확도: {accuracy:.1%})")
+                logger.info(f" 학습된 가중치 로드 (정확도: {accuracy:.1%})")
         except FileNotFoundError:
             logger.info("🆕 새로운 학습 시작")
 
@@ -236,7 +236,7 @@ class SelfLearningNVIDIASignal:
             }
 
         except Exception as e:
-            logger.error(f"❌ {symbol} 데이터 조회 실패: {e}")
+            logger.error(f" {symbol} 데이터 조회 실패: {e}")
             return None
 
     def adaptive_signal_generation(self, nvdl_data: Dict, nvdd_data: Dict) -> Tuple[Optional[Dict], Optional[Dict]]:
@@ -364,7 +364,7 @@ class SelfLearningNVIDIASignal:
         self.save_weights()
 
         accuracy = np.mean(self.signal_accuracy) if self.signal_accuracy else 0.5
-        logger.info(f"📈 학습 완료 - 정확도: {accuracy:.1%}")
+        logger.info(f" 학습 완료 - 정확도: {accuracy:.1%}")
 
     def send_telegram(self, message: str) -> bool:
         """텔레그램 전송"""
@@ -378,7 +378,7 @@ class SelfLearningNVIDIASignal:
             response = requests.post(url, data=data, timeout=10)
             return response.status_code == 200
         except Exception as e:
-            logger.error(f"❌ 텔레그램 전송 실패: {e}")
+            logger.error(f" 텔레그램 전송 실패: {e}")
             return False
 
     def check_pending_signals(self):
@@ -410,7 +410,7 @@ class SelfLearningNVIDIASignal:
                     )
 
                     # 결과 알림
-                    result_msg = f"📊 신호 결과 - {signal_data['symbol']}\n"
+                    result_msg = f" 신호 결과 - {signal_data['symbol']}\n"
                     result_msg += f"수익률: {profit_rate:+.2%}\n"
                     result_msg += f"정확도: {np.mean(self.signal_accuracy):.1%}"
                     self.send_telegram(result_msg)
@@ -427,7 +427,7 @@ class SelfLearningNVIDIASignal:
         nvdd_data = self.get_stock_data("NVDD")
 
         if not nvdl_data or not nvdd_data:
-            logger.error("❌ 가격 데이터 수집 실패")
+            logger.error(" 가격 데이터 수집 실패")
             return
 
         logger.info(f"NVDL: ${nvdl_data['price']:.2f} ({nvdl_data['change_percent']:+.2f}%)")
@@ -442,19 +442,19 @@ class SelfLearningNVIDIASignal:
             if symbol in self.last_signals:
                 last_time = self.last_signals[symbol]['timestamp']
                 if (datetime.now() - last_time).seconds < self.config['cooldown_period']:
-                    logger.info(f"⏸️ {symbol} 쿨다운 중")
+                    logger.info(f"⏸ {symbol} 쿨다운 중")
                     continue
 
             # 신호 전송
-            message = f"🔔 **{signal['symbol']} {signal['signal_type']} 신호**\n\n"
-            message += f"💰 가격: ${signal['price']:.2f}\n"
-            message += f"📊 변화율: {signal['change_percent']:+.2f}%\n"
-            message += f"📈 RSI: {signal['rsi']:.1f}\n"
-            message += f"🎯 신뢰도: {signal['confidence']:.1%}\n"
-            message += f"📊 현재 정확도: {np.mean(self.signal_accuracy):.1%}" if self.signal_accuracy else ""
+            message = f" **{signal['symbol']} {signal['signal_type']} 신호**\n\n"
+            message += f" 가격: ${signal['price']:.2f}\n"
+            message += f" 변화율: {signal['change_percent']:+.2f}%\n"
+            message += f" RSI: {signal['rsi']:.1f}\n"
+            message += f" 신뢰도: {signal['confidence']:.1%}\n"
+            message += f" 현재 정확도: {np.mean(self.signal_accuracy):.1%}" if self.signal_accuracy else ""
 
             if self.send_telegram(message):
-                logger.info(f"✅ {signal['symbol']} 신호 전송 완료")
+                logger.info(f" {signal['symbol']} 신호 전송 완료")
 
                 # 신호 저장
                 signal_data = {
@@ -490,9 +490,9 @@ class SelfLearningNVIDIASignal:
 
     def run(self):
         """메인 실행 루프"""
-        logger.info("🚀 자가학습 NVIDIA 신호 시스템 시작")
-        logger.info(f"📊 체크 간격: {self.config['check_interval']//60}분")
-        logger.info(f"🎯 최소 신뢰도: {self.config['min_confidence']:.1%} (동적 조정)")
+        logger.info(" 자가학습 NVIDIA 신호 시스템 시작")
+        logger.info(f" 체크 간격: {self.config['check_interval']//60}분")
+        logger.info(f" 최소 신뢰도: {self.config['min_confidence']:.1%} (동적 조정)")
         logger.info("=" * 60)
 
         while True:
@@ -503,11 +503,11 @@ class SelfLearningNVIDIASignal:
                 time.sleep(self.config['check_interval'])
 
             except KeyboardInterrupt:
-                logger.info("\n👋 사용자 중단 - 프로그램 종료")
+                logger.info("\n 사용자 중단 - 프로그램 종료")
                 break
             except Exception as e:
-                logger.error(f"❌ 시스템 오류: {e}")
-                logger.info("🔄 1분 후 재시도...")
+                logger.error(f" 시스템 오류: {e}")
+                logger.info(" 1분 후 재시도...")
                 time.sleep(60)
 
 if __name__ == "__main__":

@@ -60,33 +60,33 @@ class TelegramNotifier:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         if action == 'BUY':
-            emoji = "🟢"
+            emoji = ""
             action_text = "매수 신호"
         elif action == 'SELL':
-            emoji = "🔴"
+            emoji = ""
             action_text = "매도 신호"
         else:
-            emoji = "🔵"
+            emoji = ""
             action_text = action
 
         position_info = ""
         if current_position:
-            position_info = f"\\n\\n💼 **현재 포지션**: {current_position} (손익 {current_pnl_pct:+.2f}%)"
+            position_info = f"\\n\\n **현재 포지션**: {current_position} (손익 {current_pnl_pct:+.2f}%)"
 
         message = f"""
 {emoji} **LLM 매매 신호**
 
 ⏰ **시간**: {timestamp}
 
-📊 **신호**: {action_text}
-🎯 **종목**: {symbol}
-💵 **수량**: {quantity}주
-🤖 **신뢰도**: {confidence:.0f}%
+ **신호**: {action_text}
+ **종목**: {symbol}
+ **수량**: {quantity}주
+ **신뢰도**: {confidence:.0f}%
 
-💡 **분석 근거**:
+ **분석 근거**:
 {reasoning}{position_info}
 
-⚠️ **실제 거래는 직접 하세요!**
+ **실제 거래는 직접 하세요!**
         """.strip()
 
         self.send_message(message)
@@ -94,20 +94,20 @@ class TelegramNotifier:
     def notify_position_change(self, old_pos: str, new_pos: str, pnl_pct: float):
         """포지션 변경 감지 알림"""
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        result = "🟢 수익" if pnl_pct > 0 else "🔴 손실"
+        result = " 수익" if pnl_pct > 0 else " 손실"
 
         message = f"""
-🔄 **포지션 변경 감지!**
+ **포지션 변경 감지!**
 
 ⏰ **시간**: {timestamp}
 
-📊 **변경 내용**:
+ **변경 내용**:
   - 이전: {old_pos or '없음'}
   - 현재: {new_pos or '없음'}
 
-💰 **손익**: {result} {pnl_pct:+.2f}%
+ **손익**: {result} {pnl_pct:+.2f}%
 
-✅ 자동으로 학습 데이터에 기록됩니다.
+ 자동으로 학습 데이터에 기록됩니다.
         """.strip()
 
         self.send_message(message)

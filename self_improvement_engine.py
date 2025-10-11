@@ -445,10 +445,10 @@ class SelfImprovementEngine:
             return
 
         # 리포트 생성
-        report = f"🤖 <b>{self.bot_name} 봇 자기 개선 리포트</b>\n\n"
+        report = f" <b>{self.bot_name} 봇 자기 개선 리포트</b>\n\n"
 
         # 성과
-        report += f"📊 <b>성과 (최근 24시간)</b>\n"
+        report += f" <b>성과 (최근 24시간)</b>\n"
         report += f"  거래: {performance['total_trades']}건 "
         report += f"(승: {performance['wins']}, 패: {performance['losses']})\n"
         report += f"  승률: {performance['win_rate']}%\n"
@@ -460,19 +460,19 @@ class SelfImprovementEngine:
 
         # 문제점
         if issues:
-            report += f"\n🔍 <b>발견된 문제점</b>\n"
+            report += f"\n <b>발견된 문제점</b>\n"
             for issue in issues[:3]:
                 report += f"  • {issue['description']}\n"
 
         # 적용된 개선
         if applied:
-            report += f"\n🔧 <b>자동 개선 적용</b>\n"
+            report += f"\n <b>자동 개선 적용</b>\n"
             for imp in applied:
-                report += f"  ✅ [{imp['grade']}급] {imp['description']}\n"
+                report += f"   [{imp['grade']}급] {imp['description']}\n"
 
         # 메타 학습
         if meta.get('total_improvements', 0) > 0:
-            report += f"\n🧠 <b>학습 현황</b>\n"
+            report += f"\n <b>학습 현황</b>\n"
             report += f"  총 개선 횟수: {meta['total_improvements']}회\n"
             if meta.get('most_effective'):
                 report += f"  가장 효과적: {meta['most_effective']}\n"

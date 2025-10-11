@@ -230,14 +230,14 @@ class ETHToNVIDIAMapper:
     def format_notification_message(self, recommendation: Dict, eth_price: float) -> str:
         """텔레그램 알림 메시지 포맷"""
 
-        signal_emoji = "📈" if recommendation['eth_signal'] == 'LONG' else "📉"
+        signal_emoji = "" if recommendation['eth_signal'] == 'LONG' else ""
 
         message = f"""
 {signal_emoji} <b>NVIDIA ETF 포지션 추천</b>
 
 <b>━━━━━━━━━━━━━━━━━━━━━━</b>
 
-<b>📊 ETH 분석 결과</b>
+<b> ETH 분석 결과</b>
 • 현재가: ${eth_price:,.2f}
 • ETH 신호: {recommendation['eth_signal']}
 • 매수 신호: {recommendation['eth_buy_signal']}
@@ -245,15 +245,15 @@ class ETHToNVIDIAMapper:
 • 신뢰도: {recommendation['confidence']}%
 • 신호 강도: {recommendation['signal_strength']}
 
-<b>💡 분석 근거</b>
+<b> 분석 근거</b>
 {recommendation['reasoning']}
 
-<b>🎯 NVIDIA ETF 추천</b>
+<b> NVIDIA ETF 추천</b>
 • 종목: <b>{recommendation['symbol']}</b>
 • 종목명: {recommendation['name']}
 • 액션: <b>{recommendation['action']}</b>
 
-<b>🔍 매핑 논리</b>
+<b> 매핑 논리</b>
 {recommendation['rationale']}
 
 <b>━━━━━━━━━━━━━━━━━━━━━━</b>
@@ -320,7 +320,7 @@ class ETHToNVIDIAMapper:
 
         # 시작 알림
         startup_message = f"""
-🚀 <b>ETH → NVIDIA ETF 알림 시스템 시작</b>
+ <b>ETH → NVIDIA ETF 알림 시스템 시작</b>
 
 • 모드: 알림 전용
 • ETH 롱 → NVDL 추천

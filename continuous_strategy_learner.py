@@ -279,7 +279,7 @@ class ContinuousStrategyLearner:
                 best_return = result['compound_return']
                 best_strategy = result
 
-                print(f"\n🚀 획기적 전략 발견! (테스트 {i+1}/{len(test_cases)})")
+                print(f"\n 획기적 전략 발견! (테스트 {i+1}/{len(test_cases)})")
                 print(f"  복리 수익: {result['compound_return']:,.1f}%")
                 print(f"  승률: {result['win_rate']:.1f}%")
                 print(f"  거래 수: {result['total_trades']}/{result['filtered_from']}")
@@ -378,14 +378,14 @@ class ContinuousStrategyLearner:
 
         # 텔레그램 알림
         self.telegram.send_message(
-            f"🚀 획기적 전략 발견 & 배포!\n\n"
+            f" 획기적 전략 발견 & 배포!\n\n"
             f"자산: {asset.upper()}\n"
             f"전략: {new_config['name']}\n\n"
             f"성능:\n"
             f"  복리 수익: {strategy['compound_return']:,.1f}%\n"
             f"  승률: {strategy['win_rate']:.1f}%\n"
             f"  거래 수: {strategy['total_trades']}\n\n"
-            f"⚠️ 검증 기간:\n"
+            f" 검증 기간:\n"
             f"  손절: {new_config['dynamic_stop_loss']}%\n"
             f"  100거래 후 자동 조정"
         )
@@ -450,7 +450,7 @@ class ContinuousStrategyLearner:
         print("\n[실행] 연속 전략 학습 시작")
 
         self.telegram.send_message(
-            "🧠 연속 전략 학습 시작\n\n"
+            " 연속 전략 학습 시작\n\n"
             "목표: 실시간 거래하면서\n"
             "과거 데이터로 더 나은 전략 발견\n\n"
             "주기: 1시간마다\n"

@@ -304,13 +304,13 @@ class NVDAMultiModelTrader:
 
                 if profit_percent > 0:
                     model['wins'] += 1
-                    status = "✅수익"
+                    status = "수익"
                 else:
-                    status = "❌손실"
+                    status = "손실"
 
                 # 상세 로깅
                 print("------------------------------------------------------------")
-                print(f"🔥 [{model_key}] {status}")
+                print(f" [{model_key}] {status}")
                 print(f"   진입: ${entry_price:.2f} → 청산: ${current_price:.2f}")
                 print(f"   보유: {hold_time:.1f}시간, 실현손익: {profit_percent:.2f}% (${profit_amount:.2f})")
                 print(f"   누적거래: {model['trades']}회, 누적수익: ${model['total_profit']:.2f}")
@@ -322,7 +322,7 @@ class NVDAMultiModelTrader:
                 model['entry_time'] = 0
 
                 # 텔레그램 알림 비활성화
-                # emoji = "🟢" if profit_percent > 0 else "🔴"
+                # emoji = "" if profit_percent > 0 else ""
                 # telegram_msg = f"""
                 # {emoji} <b>{model['symbol']} 청산 완료</b>
                 #
@@ -393,7 +393,7 @@ class NVDAMultiModelTrader:
                 print(f"{symbol} 현재가: ${self.current_prices[symbol]:.2f}")
 
         print(f"총 모델: {len(self.models)}개")
-        print(f"\n💰 실현손익 TOP 10 (총 {len(active_models)}개 활성):")
+        print(f"\n 실현손익 TOP 10 (총 {len(active_models)}개 활성):")
 
         # 수익률 기준 정렬
         profitable_models = []
@@ -404,7 +404,7 @@ class NVDAMultiModelTrader:
         profitable_models.sort(key=lambda x: x[1]['total_profit'], reverse=True)
 
         for i, (model_key, model) in enumerate(profitable_models[:10], 1):
-            status_emoji = "✅" if model['total_profit'] > 0 else "⚪"
+            status_emoji = "" if model['total_profit'] > 0 else ""
             avg_profit = model['total_profit'] / model['trades'] if model['trades'] > 0 else 0
             win_rate = (model['wins'] / model['trades'] * 100) if model['trades'] > 0 else 0
             position_status = f" [{model['position']}]" if model['position'] else ""
@@ -431,14 +431,14 @@ class NVDAMultiModelTrader:
 
         # 시작 알림 비활성화
         # start_message = f"""
-        # 🚀 <b>NVDA/NVDQ AI 멀티모델 트레이더 시작!</b>
+        #  <b>NVDA/NVDQ AI 멀티모델 트레이더 시작!</b>
         #
-        # 📊 모델 구성:
+        #  모델 구성:
         # • 심볼: NVDA, NVDQ
         # • 총 모델: {len(self.models)}개
         # • 순수 AI 학습 (패턴/지표 없음)
         #
-        # ⚡ 자동 최적화:
+        #  자동 최적화:
         # • 성과 기반 자본 재배분
         # • 실시간 포지션 알림
         # • 5분마다 데이터 저장

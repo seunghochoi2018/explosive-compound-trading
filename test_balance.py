@@ -53,7 +53,7 @@ else:
     result = None
 
 if result and result.get("rt_cd") == "0":
-    print("\n✅ 조회 성공!")
+    print("\n 조회 성공!")
 
     # output2 확인
     output2 = result.get("output2", [])
@@ -67,7 +67,7 @@ if result and result.get("rt_cd") == "0":
 
         # USD 잔고
         usd_balance = float(balance_info.get('frcr_dncl_amt_2', 0))
-        print(f"\n💵 USD 잔고: ${usd_balance:.2f}")
+        print(f"\n USD 잔고: ${usd_balance:.2f}")
 
     # output1 확인 (보유 종목)
     output1 = result.get("output1", [])
@@ -79,4 +79,4 @@ if result and result.get("rt_cd") == "0":
         if symbol and int(qty) > 0:
             print(f"  {symbol}: {qty}주")
 else:
-    print(f"\n❌ 조회 실패: {result.get('msg1') if result else 'HTTP 오류'}")
+    print(f"\n 조회 실패: {result.get('msg1') if result else 'HTTP 오류'}")

@@ -23,9 +23,9 @@ class NVDLNVDQUltraTimeframeOptimizer:
         NVDL/NVDQ 울트라 시간주기 최적화 시스템 초기화
         """
         print("=" * 70)
-        print("🚀 NVDL/NVDQ 울트라 시간주기 최적화 시스템")
-        print("📊 15분~1주 모든 주기 + 최적 모델 자동 수렴")
-        print("💎 코드3 고급 로직 기반 NVDL/NVDQ 특화")
+        print(" NVDL/NVDQ 울트라 시간주기 최적화 시스템")
+        print(" 15분~1주 모든 주기 + 최적 모델 자동 수렴")
+        print(" 코드3 고급 로직 기반 NVDL/NVDQ 특화")
         print("=" * 70)
 
         self.fmp_api_key = fmp_api_key
@@ -106,10 +106,10 @@ class NVDLNVDQUltraTimeframeOptimizer:
         self.top_models_count = 2       # 상위 2개 모델에만 집중 (과도한 제한 방지)
         self.focus_started = False
 
-        print(f"✅ 초기화 완료!")
-        print(f"📊 시간주기: {list(self.timeframes.keys())}")
-        print(f"🎯 심볼: {self.symbols}")
-        print(f"💰 초기 자금: ${self.balance:,.2f}")
+        print(f" 초기화 완료!")
+        print(f" 시간주기: {list(self.timeframes.keys())}")
+        print(f" 심볼: {self.symbols}")
+        print(f" 초기 자금: ${self.balance:,.2f}")
 
     def initialize_models(self):
         """각 시간주기, 심볼, 전략별 모델 초기화"""
@@ -563,7 +563,7 @@ class NVDLNVDQUltraTimeframeOptimizer:
                         if not self.timeframes['6h']['models'][symbol][strategy_id]['active']:
                             self.timeframes['6h']['models'][symbol][strategy_id]['active'] = True
                             strategy_name = self.timeframes['6h']['models'][symbol][strategy_id]['strategy_name']
-                            print(f"📈 6시간 주기 활성화: {symbol}-{strategy_name}")
+                            print(f" 6시간 주기 활성화: {symbol}-{strategy_name}")
 
             # 6시간이 충분히 학습되면 12시간 활성화
             medium_ready = sum(sum(strategy_model['trades'] for strategy_model in symbol_models.values())
@@ -575,7 +575,7 @@ class NVDLNVDQUltraTimeframeOptimizer:
                         if not self.timeframes['12h']['models'][symbol][strategy_id]['active']:
                             self.timeframes['12h']['models'][symbol][strategy_id]['active'] = True
                             strategy_name = self.timeframes['12h']['models'][symbol][strategy_id]['strategy_name']
-                            print(f"📈 12시간 주기 활성화: {symbol}-{strategy_name}")
+                            print(f" 12시간 주기 활성화: {symbol}-{strategy_name}")
 
             # 12시간이 충분히 학습되면 1일 활성화
             long_ready = sum(sum(strategy_model['trades'] for strategy_model in symbol_models.values())
@@ -587,7 +587,7 @@ class NVDLNVDQUltraTimeframeOptimizer:
                         if not self.timeframes['1d']['models'][symbol][strategy_id]['active']:
                             self.timeframes['1d']['models'][symbol][strategy_id]['active'] = True
                             strategy_name = self.timeframes['1d']['models'][symbol][strategy_id]['strategy_name']
-                            print(f"📈 1일 주기 활성화: {symbol}-{strategy_name}")
+                            print(f" 1일 주기 활성화: {symbol}-{strategy_name}")
 
         except Exception as e:
             print(f"순차 활성화 오류: {e}")
@@ -641,7 +641,7 @@ class NVDLNVDQUltraTimeframeOptimizer:
                 strategy_id = model_info['strategy_id']
                 self.timeframes[tf_name]['models'][symbol][strategy_id]['active'] = True
 
-            print(f"\n🎯 충분한 학습 후 상위 {len(top_models)}개 전략으로 수렴!")
+            print(f"\n 충분한 학습 후 상위 {len(top_models)}개 전략으로 수렴!")
             for i, model_info in enumerate(top_models):
                 model = model_info['model']
                 print(f"  {i+1}. {model_info['key']}: "
@@ -672,11 +672,11 @@ class NVDLNVDQUltraTimeframeOptimizer:
 
                     # 모델 구조 확인 (디버깅)
                     if symbol not in tf_config['models']:
-                        print(f"🔴 오류: {tf_name}에 {symbol} 모델이 없음")
+                        print(f" 오류: {tf_name}에 {symbol} 모델이 없음")
                         continue
 
                     if not isinstance(tf_config['models'][symbol], dict):
-                        print(f"🔴 오류: {tf_name}-{symbol} 모델이 dict가 아님: {type(tf_config['models'][symbol])}")
+                        print(f" 오류: {tf_name}-{symbol} 모델이 dict가 아님: {type(tf_config['models'][symbol])}")
                         continue
 
                     # 각 전략별로 체크
@@ -720,10 +720,10 @@ class NVDLNVDQUltraTimeframeOptimizer:
                               for symbol_models in tf['models'].values()
                               for model in symbol_models.values() if model['active'])
 
-            print(f"\n💰 잔고: ${self.balance:,.2f} ({total_profit_pct:+.2f}%)")
-            print(f"📍 활성 포지션: {len(self.active_positions)}개")
+            print(f"\n 잔고: ${self.balance:,.2f} ({total_profit_pct:+.2f}%)")
+            print(f" 활성 포지션: {len(self.active_positions)}개")
             total_models = len(self.symbols) * len(self.timeframes) * self.strategies_per_timeframe
-            print(f"🤖 활성 모델: {active_models}/{total_models}개")
+            print(f" 활성 모델: {active_models}/{total_models}개")
 
             # 상위 5개 모델 출력
             all_models = []
@@ -739,10 +739,10 @@ class NVDLNVDQUltraTimeframeOptimizer:
 
             if all_models:
                 all_models.sort(key=lambda x: x['data']['weight'], reverse=True)
-                print(f"\n🏆 상위 전략들:")
+                print(f"\n 상위 전략들:")
                 for i, model_info in enumerate(all_models[:5]):
                     model = model_info['data']
-                    active_mark = "🔥" if model_info['active'] else "💤"
+                    active_mark = "" if model_info['active'] else ""
                     print(f"  {active_mark} {i+1}. {model_info['name']}: "
                           f"{model['win_rate']*100:.1f}% 승률, {model['avg_profit']:+.2f}% 평균")
 
@@ -781,17 +781,17 @@ class NVDLNVDQUltraTimeframeOptimizer:
             with open('nvdl_nvdq_ultra_optimizer_progress.json', 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2, default=str)
 
-            print(f"💾 진행상황 저장 완료")
+            print(f" 진행상황 저장 완료")
 
         except Exception as e:
-            print(f"🔴 진행상황 저장 오류: {e}")
+            print(f" 진행상황 저장 오류: {e}")
             import traceback
             traceback.print_exc()
 
     def run(self):
         """메인 실행 루프"""
-        print(f"\n🚀 NVDL/NVDQ 울트라 시간주기 최적화 시작!")
-        print(f"🎯 목표: 모든 시간주기 테스트 → 최고 모델 자동 발견")
+        print(f"\n NVDL/NVDQ 울트라 시간주기 최적화 시작!")
+        print(f" 목표: 모든 시간주기 테스트 → 최고 모델 자동 발견")
 
         cycle_count = 0
         last_status_time = time.time()
@@ -807,14 +807,14 @@ class NVDLNVDQUltraTimeframeOptimizer:
                 trades_executed = self.run_trading_cycle()
 
                 if trades_executed > 0:
-                    print(f"✅ {trades_executed}개 거래 실행")
+                    print(f" {trades_executed}개 거래 실행")
 
                 # 5분마다 상태 출력
                 if current_time - last_status_time >= 300:  # 5분
                     try:
                         self.print_status()
                     except Exception as e:
-                        print(f"🔴 상태 출력 오류: {e}")
+                        print(f" 상태 출력 오류: {e}")
                         import traceback
                         traceback.print_exc()
                     last_status_time = current_time
@@ -824,7 +824,7 @@ class NVDLNVDQUltraTimeframeOptimizer:
                     try:
                         self.save_progress()
                     except Exception as e:
-                        print(f"🔴 저장 오류: {e}")
+                        print(f" 저장 오류: {e}")
                         import traceback
                         traceback.print_exc()
 
@@ -834,7 +834,7 @@ class NVDLNVDQUltraTimeframeOptimizer:
                     for tf_name, tf_config in self.timeframes.items():
                         # 디버깅: 모델 구조 확인
                         if 'models' not in tf_config:
-                            print(f"🔴 오류: {tf_name}에 'models' 키가 없음")
+                            print(f" 오류: {tf_name}에 'models' 키가 없음")
                             continue
 
                         for symbol, symbol_models in tf_config['models'].items():
@@ -845,7 +845,7 @@ class NVDLNVDQUltraTimeframeOptimizer:
                                         active_intervals.append(tf_config['interval'])
                                         break
                             else:
-                                print(f"🔴 오류: {tf_name}-{symbol}의 models가 dict가 아님: {type(symbol_models)}")
+                                print(f" 오류: {tf_name}-{symbol}의 models가 dict가 아님: {type(symbol_models)}")
 
                     if active_intervals:
                         min_interval = min(active_intervals)
@@ -857,7 +857,7 @@ class NVDLNVDQUltraTimeframeOptimizer:
                     time.sleep(sleep_time)
 
                 except Exception as e:
-                    print(f"🔴 대기 시간 계산 오류: {e}")
+                    print(f" 대기 시간 계산 오류: {e}")
                     import traceback
                     traceback.print_exc()
                     # 오류 시 기본값 사용
@@ -868,15 +868,15 @@ class NVDLNVDQUltraTimeframeOptimizer:
         except KeyboardInterrupt:
             print("\n사용자 중단")
         except Exception as e:
-            print(f"\n🔴 시스템 오류: {e}")
+            print(f"\n 시스템 오류: {e}")
             import traceback
             traceback.print_exc()
         finally:
             self.save_progress()
             final_profit = (self.balance / self.initial_balance - 1) * 100
-            print(f"\n🔚 최적화 완료!")
-            print(f"💰 최종 수익률: {final_profit:+.2f}%")
-            print(f"🔄 총 사이클: {cycle_count}회")
+            print(f"\n 최적화 완료!")
+            print(f" 최종 수익률: {final_profit:+.2f}%")
+            print(f" 총 사이클: {cycle_count}회")
 
 def main():
     """메인 실행 함수"""

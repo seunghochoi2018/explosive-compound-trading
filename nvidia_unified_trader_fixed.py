@@ -152,7 +152,7 @@ class KISCompleteTrader:
 
             success, has_balance = self.get_account_balance(code)
             if success:
-                logger.info(f"✅ 계좌 {self.cano}-{code} 작동!")
+                logger.info(f" 계좌 {self.cano}-{code} 작동!")
                 self.working_account_code = code
                 return code
 
@@ -416,7 +416,7 @@ RISK: [HIGH/MEDIUM/LOW]
     def print_status(self, market_data, analysis_result):
         """현재 상태 출력"""
         print("\n" + "="*60)
-        print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f" {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print("="*60)
 
         print("[PRICE] 현재 가격:")

@@ -297,23 +297,23 @@ NVDL과 NVDD는 반대 방향으로 움직입니다:
 
     def format_signal_message(self, signal: Dict) -> str:
         """신호 메시지 포맷팅"""
-        action_emoji = "🟢" if signal["action"] == "BUY" else "🔴"
-        risk_emoji = {"LOW": "🟢", "MEDIUM": "🟡", "HIGH": "🔴"}[signal["risk_level"]]
+        action_emoji = "" if signal["action"] == "BUY" else ""
+        risk_emoji = {"LOW": "", "MEDIUM": "", "HIGH": ""}[signal["risk_level"]]
 
         price_change = ((signal["target_price"] - signal["current_price"]) / signal["current_price"]) * 100
 
         message_parts = [
             f"{action_emoji} **{signal['symbol']} {signal['action']} 신호**",
             "",
-            f"💰 **현재가**: ${signal['current_price']:.2f}",
-            f"🎯 **목표가**: ${signal['target_price']:.2f} ({price_change:+.1f}%)",
-            f"🛡️ **손절가**: ${signal['stop_loss']:.2f}",
-            f"📊 **신뢰도**: {signal['confidence']:.1%}",
+            f" **현재가**: ${signal['current_price']:.2f}",
+            f" **목표가**: ${signal['target_price']:.2f} ({price_change:+.1f}%)",
+            f" **손절가**: ${signal['stop_loss']:.2f}",
+            f" **신뢰도**: {signal['confidence']:.1%}",
             f"{risk_emoji} **리스크**: {signal['risk_level']}",
             f"⏰ **보유기간**: {signal['holding_period']}",
-            f"💵 **예상수익**: {signal['expected_return']:.1f}%",
+            f" **예상수익**: {signal['expected_return']:.1f}%",
             "",
-            "📈 **기술적 분석**:",
+            " **기술적 분석**:",
             f"• RSI: {signal['indicators']['rsi']:.1f}",
             f"• 추세: {signal['indicators']['trend_direction']}",
             f"• 모멘텀: {signal['indicators']['momentum_score']:.3f}",
@@ -321,13 +321,13 @@ NVDL과 NVDD는 반대 방향으로 움직입니다:
             f"• 지지선: ${signal['indicators']['support_level']:.2f}",
             f"• 저항선: ${signal['indicators']['resistance_level']:.2f}",
             "",
-            "🤖 **AI 분석**:",
+            " **AI 분석**:",
             f"{signal['llm_analysis']}",
             "",
-            f"🕒 **발생시간**: {signal['timestamp'].strftime('%H:%M:%S')}",
+            f" **발생시간**: {signal['timestamp'].strftime('%H:%M:%S')}",
             f"🆔 **신호ID**: {signal['signal_id']}",
             "",
-            "📝 *이 신호는 참고용이며, 투자 책임은 본인에게 있습니다.*"
+            " *이 신호는 참고용이며, 투자 책임은 본인에게 있습니다.*"
         ]
 
         return "\n".join(message_parts)
