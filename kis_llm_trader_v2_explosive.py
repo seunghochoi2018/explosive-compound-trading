@@ -6,7 +6,7 @@ KIS LLM 트레이더 v2.0 - SOXL 10시간 복리 폭발 전략
 백테스트 발견 적용:
 - 10시간 보유 + 추세 전환 = 연 2,634%
 - 승률 55%, 복리 +12.8%
-- 추세 따라가기: 상승 → SOXL, 하락 → SOXS
+- 추세 따라가기: 상승  SOXL, 하락  SOXS
 """
 import os
 os.environ['PYTHONIOENCODING'] = 'utf-8'
@@ -43,17 +43,17 @@ class ExplosiveKISTrader:
         # KIS API 설정
         self.load_kis_config()
 
-        # ⭐ 2-티어 LLM 시스템
+        #  2-티어 LLM 시스템
         # 1. 7b 실시간 모니터: 매 5분마다 상시 감시 (메모리 상주)
         # 2. 16b 메인 분석: 15분마다 깊은 분석
         print("\n[LLM 시스템 초기화]")
         print("  7b 실시간 모니터 로딩 중...")
         self.realtime_monitor = LLMMarketAnalyzer(model_name="qwen2.5:7b")
-        print("  ✅ 7b 모니터 준비 완료 (상시 감시)")
+        print("  [OK] 7b 모니터 준비 완료 (상시 감시)")
 
         print("  16b 메인 분석기 로딩 중...")
         self.main_analyzer = LLMMarketAnalyzer(model_name="deepseek-coder-v2:16b")
-        print("  ✅ 16b 분석기 준비 완료 (15분 주기)")
+        print("  [OK] 16b 분석기 준비 완료 (15분 주기)")
 
         self.last_deep_analysis_time = 0
         self.DEEP_ANALYSIS_INTERVAL = 15 * 60  # 15분
@@ -62,9 +62,9 @@ class ExplosiveKISTrader:
         # 텔레그램
         self.telegram = TelegramNotifier()
 
-        # 거래 설정 (⭐ 정확한 PDNO 코드 사용!)
-        # ⚠️  중요: PDNO는 "SOXL"이 아니라 "A980679"를 사용해야 함!
-        # ⚠️  KIS API에서 종목코드는 A980XXX 형식의 고유 코드 필수!
+        # 거래 설정 ( 정확한 PDNO 코드 사용!)
+        # [WARN]  중요: PDNO는 "SOXL"이 아니라 "A980679"를 사용해야 함!
+        # [WARN]  KIS API에서 종목코드는 A980XXX 형식의 고유 코드 필수!
         self.symbols = {
             'SOXL': {'pdno': 'A980679', 'name': '반도체 3배 레버리지 롱'},  # DIREXION DAILY SEMICONDUCTOR BULL 3X
             'SOXS': {'pdno': 'A980680', 'name': '반도체 3배 레버리지 숏'}   # DIREXION DAILY SEMICONDUCTOR BEAR 3X
@@ -94,7 +94,7 @@ class ExplosiveKISTrader:
         self.learning_file = "kis_trade_history.json"
         self.load_trade_history()
 
-        # ⭐ 복리 폭발 전략 설정 (학습 기반 동적 값)
+        #  복리 폭발 전략 설정 (학습 기반 동적 값)
         self.MAX_HOLDING_TIME = self._calculate_optimal_holding_time()
         self.DYNAMIC_STOP_LOSS = self._calculate_optimal_stop_loss()
         self.MIN_CONFIDENCE = self._calculate_optimal_confidence()
@@ -119,14 +119,14 @@ class ExplosiveKISTrader:
 
         # 텔레그램 알림
         self.telegram.send_message(
-            f"🚀 SOXL 복리 폭발 전략 시작\n\n"
+            f"[START] SOXL 복리 폭발 전략 시작\n\n"
             f"초기 잔고: ${self.initial_balance:,.2f}\n"
             f"최대 보유: 10시간\n"
             f"동적 손절: {self.DYNAMIC_STOP_LOSS}%\n"
             f"목표: 연 2,634%"
         )
 
-        # ⭐ 자기 개선 엔진은 unified_trader_manager에서 통합 관리됩니다
+        #  자기 개선 엔진은 unified_trader_manager에서 통합 관리됩니다
         print(f"[자기 개선] 통합 관리자에서 실행 중")
 
     def load_kis_config(self):
@@ -295,9 +295,9 @@ class ExplosiveKISTrader:
 
     def get_current_price(self, symbol: str) -> float:
         """
-        현재가 조회 (KIS API 우선 → FMP API 백업)
+        현재가 조회 (KIS API 우선  FMP API 백업)
 
-        🔧 2025-10-10 수정:
+        [TOOL] 2025-10-10 수정:
         - KIS API: custtype 헤더, FID_COND_MRKT_DIV_CODE/FID_INPUT_ISCD 파라미터
         - FMP API: 백업 시스템 (KIS 실패 시 자동 전환)
 
@@ -342,7 +342,7 @@ class ExplosiveKISTrader:
             print(f"[KIS] API 오류: {e}")
 
         # 2차 시도: FMP API (백업)
-        print(f"[INFO] KIS API 실패 → FMP API로 전환")
+        print(f"[INFO] KIS API 실패  FMP API로 전환")
         return self.get_price_from_fmp(symbol)
 
     def get_price_from_fmp(self, symbol: str) -> float:
@@ -380,10 +380,10 @@ class ExplosiveKISTrader:
         """
         추세 판단 (이동평균 기반 - 학습된 임계값 사용)
 
-        MA5 > MA20 * threshold_bull → 상승 (SOXL)
-        MA5 < MA20 * threshold_bear → 하락 (SOXS)
+        MA5 > MA20 * threshold_bull  상승 (SOXL)
+        MA5 < MA20 * threshold_bear  하락 (SOXS)
 
-        ⭐ 임계값은 과거 거래 데이터에서 학습됨 (하드코딩 제거)
+         임계값은 과거 거래 데이터에서 학습됨 (하드코딩 제거)
         """
         if len(self.price_history) < 20:
             return 'NEUTRAL'
@@ -404,14 +404,14 @@ class ExplosiveKISTrader:
 
         1. 10시간 초과
         2. 손절 -3%
-        3. 추세 전환 (BULL ↔ BEAR)
+        3. 추세 전환 (BULL  BEAR)
         """
         if not self.current_position:
             return (False, "", False)
 
         # 가격 체크 (장 마감 시)
         if current_price == 0 or self.entry_price == 0:
-            print(f"[{datetime.now().strftime('%H:%M:%S')}] ⚠️  가격 정보 없음 (장 마감), 청산 조건 체크 불가")
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] [WARN]  가격 정보 없음 (장 마감), 청산 조건 체크 불가")
             return (False, "", False)
 
         # PNL 계산 (3배 레버리지)
@@ -433,9 +433,9 @@ class ExplosiveKISTrader:
         # 3. 추세 전환
         if self.TREND_CHECK_ENABLED and llm_signal:
             if self.current_position == 'SOXL' and llm_signal == 'BEAR':
-                return (True, f"TREND_BULL→BEAR (PNL:{pnl:+.1f}%)", True)
+                return (True, f"TREND_BULLBEAR (PNL:{pnl:+.1f}%)", True)
             elif self.current_position == 'SOXS' and llm_signal == 'BULL':
-                return (True, f"TREND_BEAR→BULL (PNL:{pnl:+.1f}%)", True)
+                return (True, f"TREND_BEARBULL (PNL:{pnl:+.1f}%)", True)
 
         return (False, "", False)
 
@@ -444,7 +444,7 @@ class ExplosiveKISTrader:
         try:
             import requests
 
-            # ⭐ KIS API는 티커명 직접 사용 (SOXL/SOXS)
+            #  KIS API는 티커명 직접 사용 (SOXL/SOXS)
             url = f"{self.base_url}/uapi/overseas-stock/v1/trading/order"
 
             headers = {
@@ -458,7 +458,7 @@ class ExplosiveKISTrader:
                 "CANO": self.account_no.split('-')[0],
                 "ACNT_PRDT_CD": self.account_no.split('-')[1],
                 "OVRS_EXCG_CD": "NASD",
-                "PDNO": symbol,  # ⭐ 티커명 직접 사용 (SOXL/SOXS)
+                "PDNO": symbol,  #  티커명 직접 사용 (SOXL/SOXS)
                 "ORD_QTY": str(qty),
                 "OVRS_ORD_UNPR": "0",  # 시장가
                 "ORD_SVR_DVSN_CD": "0"
@@ -485,7 +485,7 @@ class ExplosiveKISTrader:
 
         # 디버깅: 시작 알림
         self.telegram.send_message(
-            f"🔍 [DEBUG] KIS 봇 메인 루프 시작\n"
+            f" [DEBUG] KIS 봇 메인 루프 시작\n"
             f"현재 시간: {datetime.now().strftime('%H:%M:%S')}\n"
             f"300초(5분)마다 분석 실행 예정"
         )
@@ -496,35 +496,35 @@ class ExplosiveKISTrader:
                 cycle_count += 1
                 loop_start = datetime.now()
                 print(f"\n{'='*80}")
-                print(f"[{loop_start.strftime('%H:%M:%S')}] 🔄 사이클 #{cycle_count} 시작 (KIS)")
+                print(f"[{loop_start.strftime('%H:%M:%S')}] [RESTART] 사이클 #{cycle_count} 시작 (KIS)")
                 print(f"{'='*80}")
 
                 # SOXL 가격 조회 (추세 판단용)
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] 💰 SOXL 가격 조회 중...")
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] [MONEY] SOXL 가격 조회 중...")
                 soxl_price = self.get_current_price('SOXL')
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] 💵 SOXL 가격: ${soxl_price:.2f}")
+                print(f"[{datetime.now().strftime('%H:%M:%S')}]  SOXL 가격: ${soxl_price:.2f}")
 
                 if soxl_price > 0:
                     self.price_history.append(soxl_price)
                     if len(self.price_history) > self.max_history:
                         self.price_history.pop(0)
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}] 📈 가격 히스토리: {len(self.price_history)}개")
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}] [UP] 가격 히스토리: {len(self.price_history)}개")
 
                 # 추세 판단
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] 🔍 추세 분석 중...")
+                print(f"[{datetime.now().strftime('%H:%M:%S')}]  추세 분석 중...")
                 trend = self.calculate_trend()
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] 📊 추세: {trend}")
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] [REPORT] 추세: {trend}")
 
-                # ⭐ 1단계: 7b 실시간 모니터 (매 루프마다 상시 실행)
+                #  1단계: 7b 실시간 모니터 (매 루프마다 상시 실행)
                 if soxl_price > 0:
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}] 👁️  7b 실시간 모니터 감시 중...")
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}] [WATCH]  7b 실시간 모니터 감시 중...")
                     monitor_start = datetime.now()
 
                     # 간단한 시장 분석 (7b는 빠르게)
                     monitor_signal = 'BULL' if trend == 'BULL' else ('BEAR' if trend == 'BEAR' else 'NEUTRAL')
 
                     monitor_duration = (datetime.now() - monitor_start).total_seconds()
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ 7b 모니터: {monitor_signal} ({monitor_duration:.1f}초)")
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}] [OK] 7b 모니터: {monitor_signal} ({monitor_duration:.1f}초)")
 
                     # 긴급 상황 감지 (큰 변동)
                     price_change_5m = 0.0
@@ -532,27 +532,27 @@ class ExplosiveKISTrader:
                         price_change_5m = abs((soxl_price - self.price_history[-2]) / self.price_history[-2]) * 100
 
                     if price_change_5m >= self.EMERGENCY_THRESHOLD:
-                        print(f"[{datetime.now().strftime('%H:%M:%S')}] ⚡ SOXL 급격한 변동 감지! {price_change_5m:.2f}%")
+                        print(f"[{datetime.now().strftime('%H:%M:%S')}]  SOXL 급격한 변동 감지! {price_change_5m:.2f}%")
                         self.telegram.send_message(
-                            f"⚡ 7b 모니터 긴급 알림 (SOXL)\n"
+                            f" 7b 모니터 긴급 알림 (SOXL)\n"
                             f"변동: {price_change_5m:+.2f}%\n"
                             f"신호: {monitor_signal}\n"
                             f"가격: ${soxl_price:.2f}"
                         )
 
-                # ⭐ 2단계: 16b 메인 분석 (15분마다)
+                #  2단계: 16b 메인 분석 (15분마다)
                 current_time = time.time()
                 need_deep_analysis = (current_time - self.last_deep_analysis_time) >= self.DEEP_ANALYSIS_INTERVAL
 
                 if need_deep_analysis and soxl_price > 0:
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}] 🧠 16b 메인 분석 시작 (15분 주기)...")
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}]  16b 메인 분석 시작 (15분 주기)...")
                     deep_start = datetime.now()
 
                     # 16b로 깊은 분석 (간단 구현 - 추세 기반)
                     deep_signal = 'BULL' if trend == 'BULL' else ('BEAR' if trend == 'BEAR' else 'NEUTRAL')
 
                     deep_duration = (datetime.now() - deep_start).total_seconds()
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ 16b 분석: {deep_signal} ({deep_duration:.1f}초)")
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}] [OK] 16b 분석: {deep_signal} ({deep_duration:.1f}초)")
 
                     # 메인 분석 결과 사용
                     llm_signal = deep_signal
@@ -563,10 +563,10 @@ class ExplosiveKISTrader:
                     llm_signal = monitor_signal if soxl_price > 0 else 'NEUTRAL'
                     if soxl_price > 0:
                         mins_until_deep = int((self.DEEP_ANALYSIS_INTERVAL - (current_time - self.last_deep_analysis_time)) / 60)
-                        print(f"[{datetime.now().strftime('%H:%M:%S')}] ⏳ 16b 분석까지 {mins_until_deep}분 대기 (7b 신호 사용)")
+                        print(f"[{datetime.now().strftime('%H:%M:%S')}]  16b 분석까지 {mins_until_deep}분 대기 (7b 신호 사용)")
 
                 self.last_llm_signal = llm_signal
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] 🎯 최종 신호: {llm_signal}")
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] [TARGET] 최종 신호: {llm_signal}")
 
                 # 포지션 있으면 청산 조건 체크
                 if self.current_position:
@@ -608,9 +608,9 @@ class ExplosiveKISTrader:
 
                 # 장 마감 체크
                 if soxl_price == 0:
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}] ⏸️  미국 장 마감, 대기 중...")
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}]   미국 장 마감, 대기 중...")
 
-                # ⭐ 자기 개선 엔진은 unified_trader_manager에서 실행됩니다
+                #  자기 개선 엔진은 unified_trader_manager에서 실행됩니다
 
                 time.sleep(300)  # 5분 간격
 
@@ -622,7 +622,7 @@ class ExplosiveKISTrader:
                 time.sleep(300)
 
     def get_ensemble_signal(self, trend: str) -> str:
-        """14b × 2 앙상블 LLM 신호"""
+        """14b  2 앙상블 LLM 신호"""
         # 간단 구현 (추세 기반)
         return 'BULL' if trend == 'BULL' else ('BEAR' if trend == 'BEAR' else 'NEUTRAL')
 
@@ -666,7 +666,7 @@ class ExplosiveKISTrader:
 
                 # 7. 텔레그램 알림
                 self.telegram.send_message(
-                    f"✅ KIS 진입 성공\n\n"
+                    f"[OK] KIS 진입 성공\n\n"
                     f"종목: {symbol}\n"
                     f"수량: {qty}주\n"
                     f"가격: ${current_price:.2f}\n"
@@ -681,7 +681,7 @@ class ExplosiveKISTrader:
             else:
                 print(f"[ERROR] 주문 실패")
                 self.telegram.send_message(
-                    f"❌ KIS 진입 실패\n\n"
+                    f"[ERROR] KIS 진입 실패\n\n"
                     f"종목: {symbol}\n"
                     f"수량: {qty}주\n"
                     f"가격: ${current_price:.2f}"
@@ -689,7 +689,7 @@ class ExplosiveKISTrader:
 
         except Exception as e:
             print(f"[ERROR] open_position 예외: {e}")
-            self.telegram.send_message(f"❌ KIS 진입 오류\n{symbol}\n{str(e)[:200]}")
+            self.telegram.send_message(f"[ERROR] KIS 진입 오류\n{symbol}\n{str(e)[:200]}")
 
     def close_position(self, reason: str):
         """포지션 청산 (자동매매)"""
@@ -763,7 +763,7 @@ class ExplosiveKISTrader:
                     self.stats['losses'] += 1
 
                 # 8. 텔레그램 알림
-                emoji = "✅" if pnl > 0 else "❌"
+                emoji = "[OK]" if pnl > 0 else "[ERROR]"
                 self.telegram.send_message(
                     f"{emoji} KIS 청산 완료\n\n"
                     f"종목: {symbol}\n"
@@ -788,7 +788,7 @@ class ExplosiveKISTrader:
             else:
                 print(f"[ERROR] 매도 주문 실패")
                 self.telegram.send_message(
-                    f"❌ KIS 청산 실패\n\n"
+                    f"[ERROR] KIS 청산 실패\n\n"
                     f"종목: {symbol}\n"
                     f"수량: {qty}주\n"
                     f"가격: ${current_price:.2f}\n"
@@ -797,7 +797,7 @@ class ExplosiveKISTrader:
 
         except Exception as e:
             print(f"[ERROR] close_position 예외: {e}")
-            self.telegram.send_message(f"❌ KIS 청산 오류\n{self.current_position}\n{str(e)[:200]}")
+            self.telegram.send_message(f"[ERROR] KIS 청산 오류\n{self.current_position}\n{str(e)[:200]}")
 
 if __name__ == "__main__":
     trader = ExplosiveKISTrader()
