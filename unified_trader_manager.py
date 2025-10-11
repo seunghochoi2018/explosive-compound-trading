@@ -92,8 +92,8 @@ KIS_PYTHON = r"C:\Users\user\AppData\Local\Programs\Python\Python311\python.exe"
 # 모델 전략 (GPU 최적화 - RTX 2060 6GB)
 # ETH: 7b 필터(1-2초, GPU) + 14b 메인(5-10초, 진입/청산) ← 빠른 암호화폐 트레이딩
 # KIS: 7b 모니터(1-2초, GPU) + 14b 메인(5-10초, 진입/청산) ← 3배 레버리지 신중 판단
-# 통합 매니저: 14b 감시자(5분, GPU 5-10초) + 7b 자기개선(10분, GPU 1-2초)
-# 철학: GPU 100% 활용, 빠른 체크 + 신중한 결정
+# 통합 매니저: 14b 감시자(5분, GPU 5-10초) + 14b 자기개선(10분, GPU 5-10초) ← 듀얼 14b
+# 철학: GPU 100% 활용, 모든 분석을 14b 고품질로
 
 # ===== 리소스 모니터링 설정 =====
 MAX_MEMORY_MB = 10 * 1024  # Ollama 메모리 상한: 10GB
@@ -110,13 +110,13 @@ TRADING_CHECK_INTERVAL = 5 * 60  # 5분마다 거래 현황 체크 (빠른 감�
 ETH_TRADE_HISTORY = r"C:\Users\user\Documents\코드3\eth_trade_history.json"
 KIS_TRADE_HISTORY = r"C:\Users\user\Documents\코드4\kis_trade_history.json"
 
-#  자기개선 엔진 설정 (통합) - 7b GPU 최적화
+#  자기개선 엔진 설정 (통합) - 14b GPU 고품질 분석
 SELF_IMPROVEMENT_INTERVAL = 10 * 60  # 10분마다 자기개선 (적극적 학습)
 IMPROVEMENT_REPORT_INTERVAL = 6 * 60 * 60  # 6시간마다 텔레그램 리포트
 TELEGRAM_ALERT_INTERVAL = 6 * 60 * 60  # 6시간마다만 텔레그램 알림
 OLLAMA_IMPROVEMENT_HOST = f"http://127.0.0.1:{OLLAMA_PORT_IMPROVEMENT}"
-OLLAMA_IMPROVEMENT_MODEL = "qwen2.5:7b"  # GPU 완전 로드 (1-2초)
-OLLAMA_IMPROVEMENT_TIMEOUT = 60  # 7b는 빠르므로 1분으로 단축
+OLLAMA_IMPROVEMENT_MODEL = "qwen2.5:14b"  # GPU 활용 (5-10초, 고품질 분석)
+OLLAMA_IMPROVEMENT_TIMEOUT = 120  # 14b는 신중하게 2분 타임아웃
 
 #  14b LLM 감시 시스템 (전체 시스템 모니터링, GPU 최적화)
 OVERSIGHT_LLM_MODEL = "qwen2.5:14b"  # GPU 활용 (5-10초)
