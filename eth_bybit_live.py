@@ -29,7 +29,7 @@ try:
     from optimal_trend_detector import OptimalTrendDetector
     API_AVAILABLE = True
 except ImportError:
-    print("❌ 필수 모듈을 찾을 수 없습니다!")
+    print(" 필수 모듈을 찾을 수 없습니다!")
     print("코드3 폴더에서 다음 파일들이 필요합니다:")
     print("- api_config.py")
     print("- bybit_api_manager.py")
@@ -40,19 +40,19 @@ class ETHBybitLiveTrader:
     def __init__(self):
         print("=" * 50)
         print("ETH BYBIT LIVE TRADING SYSTEM")
-        print("🎯 15분봉 87% 정확도 추세감지 적용")
-        print("⚠️  ETHUSD 실거래 - ETH 잔고 사용")
+        print(" 15분봉 87% 정확도 추세감지 적용")
+        print("  ETHUSD 실거래 - ETH 잔고 사용")
         print("=" * 50)
 
         if not API_AVAILABLE:
-            print("❌ API 모듈 로드 실패!")
+            print(" API 모듈 로드 실패!")
             return
 
         # API 설정 로드
         credentials = get_api_credentials()
 
         if not credentials.get("api_key") or not credentials.get("api_secret"):
-            print("❌ API 키가 설정되지 않았습니다!")
+            print(" API 키가 설정되지 않았습니다!")
             return
 
         # 바이비트 API 초기화 - 실거래 모드
@@ -75,15 +75,15 @@ class ETHBybitLiveTrader:
         }
 
         # 실제 모드 확인 표시
-        print(f"📍 모드: LIVE (실거래)")
-        print(f"📍 심볼: {self.symbol}")
-        print(f"📍 전략: {self.strategy['leverage']}x 레버리지")
-        print(f"📍 익절: {self.strategy['profit_target']*100}%")
-        print(f"📍 손절: {self.strategy['stop_loss']*100}%")
+        print(f" 모드: LIVE (실거래)")
+        print(f" 심볼: {self.symbol}")
+        print(f" 전략: {self.strategy['leverage']}x 레버리지")
+        print(f" 익절: {self.strategy['profit_target']*100}%")
+        print(f" 손절: {self.strategy['stop_loss']*100}%")
 
         # 87% 정확도 추세 감지 시스템 초기화
         self.trend_detector = OptimalTrendDetector()
-        print("✅ 87% 정확도 추세 감지 시스템 로드 완료")
+        print(" 87% 정확도 추세 감지 시스템 로드 완료")
 
         # 순수 시장 학습 시스템
         self.learning_patterns = {}
@@ -91,15 +91,15 @@ class ETHBybitLiveTrader:
         self.trade_results = []
         self.min_pattern_length = 3
         self.max_pattern_length = 7
-        print("✅ 순수 시장 학습 시스템 초기화 완료")
+        print(" 순수 시장 학습 시스템 초기화 완료")
 
         # 연결 테스트
         print("\n🔌 API 연결 테스트 중...")
         test_result = self.api.test_connection()
         if test_result.get("retCode") == 0:
-            print("✅ API 연결 성공!")
+            print(" API 연결 성공!")
         else:
-            print(f"❌ API 연결 실패: {test_result.get('retMsg')}")
+            print(f" API 연결 실패: {test_result.get('retMsg')}")
             return
 
         # 학습 데이터 로드
@@ -128,7 +128,7 @@ class ETHBybitLiveTrader:
             return 0
 
         except Exception as e:
-            print(f"❌ 잔고 조회 오류: {e}")
+            print(f" 잔고 조회 오류: {e}")
             return 0
 
     def get_positions(self):
@@ -145,7 +145,7 @@ class ETHBybitLiveTrader:
             return None
 
         except Exception as e:
-            print(f"❌ 포지션 조회 오류: {e}")
+            print(f" 포지션 조회 오류: {e}")
             return None
 
     def get_current_price(self):
@@ -159,7 +159,7 @@ class ETHBybitLiveTrader:
             return float(price_data[4])  # 종가
 
         except Exception as e:
-            print(f"❌ 가격 조회 오류: {e}")
+            print(f" 가격 조회 오류: {e}")
             return None
 
     def place_order(self, side, qty):
@@ -174,14 +174,14 @@ class ETHBybitLiveTrader:
             )
 
             if result.get("retCode") == 0:
-                print(f"✅ 주문 성공: {side} {qty} ETH")
+                print(f" 주문 성공: {side} {qty} ETH")
                 return True
             else:
-                print(f"❌ 주문 실패: {result.get('retMsg')}")
+                print(f" 주문 실패: {result.get('retMsg')}")
                 return False
 
         except Exception as e:
-            print(f"❌ 주문 오류: {e}")
+            print(f" 주문 오류: {e}")
             return False
 
     def encode_price_pattern(self, prices):
@@ -263,7 +263,7 @@ class ETHBybitLiveTrader:
                 json.dump(data, f, indent=2)
             print("💾 학습 데이터 저장 완료")
         except Exception as e:
-            print(f"❌ 학습 데이터 저장 실패: {e}")
+            print(f" 학습 데이터 저장 실패: {e}")
 
     def load_learning_data(self):
         """학습 데이터 로드"""
@@ -308,7 +308,7 @@ class ETHBybitLiveTrader:
             return "HOLD"
 
         except Exception as e:
-            print(f"❌ 신호 생성 오류: {e}")
+            print(f" 신호 생성 오류: {e}")
             return "HOLD"
 
     def run_trading_cycle(self):
@@ -337,10 +337,10 @@ class ETHBybitLiveTrader:
             # 승률 계산
             win_rate = (self.wins / max(self.total_trades, 1)) * 100
 
-            print(f"💰 ETH 잔고: {current_balance:.4f} ETH")
-            print(f"📈 성장률: {growth_pct:+.1f}%")
-            print(f"🏆 최대 잔고: {self.max_balance:.4f} ETH")
-            print(f"🎯 승률: {win_rate:.0f}% ({self.wins}/{self.total_trades})")
+            print(f" ETH 잔고: {current_balance:.4f} ETH")
+            print(f" 성장률: {growth_pct:+.1f}%")
+            print(f" 최대 잔고: {self.max_balance:.4f} ETH")
+            print(f" 승률: {win_rate:.0f}% ({self.wins}/{self.total_trades})")
 
             # 포지션 확인
             position = self.get_positions()
@@ -355,7 +355,7 @@ class ETHBybitLiveTrader:
                 side = position["side"]
                 size = float(position["size"])
 
-                print(f"📊 포지션: {side} {size} ETH @ ${entry_price:.2f}")
+                print(f" 포지션: {side} {size} ETH @ ${entry_price:.2f}")
 
                 # 수익률 계산
                 if side == "Buy":
@@ -363,16 +363,16 @@ class ETHBybitLiveTrader:
                 else:
                     pnl_pct = ((entry_price - current_price) / entry_price) * 100
 
-                print(f"💵 수익률: {pnl_pct:+.2f}%")
+                print(f" 수익률: {pnl_pct:+.2f}%")
 
                 # 익절/손절 체크
                 if pnl_pct >= self.strategy['profit_target'] * 100:
-                    print("🎯 익절 도달! 포지션 청산")
+                    print(" 익절 도달! 포지션 청산")
                     self.close_position(position)
                     self.wins += 1
                     self.total_trades += 1
                 elif pnl_pct <= -self.strategy['stop_loss'] * 100:
-                    print("🛑 손절 도달! 포지션 청산")
+                    print(" 손절 도달! 포지션 청산")
                     self.close_position(position)
                     self.total_trades += 1
                 else:
@@ -381,7 +381,7 @@ class ETHBybitLiveTrader:
                         current_position="LONG" if side == "Buy" else "SHORT"
                     )
                     if trend_result['should_exit']:
-                        print(f"🔄 추세 변환 감지: {trend_result['reason']}")
+                        print(f" 추세 변환 감지: {trend_result['reason']}")
                         self.close_position(position)
                         if pnl_pct > 0:
                             self.wins += 1
@@ -389,7 +389,7 @@ class ETHBybitLiveTrader:
 
             # 포지션이 없을 때
             else:
-                print("📊 포지션: NONE")
+                print(" 포지션: NONE")
 
                 # 신호 생성
                 signal = self.generate_signal()
@@ -405,7 +405,7 @@ class ETHBybitLiveTrader:
                         self.place_order(signal, qty)
 
         except Exception as e:
-            print(f"❌ 사이클 오류: {e}")
+            print(f" 사이클 오류: {e}")
 
     def close_position(self, position):
         """포지션 청산"""
@@ -422,7 +422,7 @@ class ETHBybitLiveTrader:
             )
 
             if result.get("retCode") == 0:
-                print(f"✅ 포지션 청산: {side} {qty} ETH")
+                print(f" 포지션 청산: {side} {qty} ETH")
 
                 # 학습 데이터 수집
                 current_price = self.get_current_price()
@@ -435,11 +435,11 @@ class ETHBybitLiveTrader:
                     )
                 return True
             else:
-                print(f"❌ 청산 실패: {result.get('retMsg')}")
+                print(f" 청산 실패: {result.get('retMsg')}")
                 return False
 
         except Exception as e:
-            print(f"❌ 청산 오류: {e}")
+            print(f" 청산 오류: {e}")
             return False
 
     def set_leverage(self):
@@ -451,27 +451,27 @@ class ETHBybitLiveTrader:
             )
 
             if result.get("retCode") == 0:
-                print(f"✅ {self.strategy['leverage']}x 레버리지 설정 완료")
+                print(f" {self.strategy['leverage']}x 레버리지 설정 완료")
                 return True
             else:
-                print(f"⚠️ 레버리지 설정 오류: {result.get('retMsg')}")
+                print(f" 레버리지 설정 오류: {result.get('retMsg')}")
                 return False
 
         except Exception as e:
-            print(f"❌ 레버리지 설정 오류: {e}")
+            print(f" 레버리지 설정 오류: {e}")
             return False
 
     def run(self):
         """메인 실행"""
         if not hasattr(self, 'is_ready') or not self.is_ready:
-            print("❌ 시스템 초기화 실패!")
+            print(" 시스템 초기화 실패!")
             return
 
         print("\n" + "=" * 50)
         print("ETH BYBIT LIVE TRADING 시작!")
-        print("🎯 15분봉 87% 정확도 추세감지 + 복리효과 적용")
+        print(" 15분봉 87% 정확도 추세감지 + 복리효과 적용")
         print("🚨 추세변환 시 즉시 청산 후 새 방향 진입")
-        print("⚠️  ETHUSD 실거래 중 - ETH 잔고 사용")
+        print("  ETHUSD 실거래 중 - ETH 잔고 사용")
         print("Ctrl+C로 중단")
         print("=" * 50)
 
@@ -485,8 +485,8 @@ class ETHBybitLiveTrader:
                 time.sleep(30)  # 30초마다 실행
 
         except KeyboardInterrupt:
-            print("\n\n🛑 거래 중단됨")
-            print(f"📊 최종 성과:")
+            print("\n\n 거래 중단됨")
+            print(f" 최종 성과:")
             print(f"  - 총 거래: {self.total_trades}")
             print(f"  - 승리: {self.wins}")
             print(f"  - 승률: {(self.wins/max(self.total_trades,1))*100:.1f}%")
@@ -495,10 +495,10 @@ class ETHBybitLiveTrader:
             self.save_learning_data()
 
         except Exception as e:
-            print(f"❌ 시스템 오류: {e}")
+            print(f" 시스템 오류: {e}")
 
 if __name__ == "__main__":
-    print("⚠️  WARNING: 실제 돈으로 거래합니다!")
+    print("  WARNING: 실제 돈으로 거래합니다!")
     print("실제 ETH 잔고로 바이비트 ETHUSD 실거래를 시작합니다.")
 
     trader = ETHBybitLiveTrader()

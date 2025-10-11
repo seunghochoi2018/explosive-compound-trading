@@ -23,9 +23,9 @@ class NVDLNVDQSmartTrader:
     """NVDL/NVDQ 스마트 자동매매 시스템"""
 
     def __init__(self):
-        print("🚀 NVDL/NVDQ 스마트 자동매매 시스템 v2.0")
-        print("📊 일봉 기반 87% 정확도 추세 감지 적용")
-        print("🤖 순수 시장 학습 + 노이즈 필터링 손절 + 텔레그램 알림")
+        print(" NVDL/NVDQ 스마트 자동매매 시스템 v2.0")
+        print(" 일봉 기반 87% 정확도 추세 감지 적용")
+        print(" 순수 시장 학습 + 노이즈 필터링 손절 + 텔레그램 알림")
 
         # 핵심 시스템 초기화
         self.trend_detector = DailyTrendDetector()
@@ -75,15 +75,15 @@ class NVDLNVDQSmartTrader:
             'trend_strength': 0.0           # 추세 강도
         }
 
-        print(f"💰 시작 잔고: ${self.balance:,.2f}")
-        print(f"📊 거래 대상: {', '.join(self.symbols)}")
-        print(f"🎯 최소 신뢰도: {self.min_confidence:.1%}")
+        print(f" 시작 잔고: ${self.balance:,.2f}")
+        print(f" 거래 대상: {', '.join(self.symbols)}")
+        print(f" 최소 신뢰도: {self.min_confidence:.1%}")
 
         # 텔레그램 연결 테스트
         if self.telegram.test_connection():
-            print("✅ 텔레그램 알림 연결 성공")
+            print(" 텔레그램 알림 연결 성공")
         else:
-            print("⚠️ 텔레그램 연결 실패 (계속 진행)")
+            print(" 텔레그램 연결 실패 (계속 진행)")
 
     def load_progress(self):
         """진행 상황 로드"""
@@ -333,14 +333,14 @@ class NVDLNVDQSmartTrader:
     def open_position(self, symbol: str, side: str, confidence: float, reason: str):
         """포지션 오픈"""
         if len(self.current_positions) >= self.max_positions:
-            print(f"⚠️ 최대 포지션 수 도달 ({self.max_positions})")
+            print(f" 최대 포지션 수 도달 ({self.max_positions})")
             return False
 
         current_price = self.get_current_price(symbol)
         position_size = self.calculate_position_size(symbol, confidence)
 
         if position_size <= 0:
-            print(f"⚠️ {symbol} 포지션 크기 계산 실패")
+            print(f" {symbol} 포지션 크기 계산 실패")
             return False
 
         # 포지션 기록
@@ -354,7 +354,7 @@ class NVDLNVDQSmartTrader:
         }
 
         position_value = position_size * current_price
-        print(f"📈 {symbol} {side} 포지션 오픈: ${current_price:.2f} (신뢰도: {confidence:.2f}, 금액: ${position_value:.0f})")
+        print(f" {symbol} {side} 포지션 오픈: ${current_price:.2f} (신뢰도: {confidence:.2f}, 금액: ${position_value:.0f})")
 
         # 텔레그램 알림
         self.telegram.notify_position_change(
@@ -409,7 +409,7 @@ class NVDLNVDQSmartTrader:
         self.balance += profit_amount
         self.total_profit += profit_pct * 100
 
-        print(f"💰 {symbol} {position['side']} 청산: {profit_pct*100:+.2f}% (이유: {reason})")
+        print(f" {symbol} {position['side']} 청산: {profit_pct*100:+.2f}% (이유: {reason})")
 
         # 학습 (핵심!) - 일봉 기준으로 변경
         if len(self.trend_detector.price_history['1d']) >= self.min_pattern_length:
@@ -435,10 +435,10 @@ class NVDLNVDQSmartTrader:
 
     def check_entry_signals(self):
         """진입 신호 체크"""
-        print(f"\n🔍 진입 신호 분석 시작 (현재 포지션: {len(self.current_positions)}/{self.max_positions})")
+        print(f"\n 진입 신호 분석 시작 (현재 포지션: {len(self.current_positions)}/{self.max_positions})")
 
         if len(self.current_positions) >= self.max_positions:
-            print(f"⚠️ 최대 포지션 수 도달 - 신규 진입 불가")
+            print(f" 최대 포지션 수 도달 - 신규 진입 불가")
             return
 
         position_recommendations = []
@@ -448,7 +448,7 @@ class NVDLNVDQSmartTrader:
                 print(f"   {symbol}: 포지션 유지 중 - 건너뛰기")
                 continue
 
-            print(f"\n📊 {symbol} 신호 분석:")
+            print(f"\n {symbol} 신호 분석:")
             # 추세 감지기에서 신호 받기 (이미 상세 로깅 포함)
             signal = self.trend_detector.get_trading_signal(symbol)
 
@@ -463,8 +463,8 @@ class NVDLNVDQSmartTrader:
                         # 추세 신뢰도와 패턴 신뢰도 결합
                         combined_confidence = signal['confidence'] * 0.6 + pattern_confidence * 0.4
 
-                        print(f"   🤖 패턴 학습 신뢰도: {pattern_confidence:.3f}")
-                        print(f"   🎯 최종 신뢰도: {combined_confidence:.3f} (최소: {self.min_confidence:.2f})")
+                        print(f"    패턴 학습 신뢰도: {pattern_confidence:.3f}")
+                        print(f"    최종 신뢰도: {combined_confidence:.3f} (최소: {self.min_confidence:.2f})")
 
                         if combined_confidence >= self.min_confidence:
                             side = 'LONG' if signal['action'] == 'BUY' else 'SHORT'
@@ -477,7 +477,7 @@ class NVDLNVDQSmartTrader:
                                 'reason': reason
                             })
 
-                            print(f"   ✅ 강력한 {symbol} {side} 신호 감지!")
+                            print(f"    강력한 {symbol} {side} 신호 감지!")
                             self.open_position(symbol, side, combined_confidence, reason)
                         else:
                             print(f"   ⏸️ {symbol} 신뢰도 부족: {combined_confidence:.3f} < {self.min_confidence:.2f}")
@@ -488,22 +488,22 @@ class NVDLNVDQSmartTrader:
                     print(f"      신호 상세: {signal['action']} ({signal['reason']})")
 
         # 추천 포지션 요약 (항상 표시)
-        print(f"\n🎯 추천 포지션 분석 결과:")
+        print(f"\n 추천 포지션 분석 결과:")
         if position_recommendations:
-            print(f"   ✅ 발견된 신호: {len(position_recommendations)}개")
+            print(f"    발견된 신호: {len(position_recommendations)}개")
             for rec in position_recommendations:
-                print(f"   📈 {rec['symbol']} {rec['side']} (신뢰도: {rec['confidence']:.3f}) - {rec['reason']}")
+                print(f"    {rec['symbol']} {rec['side']} (신뢰도: {rec['confidence']:.3f}) - {rec['reason']}")
         else:
             print(f"   ⏸️ 현재 추천 포지션 없음 - 모든 신호가 임계값 미달")
-            print(f"   📊 신뢰도 임계값: {self.min_confidence:.3f} ({self.min_confidence*100:.1f}%)")
+            print(f"    신뢰도 임계값: {self.min_confidence:.3f} ({self.min_confidence*100:.1f}%)")
 
             # 모든 심볼의 신호 상태 요약
             for symbol in self.symbols:
                 signal = self.trend_detector.generate_signal(symbol)
                 if signal and signal['confidence'] > 0:
-                    print(f"   📊 {symbol}: {signal['action']} (신뢰도: {signal['confidence']:.3f}, 사유: {signal['reason']})")
+                    print(f"    {symbol}: {signal['action']} (신뢰도: {signal['confidence']:.3f}, 사유: {signal['reason']})")
                 else:
-                    print(f"   📊 {symbol}: 신호 없음")
+                    print(f"    {symbol}: 신호 없음")
 
     def run_daily_check(self):
         """일일 체크 실행"""
@@ -524,15 +524,15 @@ class NVDLNVDQSmartTrader:
         self.check_entry_signals()
 
         # 현재 상태 출력
-        print(f"\n💰 현재 잔고: ${self.balance:,.2f}")
-        print(f"📊 총 거래: {self.total_trades}회")
+        print(f"\n 현재 잔고: ${self.balance:,.2f}")
+        print(f" 총 거래: {self.total_trades}회")
         if self.total_trades > 0:
             win_rate = self.winning_trades / self.total_trades * 100
-            print(f"🎯 승률: {win_rate:.1f}% ({self.winning_trades}/{self.total_trades})")
+            print(f" 승률: {win_rate:.1f}% ({self.winning_trades}/{self.total_trades})")
             print(f"💹 누적 수익: {self.total_profit:+.2f}%")
 
         if self.current_positions:
-            print(f"\n📈 현재 포지션:")
+            print(f"\n 현재 포지션:")
             for symbol, pos in self.current_positions.items():
                 current_price = self.get_current_price(symbol)
                 if pos['side'] == 'LONG':
@@ -553,16 +553,16 @@ class NVDLNVDQSmartTrader:
         # 학습 상태
         if self.learning_patterns:
             profitable_patterns = sum(1 for p in self.learning_patterns.values() if p['wins'] > p['total'] * 0.6)
-            print(f"🧠 학습된 패턴: {len(self.learning_patterns)}개 (수익패턴: {profitable_patterns}개)")
+            print(f" 학습된 패턴: {len(self.learning_patterns)}개 (수익패턴: {profitable_patterns}개)")
 
         self.save_progress()
         print("="*60)
 
     def run_continuous_trading(self):
         """연속 자동매매 실행"""
-        print("\n🎯 NVDL/NVDQ 스마트 자동매매 시작!")
-        print("📊 일봉 기준 87% 정확도 시스템 적용")
-        print("🤖 순수 시장 학습 + 추세 감지 + 노이즈 필터링 손절 + 텔레그램 알림")
+        print("\n NVDL/NVDQ 스마트 자동매매 시작!")
+        print(" 일봉 기준 87% 정확도 시스템 적용")
+        print(" 순수 시장 학습 + 추세 감지 + 노이즈 필터링 손절 + 텔레그램 알림")
         print("⏰ 일봉 기준 매일 분석")
 
         last_daily_check = datetime.now().date()
@@ -573,18 +573,18 @@ class NVDLNVDQSmartTrader:
 
                 # 일봉 기준 일일 체크 (하루에 한 번)
                 if current_time.date() > last_daily_check:
-                    print(f"📊 {current_time.strftime('%Y-%m-%d')} 일봉 기준 데일리 체크")
+                    print(f" {current_time.strftime('%Y-%m-%d')} 일봉 기준 데일리 체크")
                     self.run_daily_check()
                     last_daily_check = current_time.date()
 
                 time.sleep(21600)  # 일봉 기준 6시간마다 체크 (4회/일)
 
         except KeyboardInterrupt:
-            print("\n🛑 자동매매 중지됨")
+            print("\n 자동매매 중지됨")
 
             # 현재 포지션 정보
             if self.current_positions:
-                print("⚠️ 현재 포지션 유지 중:")
+                print(" 현재 포지션 유지 중:")
                 for symbol, pos in self.current_positions.items():
                     print(f"  {symbol} {pos['side']}: ${pos['entry_price']:.2f}")
 
@@ -595,9 +595,9 @@ if __name__ == "__main__":
     trader = NVDLNVDQSmartTrader()
 
     print("\n" + "="*50)
-    print("🚀 NVDL/NVDQ 스마트 자동매매 시스템 v2.0")
-    print("📊 ETH 87% 정확도 시스템의 일봉 적용")
-    print("🤖 일봉 + 순수학습 + 노이즈필터링 손절 + 텔레그램 알림")
+    print(" NVDL/NVDQ 스마트 자동매매 시스템 v2.0")
+    print(" ETH 87% 정확도 시스템의 일봉 적용")
+    print(" 일봉 + 순수학습 + 노이즈필터링 손절 + 텔레그램 알림")
     print("="*50)
 
     # 현재 상태 체크

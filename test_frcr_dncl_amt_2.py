@@ -86,7 +86,7 @@ if response.status_code == 200:
                 print(f"USD 현금 잔고: ${usd_cash:.2f}")
 
                 if usd_cash > 0:
-                    print(f"\n✅ 성공! $26.93가 발견되었습니다!")
+                    print(f"\n 성공! $26.93가 발견되었습니다!")
                 else:
                     print(f"\n여전히 $0입니다. 다른 필드 확인 필요.")
             except:

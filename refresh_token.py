@@ -42,11 +42,11 @@ if response.status_code == 200:
         with open(token_file, 'w', encoding='utf-8') as f:
             json.dump(token_data, f, indent=2)
 
-        print(f"\n✅ [토큰 발급 성공]")
+        print(f"\n [토큰 발급 성공]")
         print(f"Access Token: {token_data['access_token'][:30]}...")
         print(f"Expires In: {token_data.get('expires_in', 'N/A')} 초")
         print(f"저장 경로: {token_file}")
     else:
-        print("\n❌ [토큰 발급 실패] access_token이 응답에 없습니다")
+        print("\n [토큰 발급 실패] access_token이 응답에 없습니다")
 else:
-    print(f"\n❌ [토큰 발급 실패] HTTP {response.status_code}")
+    print(f"\n [토큰 발급 실패] HTTP {response.status_code}")

@@ -422,7 +422,7 @@ class USStockAPIManager:
                     'price': current_price
                 }
 
-                print(f"✅ {symbol} 포지션 열기 성공: {quantity}주 @ ${current_price:.2f}")
+                print(f" {symbol} 포지션 열기 성공: {quantity}주 @ ${current_price:.2f}")
                 return {
                     'success': True,
                     'symbol': symbol,
@@ -431,12 +431,12 @@ class USStockAPIManager:
                     'order_id': order_result.get('order_id')
                 }
             else:
-                print(f"❌ {symbol} 포지션 열기 실패: {order_result.get('error')}")
+                print(f" {symbol} 포지션 열기 실패: {order_result.get('error')}")
                 return order_result
 
         except Exception as e:
             error_msg = f"{symbol} 포지션 열기 오류: {e}"
-            print(f"❌ {error_msg}")
+            print(f" {error_msg}")
             return {'success': False, 'error': error_msg}
 
     def close_position(self, symbol: str) -> Dict:
@@ -471,7 +471,7 @@ class USStockAPIManager:
                     'price': current_price
                 }
 
-                print(f"✅ {symbol} 포지션 닫기 성공: {quantity}주 @ ${current_price:.2f}")
+                print(f" {symbol} 포지션 닫기 성공: {quantity}주 @ ${current_price:.2f}")
                 return {
                     'success': True,
                     'symbol': symbol,
@@ -482,12 +482,12 @@ class USStockAPIManager:
                     'pnl_pct': target_position.get('unrealized_pnl_pct', 0)
                 }
             else:
-                print(f"❌ {symbol} 포지션 닫기 실패: {order_result.get('error')}")
+                print(f" {symbol} 포지션 닫기 실패: {order_result.get('error')}")
                 return order_result
 
         except Exception as e:
             error_msg = f"{symbol} 포지션 닫기 오류: {e}"
-            print(f"❌ {error_msg}")
+            print(f" {error_msg}")
             return {'success': False, 'error': error_msg}
 
     def close_opposite_position(self, new_symbol: str):
@@ -535,27 +535,27 @@ class USStockAPIManager:
     def print_account_status(self):
         """계좌 상태 출력"""
         print("\n" + "="*50)
-        print("📊 계좌 상태")
+        print(" 계좌 상태")
         print("="*50)
 
         summary = self.get_account_summary()
         account_info = summary['account_info']
 
         if account_info:
-            print(f"💰 총 자산: ${account_info.get('equity', 0):,.2f}")
-            print(f"💵 현금: ${account_info.get('cash', 0):,.2f}")
-            print(f"📈 포트폴리오: ${account_info.get('portfolio_value', 0):,.2f}")
+            print(f" 총 자산: ${account_info.get('equity', 0):,.2f}")
+            print(f" 현금: ${account_info.get('cash', 0):,.2f}")
+            print(f" 포트폴리오: ${account_info.get('portfolio_value', 0):,.2f}")
 
         positions = summary['positions']
         if positions:
-            print(f"\n📊 포지션 ({len(positions)}개):")
+            print(f"\n 포지션 ({len(positions)}개):")
             for pos in positions:
                 symbol = pos['symbol']
                 qty = pos['quantity']
                 pnl_pct = pos['unrealized_pnl_pct']
                 print(f"  {symbol}: {qty}주 | PnL: {pnl_pct:+.2f}%")
         else:
-            print("\n📊 포지션: 없음")
+            print("\n 포지션: 없음")
 
         print("="*50)
 

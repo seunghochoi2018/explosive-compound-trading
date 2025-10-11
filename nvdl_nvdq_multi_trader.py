@@ -405,8 +405,8 @@ class NVDLNVDQMultiTrader:
             if pnl > 0:
                 model['wins'] += 1
 
-            profit_status = "✅수익" if pnl > 0 else "❌손실"
-            print(f"🔥 [{symbol}_{model['timeframe']}_{model['leverage']}x_{model['strategy']}] {profit_status}")
+            profit_status = "수익" if pnl > 0 else "손실"
+            print(f" [{symbol}_{model['timeframe']}_{model['leverage']}x_{model['strategy']}] {profit_status}")
             print(f"   진입: ${model['entry_price']:.2f} → 청산: ${exit_price:.2f}")
             print(f"   보유: {hold_duration/3600:.1f}시간, 실현손익: {net_pnl_ratio*100:.2f}% (${pnl:.2f})")
             print(f"   누적거래: {model['trades']}회, 누적수익: ${model['total_profit']:.2f}")
@@ -457,7 +457,7 @@ class NVDLNVDQMultiTrader:
             if model['performance_score'] < 0.3:  # 낮은 성과
                 model['position_size'] = model['base_position_size'] * 0.2  # 80% 감소
 
-        print(f"🔥 수렴 시스템: 상위 {len(top_models)}개 모델에 자본 집중")
+        print(f" 수렴 시스템: 상위 {len(top_models)}개 모델에 자본 집중")
         for i, (model_key, model) in enumerate(top_models[:3]):
             print(f"   {i+1}위: {model_key} (점수: {model['performance_score']:.3f})")
 
@@ -538,12 +538,12 @@ class NVDLNVDQMultiTrader:
         performing_models = [(k, v) for k, v in self.models.items() if v['trades'] > 0]
         performing_models.sort(key=lambda x: x[1]['total_profit'], reverse=True)
 
-        print(f"\n💰 실현손익 TOP 10 (총 {len(performing_models)}개 활성):")
+        print(f"\n 실현손익 TOP 10 (총 {len(performing_models)}개 활성):")
         for i, (model_key, model) in enumerate(performing_models[:10]):
             win_rate = (model['wins'] / model['trades']) * 100
             avg_profit = model['total_profit'] / model['trades']
             position_info = f"[{model['position']}]" if model['position'] else ""
-            profit_emoji = "✅" if model['total_profit'] > 0 else "❌" if model['total_profit'] < 0 else "⚪"
+            profit_emoji = "" if model['total_profit'] > 0 else "" if model['total_profit'] < 0 else "⚪"
 
             print(f"{profit_emoji} {i+1:2d}. [{model['symbol']}_{model['timeframe']}_{model['leverage']}x_{model['strategy']}]")
             print(f"      거래: {model['wins']:2d}승/{model['trades']:2d}전 ({win_rate:4.1f}%) | "

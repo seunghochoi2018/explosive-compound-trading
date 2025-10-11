@@ -100,7 +100,7 @@ class NVDLNVDQEnhancedTrader:
             with open(self.learning_file, 'w') as f:
                 json.dump(data, f, indent=2)
         except Exception as e:
-            print(f"⚠️ 학습 데이터 저장 실패: {e}")
+            print(f" 학습 데이터 저장 실패: {e}")
 
     def encode_daily_pattern(self, prices):
         """일봉 패턴을 문자열로 인코딩 (이더봇 방식 적용)"""
@@ -388,7 +388,7 @@ class NVDLNVDQEnhancedTrader:
             with open(self.progress_file, 'w') as f:
                 json.dump(data, f, indent=2)
         except Exception as e:
-            print(f"⚠️ 진행 상황 저장 실패: {e}")
+            print(f" 진행 상황 저장 실패: {e}")
 
     def show_stats(self):
         """통계 출력"""

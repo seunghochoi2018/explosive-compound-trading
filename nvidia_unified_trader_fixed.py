@@ -152,7 +152,7 @@ class KISCompleteTrader:
 
             success, has_balance = self.get_account_balance(code)
             if success:
-                logger.info(f"✅ 계좌 {self.cano}-{code} 작동!")
+                logger.info(f" 계좌 {self.cano}-{code} 작동!")
                 self.working_account_code = code
                 return code
 

@@ -400,7 +400,7 @@ class NVDARealtimeLearningBot:
         if winrate >= self.min_winrate_for_signal and self.learning_stats['total_profit'] >= self.min_profit_for_signal:
             self.learning_phase = False
             print("=" * 50)
-            print("🎯 학습 완료! 실시간 시그널 시작")
+            print(" 학습 완료! 실시간 시그널 시작")
             print(f"검증된 승률: {winrate:.1f}%")
             print(f"검증된 수익: ${self.learning_stats['total_profit']:+.2f}")
             print("=" * 50)
@@ -410,11 +410,11 @@ class NVDARealtimeLearningBot:
 
             # 텔레그램 알림
             self.send_telegram_message(
-                f"🚀 NVDA/NVDQ 봇 학습 완료!\n"
-                f"✅ 거래: {total}회\n"
-                f"✅ 승률: {winrate:.1f}%\n"
-                f"✅ 수익: ${self.learning_stats['total_profit']:+.2f}\n"
-                f"📊 실시간 시그널 시작!"
+                f" NVDA/NVDQ 봇 학습 완료!\n"
+                f" 거래: {total}회\n"
+                f" 승률: {winrate:.1f}%\n"
+                f" 수익: ${self.learning_stats['total_profit']:+.2f}\n"
+                f" 실시간 시그널 시작!"
             )
 
     def select_best_strategies(self):
@@ -489,19 +489,19 @@ class NVDARealtimeLearningBot:
         current_price = self.prices[symbol]['current']
 
         message = f"""
-🔔 <b>NVDA 트레이딩 시그널</b>
+ <b>NVDA 트레이딩 시그널</b>
 
-📊 종목: {symbol} ({leverage}X 레버리지)
-💰 현재가: ${current_price:.2f}
-📈 포지션: <b>{signal['direction']}</b>
-🎯 전략: {signal['strategy']}
-⚡ 신뢰도: {signal['confidence']*100:.0f}%
+ 종목: {symbol} ({leverage}X 레버리지)
+ 현재가: ${current_price:.2f}
+ 포지션: <b>{signal['direction']}</b>
+ 전략: {signal['strategy']}
+ 신뢰도: {signal['confidence']*100:.0f}%
 
-💡 목표 수익: {signal['config']['profit']*100:.1f}%
-🛑 손절선: {signal['config']['loss']*100:.1f}%
+ 목표 수익: {signal['config']['profit']*100:.1f}%
+ 손절선: {signal['config']['loss']*100:.1f}%
 ⏱ 예상 보유: {signal['config']['hold']//60}분
 
-⚠️ 리스크 관리 필수!
+ 리스크 관리 필수!
 """
 
         self.send_telegram_message(message)
@@ -613,7 +613,7 @@ class NVDARealtimeLearningBot:
             print(f"수익률: {total_return:+.2f}%")
 
             if not self.learning_phase:
-                print(f"\n✅ 검증 완료!")
+                print(f"\n 검증 완료!")
                 print(f"검증된 전략: {len(self.verified_strategies)}개")
 
         print("=" * 60)

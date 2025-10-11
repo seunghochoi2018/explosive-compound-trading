@@ -147,15 +147,15 @@ class TelegramNotifier:
 
 ⏰ **시간**: {timestamp}
 
-📊 **신호**: {action_text}
-🎯 **종목**: {symbol}
-💵 **수량**: {quantity}주
-🤖 **신뢰도**: {confidence:.0f}%
+ **신호**: {action_text}
+ **종목**: {symbol}
+ **수량**: {quantity}주
+ **신뢰도**: {confidence:.0f}%
 
-💡 **분석 근거**:
+ **분석 근거**:
 {reasoning}{position_info}
 
-⚠️ **실제 거래는 직접 하세요!**
+ **실제 거래는 직접 하세요!**
         """.strip()
 
         self.send_message(message)

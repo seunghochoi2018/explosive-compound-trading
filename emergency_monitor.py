@@ -156,7 +156,7 @@ def emergency_close_eth(position):
         return True
     except Exception as e:
         print(colored(f"[ETH] 청산 실패: {e}", "red"))
-        send_telegram(f"❌ ETH 청산 실패: {e}")
+        send_telegram(f" ETH 청산 실패: {e}")
         return False
 
 def main():
@@ -189,9 +189,9 @@ def main():
                     print(colored(f"\n🚨 강제 청산 실행! (손실 {pnl:.2f}%)", "red"))
                     emergency_close_eth(eth_pos)
                 elif pnl <= EMERGENCY_STOP_LOSS:
-                    msg = f"⚠️ <b>ETH 손절 경고</b>\n\n현재 손익: {pnl:.2f}%\n손절선 근접!"
+                    msg = f" <b>ETH 손절 경고</b>\n\n현재 손익: {pnl:.2f}%\n손절선 근접!"
                     send_telegram(msg)
-                    print(colored(f"⚠️  손절 경고! 현재 {pnl:.2f}%", "yellow"))
+                    print(colored(f"  손절 경고! 현재 {pnl:.2f}%", "yellow"))
             else:
                 print(colored("  ETH: 포지션 없음", "white"))
 
@@ -214,9 +214,9 @@ def main():
                     send_telegram(msg)
                     print(colored(f"🚨 KIS 강제청산 필요! {pnl:.2f}%", "red"))
                 elif pnl <= EMERGENCY_STOP_LOSS:
-                    msg = f"⚠️ <b>KIS 손절 경고</b>\n\n종목: {kis_pos['symbol']}\n현재 손익: {pnl:.2f}%"
+                    msg = f" <b>KIS 손절 경고</b>\n\n종목: {kis_pos['symbol']}\n현재 손익: {pnl:.2f}%"
                     send_telegram(msg)
-                    print(colored(f"⚠️  KIS 손절 경고! {pnl:.2f}%", "yellow"))
+                    print(colored(f"  KIS 손절 경고! {pnl:.2f}%", "yellow"))
             else:
                 print(colored("  KIS: 포지션 없음", "white"))
 

@@ -6,7 +6,7 @@ with open('kis_llm_trader.py', 'r', encoding='utf-8') as f:
     content = f.read()
 
 # symbol_exchange_map 수정
-old_map = '''        # ⭐ 종목별 거래소 코드 (ChatGPT/KIS 챗봇 확인) ⭐
+old_map = '''        #  종목별 거래소 코드 (ChatGPT/KIS 챗봇 확인) 
         self.symbol_exchange_map = {
             "TQQQ": "NASD",  # KIS 기준 NASD 등록
             "SQQQ": "NASD",  # KIS 기준 NASD 등록
@@ -14,7 +14,7 @@ old_map = '''        # ⭐ 종목별 거래소 코드 (ChatGPT/KIS 챗봇 확인
             "SOXS": "NASD"   # KIS 기준 NASD 등록
         }'''
 
-new_map = '''        # ⭐ 종목별 거래소 코드 (실제 API 응답 기준으로 업데이트) ⭐
+new_map = '''        #  종목별 거래소 코드 (실제 API 응답 기준으로 업데이트) 
         self.symbol_exchange_map = {
             "TQQQ": "NASD",  # KIS 기준 NASD 등록
             "SQQQ": "NASD",  # KIS 기준 NASD 등록

@@ -26,7 +26,7 @@ def load_token():
             token_data = json.load(f)
             return token_data.get('access_token')
     except Exception as e:
-        print(f"❌ 토큰 로드 실패: {e}")
+        print(f" 토큰 로드 실패: {e}")
         return None
 
 def get_current_price(token, symbol):
@@ -83,7 +83,7 @@ def get_current_price(token, symbol):
         else:
             print(f"HTTP 오류: {response.status_code}")
     except Exception as e:
-        print(f"❌ 예외 발생: {e}")
+        print(f" 예외 발생: {e}")
         import traceback
         traceback.print_exc()
     return None
@@ -102,7 +102,7 @@ def get_hashkey(token, data):
             result = response.json()
             return result.get('HASH', '')
     except Exception as e:
-        print(f"❌ 해시키 생성 실패: {e}")
+        print(f" 해시키 생성 실패: {e}")
     return ""
 
 def test_buy_order(symbol="TQQQ", quantity=1):
@@ -114,26 +114,26 @@ def test_buy_order(symbol="TQQQ", quantity=1):
     # 1. 토큰 로드
     token = load_token()
     if not token:
-        print("❌ 토큰 로드 실패")
+        print(" 토큰 로드 실패")
         return
 
-    print("✅ 토큰 로드 성공")
+    print(" 토큰 로드 성공")
 
     # 2. 현재가 조회
     current_price = get_current_price(token, symbol)
     if not current_price:
-        print(f"❌ {symbol} 가격 조회 실패")
+        print(f" {symbol} 가격 조회 실패")
         return
 
-    print(f"✅ {symbol} 현재가: ${current_price:.2f}")
+    print(f" {symbol} 현재가: ${current_price:.2f}")
 
     # 3. PDNO 변환
     pdno = PDNO_MAP.get(symbol)
     if not pdno:
-        print(f"❌ {symbol} PDNO 매핑 없음")
+        print(f" {symbol} PDNO 매핑 없음")
         return
 
-    print(f"✅ PDNO: {pdno}")
+    print(f" PDNO: {pdno}")
 
     # 4. 주문 데이터 생성
     order_data = {
@@ -152,7 +152,7 @@ def test_buy_order(symbol="TQQQ", quantity=1):
 
     # 5. 해시키 생성
     hashkey = get_hashkey(token, order_data)
-    print(f"\n✅ Hashkey: {hashkey[:20]}...")
+    print(f"\n Hashkey: {hashkey[:20]}...")
 
     # 6. 주문 실행
     url = f"{BASE_URL}/uapi/overseas-stock/v1/trading/order"
@@ -180,19 +180,19 @@ def test_buy_order(symbol="TQQQ", quantity=1):
             result = response.json()
             if result.get("rt_cd") == "0":
                 order_no = result.get('output', {}).get('ODNO', 'N/A')
-                print(f"\n✅✅✅ 주문 성공! ✅✅✅")
+                print(f"\n 주문 성공! ")
                 print(f"주문번호: {order_no}")
                 print(f"{symbol} {quantity}주 @ ${current_price:.2f}")
             else:
                 msg = result.get('msg1', 'Unknown error')
-                print(f"\n❌ 주문 실패: {msg}")
+                print(f"\n 주문 실패: {msg}")
                 print(f"rt_cd: {result.get('rt_cd')}")
                 print(f"msg_cd: {result.get('msg_cd')}")
         else:
-            print(f"\n❌ HTTP 오류: {response.status_code}")
+            print(f"\n HTTP 오류: {response.status_code}")
 
     except Exception as e:
-        print(f"\n❌ 주문 예외: {e}")
+        print(f"\n 주문 예외: {e}")
 
     print("\n" + "="*70)
 

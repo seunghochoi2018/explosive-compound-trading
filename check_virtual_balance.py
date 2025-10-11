@@ -53,7 +53,7 @@ if response.status_code == 200:
     print(json.dumps(result, indent=2, ensure_ascii=False))
 
     if result.get("rt_cd") == "0":
-        print("\n✅ 모의투자 계좌 조회 성공!")
+        print("\n 모의투자 계좌 조회 성공!")
 
         output2 = result.get("output2", [])
         if output2:

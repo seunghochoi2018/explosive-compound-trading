@@ -188,7 +188,7 @@ def format_position_message(bybit_positions, kis_positions):
     if not bybit_positions and not kis_positions:
         return None
 
-    msg = "📊 <b>통합 포지션 현황</b>\n\n"
+    msg = " <b>통합 포지션 현황</b>\n\n"
 
     # Bybit ETH 포지션
     if bybit_positions:
@@ -197,7 +197,7 @@ def format_position_message(bybit_positions, kis_positions):
             pnl_emoji = "🟢" if pos['pnl_pct'] >= 0 else "🔴"
             pnl_sign = "+" if pos['pnl_pct'] >= 0 else ""
 
-            side_emoji = "📈" if pos['side'] == 'Buy' else "📉"
+            side_emoji = "" if pos['side'] == 'Buy' else ""
             msg += f"{side_emoji} {pnl_emoji} <b>{pos['symbol']}</b> x{pos['leverage']}\n"
             msg += f"수량: {pos['size']} ETH\n"
             msg += f"진입: ${pos['entry_price']:.2f} → ${pos['current_price']:.2f}\n"
@@ -289,7 +289,7 @@ def main():
                     msg = format_position_message(bybit_positions, kis_positions)
                     if msg:
                         send_telegram(msg)
-                        print(f"  📱 텔레그램 알림 전송 (포지션 변경)")
+                        print(f"   텔레그램 알림 전송 (포지션 변경)")
 
                 # 손실 경고 체크
                 all_positions = []
@@ -309,19 +309,19 @@ def main():
                             msg += f"손익: {pnl:.2f}%\n"
                             msg += f"손실: ${pos['pnl_usd']:.2f}\n"
                             msg += f"진입: ${pos['entry_price']:.2f} → ${pos['current_price']:.2f}\n\n"
-                            msg += f"⚠️ 즉시 확인 필요!"
+                            msg += f" 즉시 확인 필요!"
                             send_telegram(msg)
                             last_alert_time[alert_key] = current_time
                             print(f"  🚨 긴급 알림 전송! [{exchange}] {symbol}")
 
                     elif pnl <= ALERT_LOSS_THRESHOLD:
                         if alert_key not in last_alert_time or (current_time - last_alert_time[alert_key]) > 3600:  # 1시간마다
-                            msg = f"⚠️ <b>[{exchange}] {symbol} 손절선 근접</b>\n\n"
+                            msg = f" <b>[{exchange}] {symbol} 손절선 근접</b>\n\n"
                             msg += f"손익: {pnl:.2f}%\n"
                             msg += f"손실: ${pos['pnl_usd']:.2f}"
                             send_telegram(msg)
                             last_alert_time[alert_key] = current_time
-                            print(f"  ⚠️  손절 경고 전송 [{exchange}] {symbol}")
+                            print(f"    손절 경고 전송 [{exchange}] {symbol}")
 
                 last_bybit_position = bybit_positions
                 last_kis_position = kis_positions
@@ -329,8 +329,8 @@ def main():
             else:
                 if last_bybit_position is not None or last_kis_position is not None:
                     # 포지션 청산됨
-                    send_telegram("✅ <b>모든 포지션 청산 완료</b>\n\nBybit ETH + KIS 주식 모두 정리되었습니다.")
-                    print(f"[{timestamp}] ✅ 포지션 청산")
+                    send_telegram(" <b>모든 포지션 청산 완료</b>\n\nBybit ETH + KIS 주식 모두 정리되었습니다.")
+                    print(f"[{timestamp}]  포지션 청산")
                     last_bybit_position = None
                     last_kis_position = None
                 else:

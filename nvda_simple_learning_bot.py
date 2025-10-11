@@ -451,14 +451,14 @@ class NVDALearningBot:
     def send_learning_complete_message(self, winrate, profit):
         """학습 완료 알림"""
         message = f"""
-🚀 <b>NVDA 학습 봇 완료!</b>
+ <b>NVDA 학습 봇 완료!</b>
 
-✅ 거래: {self.learning_stats['total_trades']}회
-✅ 승률: {winrate:.1f}%
-✅ 수익: ${profit:+.2f}
-📊 검증된 전략: {len(self.verified_strategies)}개
+ 거래: {self.learning_stats['total_trades']}회
+ 승률: {winrate:.1f}%
+ 수익: ${profit:+.2f}
+ 검증된 전략: {len(self.verified_strategies)}개
 
-🔔 실시간 시그널 시작합니다!
+ 실시간 시그널 시작합니다!
 """
         self.send_telegram_message(message)
 
@@ -469,18 +469,18 @@ class NVDALearningBot:
         current_price = self.prices[symbol]['current']
 
         message = f"""
-🔔 <b>NVDA 트레이딩 시그널</b>
+ <b>NVDA 트레이딩 시그널</b>
 
-📊 종목: {symbol} ({leverage}X)
-💰 현재가: ${current_price:.2f}
-📈 포지션: <b>{signal['direction']}</b>
-🎯 전략: {signal['strategy']}
-⚡ 신뢰도: {signal['confidence']*100:.0f}%
+ 종목: {symbol} ({leverage}X)
+ 현재가: ${current_price:.2f}
+ 포지션: <b>{signal['direction']}</b>
+ 전략: {signal['strategy']}
+ 신뢰도: {signal['confidence']*100:.0f}%
 
-💡 목표: {signal['config']['profit']*100:.1f}%
-🛑 손절: {signal['config']['loss']*100:.1f}%
+ 목표: {signal['config']['profit']*100:.1f}%
+ 손절: {signal['config']['loss']*100:.1f}%
 
-⚠️ 리스크 관리 필수!
+ 리스크 관리 필수!
 """
         self.send_telegram_message(message)
 
@@ -569,7 +569,7 @@ class NVDALearningBot:
         print(f"수익률: {((self.virtual_balance / self.initial_balance) - 1) * 100:+.2f}%")
 
         if not self.learning_phase:
-            print(f"✅ 검증 완료 - {len(self.verified_strategies)}개 전략")
+            print(f" 검증 완료 - {len(self.verified_strategies)}개 전략")
 
         print("=" * 50)
 

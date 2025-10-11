@@ -54,7 +54,7 @@ new_prompt = '''            # 거래 히스토리 분석 (성공/실패 패턴)
 
 {json.dumps(recent_trades, indent=2, ensure_ascii=False) if recent_trades else '데이터 없음'}
 
-[⚠️ 실패 패턴 분석 - 반드시 고려]
+[ 실패 패턴 분석 - 반드시 고려]
 {json.dumps(loss_trades[-5:], indent=2, ensure_ascii=False) if loss_trades else '실패 거래 없음'}
 
 **실패 경험에서 배운 교훈:**

@@ -291,7 +291,7 @@ class PositionAnalysisReporter:
         report_sections = []
 
         # 1. 기본 통계
-        report_sections.append("📊 **NVDL/NVDQ 포지션 변경 주기 분석 보고서**")
+        report_sections.append(" **NVDL/NVDQ 포지션 변경 주기 분석 보고서**")
         report_sections.append(f"📅 분석 날짜: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         report_sections.append("")
 
@@ -299,7 +299,7 @@ class PositionAnalysisReporter:
         if self.trade_intervals:
             avg_interval = np.mean(self.trade_intervals)
             median_interval = np.median(self.trade_intervals)
-            report_sections.append("📈 **전체 거래 통계**")
+            report_sections.append(" **전체 거래 통계**")
             report_sections.append(f"- 총 거래 간격: {len(self.trade_intervals)}개")
             report_sections.append(f"- 평균 간격: {avg_interval:.1f}시간")
             report_sections.append(f"- 중간값 간격: {median_interval:.1f}시간")
@@ -307,7 +307,7 @@ class PositionAnalysisReporter:
 
         # 3. 보유 기간별 수익성
         if self.profitability_by_duration:
-            report_sections.append("💰 **보유 기간별 수익성**")
+            report_sections.append(" **보유 기간별 수익성**")
             for duration, stats in self.profitability_by_duration.items():
                 report_sections.append(
                     f"- {duration}: "
@@ -319,7 +319,7 @@ class PositionAnalysisReporter:
 
         # 4. 최적 주기 추천
         if self.optimal_intervals:
-            report_sections.append("🎯 **최적 거래 주기 추천**")
+            report_sections.append(" **최적 거래 주기 추천**")
             top_3 = list(self.optimal_intervals.items())[:3]
             for i, (duration, analysis) in enumerate(top_3, 1):
                 stats = analysis['stats']
@@ -353,7 +353,7 @@ class PositionAnalysisReporter:
             report_sections.append("")
 
         # 6. 권장사항
-        report_sections.append("💡 **거래 권장사항**")
+        report_sections.append(" **거래 권장사항**")
 
         if self.optimal_intervals:
             best_duration = list(self.optimal_intervals.keys())[0]
@@ -365,7 +365,7 @@ class PositionAnalysisReporter:
             report_sections.append(f"- 예상 승률: {best_sim['win_rate']:.1f}%")
 
         report_sections.append("")
-        report_sections.append("⚠️ 과거 데이터 기반 분석이며, 미래 성과를 보장하지 않습니다.")
+        report_sections.append(" 과거 데이터 기반 분석이며, 미래 성과를 보장하지 않습니다.")
 
         return "\n".join(report_sections)
 
@@ -403,7 +403,7 @@ class PositionAnalysisReporter:
                     parts.append(current_part)
 
                 for i, part in enumerate(parts):
-                    header = f"📊 **보고서 {i+1}/{len(parts)}**\n\n" if i == 0 else f"📊 **보고서 {i+1}/{len(parts)} (계속)**\n\n"
+                    header = f" **보고서 {i+1}/{len(parts)}**\n\n" if i == 0 else f" **보고서 {i+1}/{len(parts)} (계속)**\n\n"
                     self.telegram.send_message(header + part)
                     time.sleep(2)  # 메시지 간 딜레이
 
@@ -458,7 +458,7 @@ def main():
     FMP_API_KEY = "5j69XWnoSpoBvEY0gKSUTB0zXcr0z2KI"
 
     if not FMP_API_KEY or FMP_API_KEY == "YOUR_API_KEY_HERE":
-        print("❌ FMP API 키를 설정해주세요!")
+        print(" FMP API 키를 설정해주세요!")
         return
 
     # 분석 리포터 생성
@@ -469,7 +469,7 @@ def main():
 
     # 권장사항 출력
     print(f"\n📋 권장 체크 주기: {reporter.get_recommended_check_interval()}시간")
-    print(f"📊 예상 포지션 변경 빈도: {reporter.get_position_change_frequency_estimate()}")
+    print(f" 예상 포지션 변경 빈도: {reporter.get_position_change_frequency_estimate()}")
 
 if __name__ == "__main__":
     main()

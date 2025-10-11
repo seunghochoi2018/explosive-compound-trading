@@ -36,41 +36,41 @@ class TelegramNotifier:
         # 메시지 템플릿
         self.templates = {
             'position_change': """
-🔄 **포지션 변경 알림**
+ **포지션 변경 알림**
 
-📊 **이전**: {old_position}
-📈 **신규**: {new_position}
+ **이전**: {old_position}
+ **신규**: {new_position}
 
-💰 **신뢰도**: {confidence:.1%}
+ **신뢰도**: {confidence:.1%}
 ⏰ **시간**: {timestamp}
 
-💡 **분석**: {analysis}
+ **분석**: {analysis}
             """.strip(),
 
             'trade_result': """
 💼 **거래 완료**
 
-🎯 **종목**: {symbol}
-💵 **수익률**: {profit_pct:+.2f}%
-📊 **진입가**: ${entry_price:.2f}
-📈 **청산가**: ${exit_price:.2f}
+ **종목**: {symbol}
+ **수익률**: {profit_pct:+.2f}%
+ **진입가**: ${entry_price:.2f}
+ **청산가**: ${exit_price:.2f}
 
 ⏱️ **보유시간**: {holding_time}
-🏆 **결과**: {result}
+ **결과**: {result}
 
-📈 **누적 수익**: {total_profit:+.2f}%
-🎯 **승률**: {win_rate:.1f}%
+ **누적 수익**: {total_profit:+.2f}%
+ **승률**: {win_rate:.1f}%
             """.strip(),
 
             'signal_alert': """
 🚨 **거래 신호 발생**
 
-📊 **종목**: {symbol}
+ **종목**: {symbol}
 [SIGNAL] **신호**: {signal}
 💪 **신뢰도**: {confidence:.1%}
 
-📈 **현재가**: ${current_price:.2f}
-📊 **기술분석**:
+ **현재가**: ${current_price:.2f}
+ **기술분석**:
   - RSI: {rsi:.1f}
   - 모멘텀: {momentum:+.2%}
   - 변동성: {volatility:.2%}
@@ -79,7 +79,7 @@ class TelegramNotifier:
             """.strip(),
 
             'daily_summary': """
-📊 **일일 거래 요약**
+ **일일 거래 요약**
 
 📅 **날짜**: {date}
 
@@ -88,18 +88,18 @@ class TelegramNotifier:
   - 수익 거래: {winning_trades}회
   - 손실 거래: {losing_trades}회
 
-💰 **수익 현황**:
+ **수익 현황**:
   - 일일 수익: {daily_profit:+.2f}%
   - 누적 수익: {total_profit:+.2f}%
   - 승률: {win_rate:.1f}%
 
-🎯 **현재 포지션**: {current_position}
+ **현재 포지션**: {current_position}
 
-⚡ **시스템 상태**: 정상 운영 중
+ **시스템 상태**: 정상 운영 중
             """.strip(),
 
             'error_alert': """
-⚠️ **시스템 오류 알림**
+ **시스템 오류 알림**
 
 🚨 **오류 유형**: {error_type}
 📝 **내용**: {error_message}
@@ -109,10 +109,10 @@ class TelegramNotifier:
             """.strip(),
 
             'system_status': """
-⚡ **시스템 상태 체크**
+ **시스템 상태 체크**
 
 🟢 **상태**: {status}
-🔄 **가동 시간**: {uptime}
+ **가동 시간**: {uptime}
 [SIGNAL] **마지막 신호**: {last_signal}
 
 💹 **포트폴리오**:
@@ -120,7 +120,7 @@ class TelegramNotifier:
   - 진입 시간: {entry_time}
   - 수익률: {current_pnl:+.2f}%
 
-📊 **통계**:
+ **통계**:
   - 총 거래: {total_trades}
   - 승률: {win_rate:.1f}%
   - 누적 수익: {total_profit:+.2f}%
@@ -306,7 +306,7 @@ class TelegramNotifier:
     def test_connection(self) -> bool:
         """텔레그램 연결 테스트"""
         try:
-            test_message = f"🧪 **연결 테스트**\n\n⏰ 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n🤖 NVDL/NVDQ 알림 봇이 정상 작동 중입니다."
+            test_message = f"🧪 **연결 테스트**\n\n⏰ 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n NVDL/NVDQ 알림 봇이 정상 작동 중입니다."
             return self.send_message(test_message)
         except Exception as e:
             print(f"텔레그램 연결 테스트 실패: {e}")
@@ -381,9 +381,9 @@ def main():
     # 연결 테스트
     print("연결 테스트 중...")
     if notifier.test_connection():
-        print("✅ 텔레그램 연결 성공!")
+        print(" 텔레그램 연결 성공!")
     else:
-        print("❌ 텔레그램 연결 실패!")
+        print(" 텔레그램 연결 실패!")
         return
 
     # 각종 알림 테스트
@@ -435,7 +435,7 @@ def main():
         current_position="NVDL"
     )
 
-    print("✅ 모든 테스트 완료!")
+    print(" 모든 테스트 완료!")
 
 if __name__ == "__main__":
     main()

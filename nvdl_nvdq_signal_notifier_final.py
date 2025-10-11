@@ -768,9 +768,9 @@ class PureAISignalNotifier:
                 # 성공 로그 (포지션 변경 명시)
                 old_text = old_position if old_position else "CASH"
                 new_text = self.current_position if self.current_position else "CASH"
-                print(f"✅ 포지션 변경 알림 전송: {old_text} → {new_text} (신뢰도: {signal.confidence:.1%})")
+                print(f" 포지션 변경 알림 전송: {old_text} → {new_text} (신뢰도: {signal.confidence:.1%})")
             else:
-                print(f"❌ 텔레그램 알림 전송 실패")
+                print(f" 텔레그램 알림 전송 실패")
 
         except Exception as e:
             print(f"신호 알림 전송 오류: {e}")

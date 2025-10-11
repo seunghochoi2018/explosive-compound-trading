@@ -27,9 +27,9 @@ class NVDLNVDQMultiTimeframeOptimizer:
         NVDL/NVDQ 다중 시간주기 최적화 시스템 초기화
         """
         print("=" * 70)
-        print("🔥 NVDL/NVDQ 다중 시간주기 최적화 시스템")
-        print("📊 모든 시간주기 테스트 + 최적 모델 수렴")
-        print("💰 실제 거래 성과로 자동 학습")
+        print(" NVDL/NVDQ 다중 시간주기 최적화 시스템")
+        print(" 모든 시간주기 테스트 + 최적 모델 수렴")
+        print(" 실제 거래 성과로 자동 학습")
         print("=" * 70)
 
         self.fmp_api_key = fmp_api_key
@@ -82,10 +82,10 @@ class NVDLNVDQMultiTimeframeOptimizer:
         # 기존 진행 상황 로드
         self.load_progress()
 
-        print(f"✅ 총 {len(self.models)}개 모델 생성 완료")
+        print(f" 총 {len(self.models)}개 모델 생성 완료")
         print(f"💎 시간주기: {list(self.timeframes.keys())}")
-        print(f"🎯 심볼: {self.symbols}")
-        print(f"⚡ 전략: {list(self.strategies.keys())}")
+        print(f" 심볼: {self.symbols}")
+        print(f" 전략: {list(self.strategies.keys())}")
 
     def create_all_models(self):
         """모든 모델 조합 생성"""
@@ -359,9 +359,9 @@ class NVDLNVDQMultiTimeframeOptimizer:
             model = self.models[model_key]
             performance = self.model_performance.get(model_key, {})
 
-            message = f"""📊 **NVDL/NVDQ 거래 완료**
+            message = f""" **NVDL/NVDQ 거래 완료**
 
-🎯 **거래 정보**:
+ **거래 정보**:
 - 심볼: {symbol}
 - 방향: {side.upper()}
 - 진입: ${entry_price:.2f}
@@ -369,12 +369,12 @@ class NVDLNVDQMultiTimeframeOptimizer:
 - 수익: {profit_pct:+.2f}%
 - 보유: {holding_time:.1f}시간
 
-🤖 **모델 정보**:
+ **모델 정보**:
 - 전략: {model['strategy']}
 - 주기: {model['timeframe']}
 - 현재 잔고: ${self.current_balance:,.2f}
 
-📈 **모델 성과**:
+ **모델 성과**:
 - 거래수: {performance.get('trades', 0)}회
 - 승률: {model.get('win_rate', 0)*100:.1f}%
 - 평균수익: {model.get('avg_profit', 0):+.2f}%
@@ -428,7 +428,7 @@ class NVDLNVDQMultiTimeframeOptimizer:
         for model_key, model_data in best_models:
             self.models[model_key]['weight'] /= total_weight
 
-        print(f"🔥 최고 성과 모델 {len(best_models)}개에 집중!")
+        print(f" 최고 성과 모델 {len(best_models)}개에 집중!")
         for i, (model_key, model_data) in enumerate(best_models):
             print(f"  {i+1}. {model_key}: {model_data['win_rate']*100:.1f}% 승률, "
                   f"{model_data['avg_profit']:+.2f}% 평균수익")
@@ -439,9 +439,9 @@ class NVDLNVDQMultiTimeframeOptimizer:
     def send_focus_notification(self, best_models: List[Tuple[str, Dict]]):
         """모델 집중 알림"""
         try:
-            message = f"""🔥 **최적 모델 수렴 알림**
+            message = f""" **최적 모델 수렴 알림**
 
-📊 **상위 {len(best_models)}개 모델에 집중**:
+ **상위 {len(best_models)}개 모델에 집중**:
 
 """
             for i, (model_key, model_data) in enumerate(best_models):
@@ -451,8 +451,8 @@ class NVDLNVDQMultiTimeframeOptimizer:
                 message += f"   - 거래수: {model_data['trades']}회\n"
                 message += f"   - 가중치: {model_data['weight']:.3f}\n\n"
 
-            message += f"💰 **현재 잔고**: ${self.current_balance:,.2f}\n"
-            message += f"📈 **총 수익률**: {(self.current_balance/self.initial_balance-1)*100:+.2f}%"
+            message += f" **현재 잔고**: ${self.current_balance:,.2f}\n"
+            message += f" **총 수익률**: {(self.current_balance/self.initial_balance-1)*100:+.2f}%"
 
             print("=== 거래 완료 알림 ===")
             print(message)
@@ -605,19 +605,19 @@ class NVDLNVDQMultiTimeframeOptimizer:
             total_trades = sum(model['trades'] for model in self.models.values())
             active_models = sum(1 for model in self.models.values() if model['active'])
 
-            message = f"""📊 **NVDL/NVDQ 다중 시간주기 최적화 현황**
+            message = f""" **NVDL/NVDQ 다중 시간주기 최적화 현황**
 
-💰 **수익 현황**:
+ **수익 현황**:
 - 현재 잔고: ${self.current_balance:,.2f}
 - 총 수익률: {(self.current_balance/self.initial_balance-1)*100:+.2f}%
 - 총 거래수: {total_trades}회
 
-🤖 **모델 현황**:
+ **모델 현황**:
 - 전체 모델: {len(self.models)}개
 - 활성 모델: {active_models}개
 - 현재 포지션: {len(self.current_positions)}개
 
-🏆 **상위 모델들**:
+ **상위 모델들**:
 """
             for i, (model_key, model_data) in enumerate(best_models):
                 message += f"{i+1}. **{model_key}**\n"
@@ -632,16 +632,16 @@ class NVDLNVDQMultiTimeframeOptimizer:
 
     def run(self):
         """메인 실행 루프"""
-        print(f"\n🚀 NVDL/NVDQ 다중 시간주기 최적화 시작!")
-        print(f"💰 초기 자금: ${self.initial_balance:,.2f}")
+        print(f"\n NVDL/NVDQ 다중 시간주기 최적화 시작!")
+        print(f" 초기 자금: ${self.initial_balance:,.2f}")
 
         # 시작 알림
         start_message = (
-            f"🔥 **NVDL/NVDQ 다중 시간주기 최적화 시작**\n\n"
-            f"💰 초기 자금: ${self.initial_balance:,.2f}\n"
-            f"📊 총 모델: {len(self.models)}개\n"
+            f" **NVDL/NVDQ 다중 시간주기 최적화 시작**\n\n"
+            f" 초기 자금: ${self.initial_balance:,.2f}\n"
+            f" 총 모델: {len(self.models)}개\n"
             f"⏰ 시작 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-            f"🎯 목표: 최고 수익률 모델 자동 발견!"
+            f" 목표: 최고 수익률 모델 자동 발견!"
         )
         print("=== 시작 알림 ===")
         print(start_message)
@@ -661,7 +661,7 @@ class NVDLNVDQMultiTimeframeOptimizer:
                 trades_executed = self.run_trading_cycle()
 
                 if trades_executed > 0:
-                    print(f"✅ {trades_executed}개 거래 실행")
+                    print(f" {trades_executed}개 거래 실행")
 
                 # 30분마다 최적 모델 집중
                 if current_time - last_focus_time >= 1800:  # 30분
@@ -674,13 +674,13 @@ class NVDLNVDQMultiTimeframeOptimizer:
                     last_status_time = current_time
 
                 # 현재 상태 출력
-                print(f"💰 잔고: ${self.current_balance:,.2f} "
+                print(f" 잔고: ${self.current_balance:,.2f} "
                       f"({(self.current_balance/self.initial_balance-1)*100:+.2f}%)")
-                print(f"📍 포지션: {len(self.current_positions)}개")
+                print(f" 포지션: {len(self.current_positions)}개")
 
                 # 활성 모델 수
                 active_count = sum(1 for m in self.models.values() if m['active'])
-                print(f"🤖 활성 모델: {active_count}/{len(self.models)}개")
+                print(f" 활성 모델: {active_count}/{len(self.models)}개")
 
                 # 진행 상황 저장
                 if cycle_count % 10 == 0:  # 10 사이클마다
@@ -700,16 +700,16 @@ class NVDLNVDQMultiTimeframeOptimizer:
             final_profit = (self.current_balance / self.initial_balance - 1) * 100
             end_message = (
                 f"⏹️ **NVDL/NVDQ 다중 시간주기 최적화 종료**\n\n"
-                f"💰 최종 잔고: ${self.current_balance:,.2f}\n"
-                f"📈 총 수익률: {final_profit:+.2f}%\n"
-                f"🔄 총 사이클: {cycle_count}회\n"
+                f" 최종 잔고: ${self.current_balance:,.2f}\n"
+                f" 총 수익률: {final_profit:+.2f}%\n"
+                f" 총 사이클: {cycle_count}회\n"
                 f"⏰ 종료 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
             )
             print("=== 종료 알림 ===")
             print(end_message)
 
             print(f"\n🔚 최적화 완료!")
-            print(f"💰 최종 수익률: {final_profit:+.2f}%")
+            print(f" 최종 수익률: {final_profit:+.2f}%")
 
 def main():
     """메인 실행 함수"""

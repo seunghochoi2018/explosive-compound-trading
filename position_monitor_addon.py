@@ -114,7 +114,7 @@ def check_kis_position_realtime():
 
 # ===== 메인 루프에 추가할 코드 =====
 """
-# ⭐ 실시간 포지션 모니터링 (30초마다)
+#  실시간 포지션 모니터링 (30초마다)
 if (current_time - last_position_check) >= POSITION_CHECK_INTERVAL:
     # ETH 포지션 체크
     eth_pos = check_eth_position_realtime()
@@ -128,19 +128,19 @@ if (current_time - last_position_check) >= POSITION_CHECK_INTERVAL:
             msg += f"손익: {pnl:.2f}%\n"
             msg += f"손실: ${eth_pos['pnl_usd']:.2f}\n"
             msg += f"진입: ${eth_pos['entry']:.2f} → ${eth_pos['current']:.2f}\n\n"
-            msg += f"⚠️ 즉시 확인 필요!"
+            msg += f" 즉시 확인 필요!"
             telegram.send_message(msg)
             last_position_alert[alert_key] = current_time
             colored_print(f"🚨 [ETH] 강제청산 경고! 손실 {pnl:.2f}%", "red")
 
         elif eth_pos['alert_level'] == 'warning' and alert_key not in last_position_alert:
-            msg = f"⚠️ <b>ETH 손절 경고</b>\n\n"
+            msg = f" <b>ETH 손절 경고</b>\n\n"
             msg += f"손익: {pnl:.2f}%\n"
             msg += f"손실: ${eth_pos['pnl_usd']:.2f}\n"
             msg += f"손절선 근접 중"
             telegram.send_message(msg)
             last_position_alert[alert_key] = current_time
-            colored_print(f"⚠️  [ETH] 손절 경고! {pnl:.2f}%", "yellow")
+            colored_print(f"  [ETH] 손절 경고! {pnl:.2f}%", "yellow")
 
         # 정상 상태로 복귀 시 알림 리셋
         if eth_pos['alert_level'] == 'normal':
@@ -157,18 +157,18 @@ if (current_time - last_position_check) >= POSITION_CHECK_INTERVAL:
             msg += f"종목: {kis_pos['symbol']}\n"
             msg += f"손익: {pnl:.2f}%\n"
             msg += f"손실: ${kis_pos['pnl_usd']:.2f}\n\n"
-            msg += f"⚠️ HTS/MTS에서 수동 청산 필요!"
+            msg += f" HTS/MTS에서 수동 청산 필요!"
             telegram.send_message(msg)
             last_position_alert[alert_key] = current_time
             colored_print(f"🚨 [KIS] 강제청산 필요! {kis_pos['symbol']} {pnl:.2f}%", "red")
 
         elif kis_pos['alert_level'] == 'warning' and alert_key not in last_position_alert:
-            msg = f"⚠️ <b>KIS 손절 경고</b>\n\n"
+            msg = f" <b>KIS 손절 경고</b>\n\n"
             msg += f"종목: {kis_pos['symbol']}\n"
             msg += f"손익: {pnl:.2f}%"
             telegram.send_message(msg)
             last_position_alert[alert_key] = current_time
-            colored_print(f"⚠️  [KIS] 손절 경고! {kis_pos['symbol']} {pnl:.2f}%", "yellow")
+            colored_print(f"  [KIS] 손절 경고! {kis_pos['symbol']} {pnl:.2f}%", "yellow")
 
         if kis_pos['alert_level'] == 'normal':
             last_position_alert = {k: v for k, v in last_position_alert.items() if not k.startswith(f"KIS_{kis_pos['symbol']}_")}

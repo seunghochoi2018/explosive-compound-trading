@@ -434,9 +434,9 @@ class EnsembleLLMAnalyzer:
             # [NEW] 추세 반전 경고 추가
             reversal_alert = ""
             if decline_from_peak < -1.5:
-                reversal_alert = f" ⚠️고점대비{abs(decline_from_peak):.1f}%하락"
+                reversal_alert = f" 고점대비{abs(decline_from_peak):.1f}%하락"
             if momentum_weakening > 1.0:
-                reversal_alert += f" ⚠️모멘텀약화{momentum_weakening:.1f}%"
+                reversal_alert += f" 모멘텀약화{momentum_weakening:.1f}%"
 
             data_desc = f"1 {trend}({change:+.1f}%) {recent_prices}{reversal_alert}"
 
@@ -448,9 +448,9 @@ class EnsembleLLMAnalyzer:
             # [NEW] 추세 반전 경고
             reversal_alert = ""
             if decline_from_peak < -2.0:
-                reversal_alert = f" ⚠️고점${recent_peak:.1f}→현재하락{abs(decline_from_peak):.1f}%"
+                reversal_alert = f" 고점${recent_peak:.1f}→현재하락{abs(decline_from_peak):.1f}%"
             if pattern_signal == "하락_패턴":
-                reversal_alert += " ⚠️하락패턴감지"
+                reversal_alert += " 하락패턴감지"
 
             data_desc = f"5 {trend}({change:+.1f}%) {recent_prices}{reversal_alert}"
 
@@ -479,11 +479,11 @@ class EnsembleLLMAnalyzer:
             if decline_from_peak < -2.0 and current_direction == "BULL":
                 reversal_info = f" 🚨BULL→BEAR전환고려! 고점${recent_peak:.1f}에서{abs(decline_from_peak):.1f}%하락"
             elif momentum_weakening > 1.5:
-                reversal_info = f" ⚠️추세약화{momentum_weakening:.1f}% 전환신호"
+                reversal_info = f" 추세약화{momentum_weakening:.1f}% 전환신호"
             elif pattern_signal == "하락_패턴" and current_direction == "BULL":
-                reversal_info = f" ⚠️하락패턴감지(현재BULL)"
+                reversal_info = f" 하락패턴감지(현재BULL)"
             elif pattern_signal == "상승_패턴" and current_direction == "BEAR":
-                reversal_info = f" ⚠️상승패턴감지(현재BEAR)"
+                reversal_info = f" 상승패턴감지(현재BEAR)"
 
             data_desc = f"{recent_prices} {win_rate:.0f}%{reversal_info}"
 
@@ -536,12 +536,12 @@ class EnsembleLLMAnalyzer:
 
                 if loss_trend_1m or loss_trend_5m:
                     loss_patterns.append(
-                        f"⚠️{loss_side}진입({loss_trend_1m}/{loss_trend_5m})→손실{loss_pnl:.1f}%"
+                        f"{loss_side}진입({loss_trend_1m}/{loss_trend_5m})→손실{loss_pnl:.1f}%"
                     )
 
         loss_warning = ""
         if loss_patterns:
-            loss_warning = f"\n❌과거실패:{';'.join(loss_patterns[:3])}"
+            loss_warning = f"\n과거실패:{';'.join(loss_patterns[:3])}"
 
         # [CORE_PHILOSOPHY] 절대적 임계치 설정 금지 - LLM 자율 학습 기반 판단
         # 주석: 손절선이 아닌 이상 절대적 임계치 설정 금지 및 상황에 대한 학습 필요
@@ -557,14 +557,14 @@ class EnsembleLLMAnalyzer:
 {context_section}:${current_price} | {data_desc}
 {stats_info}{position_info}{loss_warning}{strategy_hint}
 
-⚡규칙 (LLM 자율 판단 - 절대적 임계치 사용 금지):
+규칙 (LLM 자율 판단 - 절대적 임계치 사용 금지):
 1. [핵심] 추세선 돌파(trendline breakout) 명확히 인식!
-   💡 사용자 피드백: "횡보장 판단보다 추세돌파를 명확히 인식하는게 더 중요"
+    사용자 피드백: "횡보장 판단보다 추세돌파를 명확히 인식하는게 더 중요"
    - 이유: 횡보/추세 구분보다 추세선 돌파 감지가 실제 수익 핵심
    - 예: 고점 $4558 → 현재 $4421 (-3%) = 상승추세선 하향돌파 → SELL
    - 횡보장 진입 금지는 부차적, 추세돌파 놓치면 수익 기회 상실
 2. 포지션 보유 중 청산 판단 (LLM 자율 결정):
-   💡 절대 %로 판단 금지! PNL + 시장 맥락 + 과거 학습으로 종합 판단
+    절대 %로 판단 금지! PNL + 시장 맥락 + 과거 학습으로 종합 판단
    - 작은 수익에서 청산? → 추세 강하면 유지, 반등 조짐 있으면 청산
    - 큰 수익에서 청산? → 추세 지속이면 유지, 되돌림 위험 있으면 청산
    - 손실 중 청산? → 추세 전환 신호 + 과거 실패 패턴 유사성 검토
@@ -573,13 +573,13 @@ class EnsembleLLMAnalyzer:
 3. 과거 실패 패턴 회피: 동일한 시장 상황 반복 금지
 4. 손실/이익 판단은 LLM이 시장 맥락 보고 자율 결정 (고정 % 금지)
 
-⚠️ 선택지 (4가지만 사용 - 명확성 향상):
+ 선택지 (4가지만 사용 - 명확성 향상):
 1. HOLD: 현재 포지션 유지 (또는 관망)
 2. CLOSE: 현재 포지션 청산만 (수익/손실 실현, 신규 진입 없음)
 3. BUY: 매수 진입 (포지션 있으면 청산 후 진입)
 4. SELL: 매도 진입 (포지션 있으면 청산 후 진입)
 
-💡 예시:
+ 예시:
 - 현재 SELL +30% → CLOSE 선택 → 수익 실현
 - 현재 SELL +30% → BUY 선택 → 청산 후 반대 포지션
 - 현재 SELL +30% → HOLD 선택 → 포지션 유지

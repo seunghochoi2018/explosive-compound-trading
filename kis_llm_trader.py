@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-⚠️ [매우 중요] 코드 수정 후 반드시 봇 재시작 필요!
+ [매우 중요] 코드 수정 후 반드시 봇 재시작 필요!
 ================================================================================
 - Python은 시작 시 코드를 메모리에 로드합니다
 - 파일을 수정해도 실행 중인 봇은 이전 코드를 사용합니다
 - 새 코드 적용하려면 반드시 봇을 중지하고 재시작해야 합니다!
 
-⚠️ [즉시 알림 규칙] - 적극적으로 알려주세요!
+ [즉시 알림 규칙] - 적극적으로 알려주세요!
 ================================================================================
 다음 사항을 발견하면 사용자에게 즉시 알립니다:
 
@@ -32,7 +32,7 @@
    - 불필요하거나 방해되는 기능
    - 더 나은 구현 방법
 
-⚠️ 중요: 수동적으로 기다리지 말 것!
+ 중요: 수동적으로 기다리지 말 것!
 - 사용자가 물어보기 전에 먼저 발견하고 알릴 것
 - 한 가지 문제를 수정할 때, 관련된 다른 문제도 함께 확인할 것
   예: SOXS 거래소 코드 수정 → SOXL도 즉시 확인
@@ -148,19 +148,19 @@ if hasattr(sys.stderr, 'buffer') and not isinstance(sys.stderr, io.TextIOWrapper
 ================================================================================
 3. 주문 가격 (OVRS_ORD_UNPR)
 ================================================================================
-⭐⭐⭐ [중요] 시장가도 현재가 입력 필수! ⭐⭐⭐
+ [중요] 시장가도 현재가 입력 필수! 
 
 시장가: 현재가 입력 (예: "40.17") + ORD_DVSN = "00"
 지정가: 지정가 입력 (예: "45.50") + ORD_DVSN = "01"
 
-⚠️ 주의: 문서에는 "0"이라고 되어 있지만, 실제로는 현재가 필요!
+ 주의: 문서에는 "0"이라고 되어 있지만, 실제로는 현재가 필요!
 - "0"을 보내면 "$0.01 미만" 오류 발생
 - 시장가 주문이지만 현재가를 입력해야 함
 - ORD_DVSN = "00"으로 시장가 구분
 
 시장가 예시 (ChatGPT/한국투자 챗봇 확인):
 {
-  "OVRS_ORD_UNPR": "40.17", // ⭐ 시장가도 현재가 입력!
+  "OVRS_ORD_UNPR": "40.17", //  시장가도 현재가 입력!
   "ORD_DVSN": "00"          // 00 = 시장가
 }
 
@@ -173,8 +173,8 @@ if hasattr(sys.stderr, 'buffer') and not isinstance(sys.stderr, io.TextIOWrapper
 ================================================================================
 4. 주문 구분 (ORD_DVSN)
 ================================================================================
-⭐ 시장가: "00" ⭐
-⭐ 지정가: "01" ⭐
+ 시장가: "00" 
+ 지정가: "01" 
 
 ================================================================================
 5. 필수 필드
@@ -278,7 +278,7 @@ class KISLLMTrader:
         self.exchange_cd = "NASD"  # 기본 거래소 코드
         self.exchange_cd_query = "AMEX"  # 매수가능금액 조회 시 사용
 
-        # ⭐ 종목별 PDNO 매핑 (KIS API 실전 종목코드) ⭐
+        #  종목별 PDNO 매핑 (KIS API 실전 종목코드) 
         self.symbol_pdno_map = {
             "TQQQ": "A206892",  # ProShares UltraPro QQQ
             "SQQQ": "A206893",  # ProShares UltraPro Short QQQ
@@ -286,10 +286,10 @@ class KISLLMTrader:
             "SOXS": "A980680"   # Direxion Daily Semiconductor Bear 3X
         }
 
-        # ⭐ PDNO → Symbol 역변환 맵 (포지션 조회용) ⭐
+        #  PDNO → Symbol 역변환 맵 (포지션 조회용) 
         self.pdno_symbol_map = {v: k for k, v in self.symbol_pdno_map.items()}
 
-        # ⭐ 종목별 거래소 코드 (실제 API 응답 기준으로 업데이트) ⭐
+        #  종목별 거래소 코드 (실제 API 응답 기준으로 업데이트) 
         self.symbol_exchange_map = {
             "TQQQ": "NASD",  # KIS 기준 NASD 등록
             "SQQQ": "NASD",  # KIS 기준 NASD 등록
@@ -298,7 +298,7 @@ class KISLLMTrader:
         }
 
         self.currency = "USD"
-        self.target_symbols = ['SOXL', 'SOXS']  # ⭐ SOXL/SOXS (반도체 3X 레버리지) ⭐
+        self.target_symbols = ['SOXL', 'SOXS']  #  SOXL/SOXS (반도체 3X 레버리지) 
 
         # [핵심] LLM 분석기 초기화 (14b × 2 병렬)
         print("\n[LLM 초기화] 14b × 2 병렬 앙상블 시작...")
@@ -419,7 +419,7 @@ class KISLLMTrader:
             try:
                 with open(self.learning_file, 'r', encoding='utf-8') as f:
                     self.all_trades = json.load(f)
-                print(f"[학습 데이터] {len(self.all_trades)}개 거래 로드 ✅")
+                print(f"[학습 데이터] {len(self.all_trades)}개 거래 로드 ")
             except Exception as e:
                 print(f"[ERROR] 거래 히스토리 로드 실패: {type(e).__name__}: {e}")
                 import traceback
@@ -447,7 +447,7 @@ class KISLLMTrader:
             try:
                 with open(self.meta_learning_file, 'r', encoding='utf-8') as f:
                     self.meta_insights = json.load(f)
-                print(f"[메타 학습] {len(self.meta_insights)}개 인사이트 로드 ✅")
+                print(f"[메타 학습] {len(self.meta_insights)}개 인사이트 로드 ")
             except Exception as e:
                 print(f"[ERROR] 메타 인사이트 로드 실패: {type(e).__name__}: {e}")
                 import traceback
@@ -728,7 +728,7 @@ class KISLLMTrader:
                         qty_str = item.get('ovrs_cblc_qty', '0')
                         print(f"[DEBUG] Item {idx}: pdno={pdno}, qty_str={qty_str}")
 
-                        # ⭐ PDNO → Symbol 변환 (API가 심볼을 반환하는 경우도 처리) ⭐
+                        #  PDNO → Symbol 변환 (API가 심볼을 반환하는 경우도 처리) 
                         symbol = self.pdno_symbol_map.get(pdno, None)
 
                         # PDNO로 변환 실패 시, API가 심볼을 직접 반환한 경우 확인
@@ -836,7 +836,7 @@ class KISLLMTrader:
             else:
                 return {'success': False, 'message': f'잘못된 주문 타입: {order_type}'}
 
-            # ⭐ PDNO 변환 (ChatGPT/KIS 챗봇 확인) ⭐
+            #  PDNO 변환 (ChatGPT/KIS 챗봇 확인) 
             if symbol not in self.symbol_pdno_map:
                 return {'success': False, 'message': f'{symbol} PDNO 매핑 없음 (지원하지 않는 종목)'}
 
@@ -848,7 +848,7 @@ class KISLLMTrader:
             print(f"  PDNO: {pdno}")
             print(f"  거래소: {exchange_cd}")
 
-            # ⭐ 현재가 조회 (시장가도 현재가 필수) ⭐
+            #  현재가 조회 (시장가도 현재가 필수) 
             if price is None:
                 # 가격 히스토리에서 최신 현재가 가져오기
                 if hasattr(self, 'price_history_1m') and self.price_history_1m:
@@ -878,21 +878,21 @@ class KISLLMTrader:
                     # 매도 시 포지션의 현재가 우선 사용
                     price = pos.get('current_price', price)
 
-            # ⭐ 가격 결정 (시장가도 현재가 입력!) ⭐
+            #  가격 결정 (시장가도 현재가 입력!) 
             # 시장가: price=40.16 → order_price="40.16"
             # 지정가: price=45.5 → order_price="45.50"
             order_price = f"{float(price):.2f}"
 
-            # ⭐ 주문 데이터 생성 ⭐
+            #  주문 데이터 생성 
             order_data = {
                 "CANO": self.cano,
                 "ACNT_PRDT_CD": self.acnt_prdt_cd,
-                "OVRS_EXCG_CD": exchange_cd,  # ⭐ NASD (ChatGPT/KIS 챗봇 확인) ⭐
-                "PDNO": pdno,  # ⭐ 정확한 PDNO 사용 (A980679 / A980680) ⭐
+                "OVRS_EXCG_CD": exchange_cd,  #  NASD (ChatGPT/KIS 챗봇 확인) 
+                "PDNO": pdno,  #  정확한 PDNO 사용 (A980679 / A980680) 
                 "ORD_QTY": str(quantity),
-                "OVRS_ORD_UNPR": order_price,  # ⭐ 시장가도 현재가 입력! ⭐
+                "OVRS_ORD_UNPR": order_price,  #  시장가도 현재가 입력! 
                 "ORD_SVR_DVSN_CD": "0",
-                "ORD_DVSN": "00"  # ⭐ 00=시장가, 01=지정가 ⭐
+                "ORD_DVSN": "00"  #  00=시장가, 01=지정가 
             }
 
             print(f"\n[주문 요청] {order_type} {symbol} ({pdno})")
@@ -931,7 +931,7 @@ class KISLLMTrader:
 
                 if rt_cd == '0':
                     order_no = result.get('output', {}).get('ODNO', 'N/A')
-                    print(f"✅ [주문 성공] 주문번호: {order_no}")
+                    print(f" [주문 성공] 주문번호: {order_no}")
                     return {
                         'success': True,
                         'order_no': order_no,
@@ -939,14 +939,14 @@ class KISLLMTrader:
                         'quantity': quantity
                     }
                 else:
-                    print(f"❌ [주문 실패] {msg} (rt_cd: {rt_cd})")
+                    print(f" [주문 실패] {msg} (rt_cd: {rt_cd})")
                     return {'success': False, 'message': msg}
             else:
-                print(f"❌ [주문 실패] HTTP {response.status_code}")
+                print(f" [주문 실패] HTTP {response.status_code}")
                 return {'success': False, 'message': f'HTTP {response.status_code}'}
 
         except Exception as e:
-            print(f"❌ [주문 예외] {e}")
+            print(f" [주문 예외] {e}")
             import traceback
             traceback.print_exc()
             return {'success': False, 'message': str(e)}
@@ -1146,7 +1146,7 @@ class KISLLMTrader:
 
 {json.dumps(recent_trades, indent=2, ensure_ascii=False) if recent_trades else '데이터 없음'}
 
-[⚠️ 실패 패턴 분석 - 반드시 고려]
+[ 실패 패턴 분석 - 반드시 고려]
 {json.dumps(loss_trades[-5:], indent=2, ensure_ascii=False) if loss_trades else '실패 거래 없음'}
 
 **실패 경험에서 배운 교훈:**
@@ -1293,12 +1293,12 @@ JSON 형식으로 답변:
             if optimal_timing_pattern:
                 recommendation = optimal_timing_pattern.get('recommendation', '')
                 learning_note = optimal_timing_pattern.get('learning_note', '')
-                timing_learning += f"\n✅ 과거 성공 패턴:\n   {learning_note}\n   → {recommendation}"
+                timing_learning += f"\n 과거 성공 패턴:\n   {learning_note}\n   → {recommendation}"
 
             if noise_pattern:
                 warning = noise_pattern.get('warning', '')
                 learning_note = noise_pattern.get('learning_note', '')
-                timing_learning += f"\n❌ 노이즈 패턴 (피해야 함):\n   {learning_note}\n   → {warning}"
+                timing_learning += f"\n 노이즈 패턴 (피해야 함):\n   {learning_note}\n   → {warning}"
 
             # 현재 상황과 과거 패턴 비교
             timing_comparison = ""
@@ -1510,7 +1510,7 @@ JSON 형식으로 답변:
             # # 최고 PNL 갱신
             # if current_pnl_pct > self.max_pnl:
             #     self.max_pnl = current_pnl_pct
-            #     print(f"  📈 최고 PNL 갱신: {self.max_pnl:.2f}%")
+            #     print(f"   최고 PNL 갱신: {self.max_pnl:.2f}%")
             #
             # # 최고 PNL에 따라 손절선 상향 조정 (수익 보호)
             # old_stop = self.trailing_stop_loss
@@ -1593,7 +1593,7 @@ JSON 형식으로 답변:
                         # 충분한 수익, 전환 OK
                         should_switch = True
                         net_profit = current_pnl_pct - ROUND_TRIP_FEE
-                        print(f"\n[🎯 방향 전환 감지!]")
+                        print(f"\n[ 방향 전환 감지!]")
                         print(f"  이전 방향: {self.current_llm_direction}")
                         print(f"  새 방향: {signal}")
                         print(f"  현재 손익: {current_pnl_pct:+.2f}% (실질: {net_profit:+.2f}%)")
@@ -1603,7 +1603,7 @@ JSON 형식으로 답변:
                     elif confidence >= 70:
                         # 신뢰도 높으면 작은 수익도 OK
                         should_switch = True
-                        print(f"\n[🎯 방향 전환 감지!] (고신뢰도)")
+                        print(f"\n[ 방향 전환 감지!] (고신뢰도)")
                         print(f"  이전 방향: {self.current_llm_direction}")
                         print(f"  새 방향: {signal}")
                         print(f"  현재 손익: {current_pnl_pct:+.2f}%")
@@ -1620,7 +1620,7 @@ JSON 형식으로 답변:
                 # 손실 중 전환 - 손실 차단 우선
                 elif current_pnl_pct < 0:
                     should_switch = True
-                    print(f"\n[🎯 손실 차단 전환!]")
+                    print(f"\n[ 손실 차단 전환!]")
                     print(f"  이전 방향: {self.current_llm_direction}")
                     print(f"  새 방향: {signal}")
                     print(f"  현재 손익: {current_pnl_pct:+.2f}%")
@@ -1630,7 +1630,7 @@ JSON 형식으로 답변:
                 else:
                     # PNL = 0
                     should_switch = True
-                    print(f"\n[🎯 방향 전환 감지!]")
+                    print(f"\n[ 방향 전환 감지!]")
                     print(f"  → 포지션 전환: {current_position} → {target_symbol}")
             else:
                 print(f"\n[포지션 유지]")
@@ -1717,7 +1717,7 @@ JSON 형식으로 답변:
             sell_result = self.sell_all(current_position)
 
             if not sell_result['success']:
-                print(f"  ❌ 매도 실패: {sell_result['message']}")
+                print(f"   매도 실패: {sell_result['message']}")
                 print("  → 다음 사이클에 재시도")
                 return
 
@@ -1784,11 +1784,11 @@ JSON 형식으로 답변:
             buy_result = self.buy_max(target_symbol)
 
             if not buy_result['success']:
-                print(f"  ❌ 매수 실패: {buy_result['message']}")
+                print(f"   매수 실패: {buy_result['message']}")
                 print("  → 다음 사이클에 재시도")
                 return
 
-            print(f"  ✅ 매수 완료: {buy_result.get('quantity', '?')}주")
+            print(f"   매수 완료: {buy_result.get('quantity', '?')}주")
 
             # LLM 방향 업데이트 (새 포지션 방향으로)
             self.current_llm_direction = signal

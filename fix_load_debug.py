@@ -27,7 +27,7 @@ new_load_trade = '''    def load_trade_history(self):
             try:
                 with open(self.learning_file, 'r', encoding='utf-8') as f:
                     self.all_trades = json.load(f)
-                print(f"[학습 데이터] {len(self.all_trades)}개 거래 로드 ✅")
+                print(f"[학습 데이터] {len(self.all_trades)}개 거래 로드 ")
             except Exception as e:
                 print(f"[ERROR] 거래 히스토리 로드 실패: {type(e).__name__}: {e}")
                 import traceback
@@ -58,7 +58,7 @@ new_load_meta = '''    def load_meta_insights(self):
             try:
                 with open(self.meta_learning_file, 'r', encoding='utf-8') as f:
                     self.meta_insights = json.load(f)
-                print(f"[메타 학습] {len(self.meta_insights)}개 인사이트 로드 ✅")
+                print(f"[메타 학습] {len(self.meta_insights)}개 인사이트 로드 ")
             except Exception as e:
                 print(f"[ERROR] 메타 인사이트 로드 실패: {type(e).__name__}: {e}")
                 import traceback

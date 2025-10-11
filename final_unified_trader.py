@@ -300,7 +300,7 @@ class FinalUnifiedTrader:
                         recent_data += f"\n{i}. NVDL:{record['nvdl_trend']} NVDD:{record['nvdd_trend']} ETH:{record['eth_trend']} → {record['analysis_result']}"
 
                 prompt = f"""
-🤖 멀티 자산 통합 분석 (학습 강화):
+ 멀티 자산 통합 분석 (학습 강화):
 
 현재 시장:
 - NVDL (2x Long): ${market_data['nvdl']['price']:.2f} ({market_data['nvdl']['trend']}) - {nvdl_pos}

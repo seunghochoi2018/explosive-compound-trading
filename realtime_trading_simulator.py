@@ -37,12 +37,12 @@ class RealtimeTradingSimulator:
         print("=== 실시간 트레이딩 시뮬레이터 ===")
         print("🔴 과거 데이터 학습 없음")
         print("🟢 실시간 데이터로만 학습")
-        print("💰 실제 매매 시뮬레이션")
-        print("🧠 결과 기반 실시간 학습")
+        print(" 실제 매매 시뮬레이션")
+        print(" 결과 기반 실시간 학습")
         print()
         print("*** 데이터 소스 확인 ***")
-        print("✅ FMP API 사용 (Financial Modeling Prep)")
-        print("❌ yfinance 사용 금지 (신뢰성 문제)")
+        print(" FMP API 사용 (Financial Modeling Prep)")
+        print(" yfinance 사용 금지 (신뢰성 문제)")
         print("📡 실시간 데이터: FMP Real-time API")
         print("🚫 과거 데이터 사용 안함")
         print()
@@ -87,7 +87,7 @@ class RealtimeTradingSimulator:
         # 신호 임계값 (매우 단순화)
         self.confidence_threshold = 0.6  # 60% 이상 신뢰도에서만 매매
 
-        print(f"✅ 초기화 완료 - 시작 자금: ${self.balance:,.0f}")
+        print(f" 초기화 완료 - 시작 자금: ${self.balance:,.0f}")
 
     def get_realtime_price(self, symbol: str) -> float:
         """실시간 가격 조회"""
@@ -99,7 +99,7 @@ class RealtimeTradingSimulator:
                 self.price_history[symbol].append(price)
                 return price
         except Exception as e:
-            print(f"⚠️ {symbol} 실시간 가격 조회 실패: {e}")
+            print(f" {symbol} 실시간 가격 조회 실패: {e}")
 
         # 실패시 임시 가격 (실제로는 마지막 알려진 가격 사용)
         if symbol == 'NVDL':
@@ -171,7 +171,7 @@ class RealtimeTradingSimulator:
                 return "HOLD", "NONE", confidence
 
         except Exception as e:
-            print(f"⚠️ 예측 오류: {e}")
+            print(f" 예측 오류: {e}")
             return "HOLD", "NONE", 0.0
 
     def execute_trade(self, action: str, symbol: str, confidence: float):
@@ -270,7 +270,7 @@ class RealtimeTradingSimulator:
         if len(self.recent_features) < 5:
             return
 
-        print("🔄 실시간 모델 재학습 시작...")
+        print(" 실시간 모델 재학습 시작...")
 
         try:
             X = np.array(list(self.recent_features))
@@ -278,7 +278,7 @@ class RealtimeTradingSimulator:
 
             # 라벨 균형 확인
             if len(np.unique(y)) < 2:
-                print("   ⚠️ 라벨이 한쪽으로 치우침, 재학습 스킵")
+                print("    라벨이 한쪽으로 치우침, 재학습 스킵")
                 return
 
             # 데이터 정규화
@@ -291,15 +291,15 @@ class RealtimeTradingSimulator:
             self.model.fit(X_scaled, y)
             self.is_model_trained = True
 
-            print(f"   ✅ 재학습 완료 - 샘플: {len(X)}개")
+            print(f"    재학습 완료 - 샘플: {len(X)}개")
 
         except Exception as e:
-            print(f"   ❌ 재학습 실패: {e}")
+            print(f"    재학습 실패: {e}")
 
     def display_status(self):
         """현재 상태 표시"""
         print(f"\n{'='*50}")
-        print(f"📊 실시간 트레이딩 상태")
+        print(f" 실시간 트레이딩 상태")
         print(f"{'='*50}")
         print(f"잔고: ${self.balance:,.0f}")
         print(f"포지션: {self.position or 'None'}")
@@ -317,15 +317,15 @@ class RealtimeTradingSimulator:
         print(f"승률: {self.win_rate:.1f}%")
         print(f"총 수익: {self.total_profit:+.2f}%")
         print(f"학습 샘플: {len(self.recent_features)}개")
-        print(f"모델 훈련: {'✅' if self.is_model_trained else '❌'}")
+        print(f"모델 훈련: {'' if self.is_model_trained else ''}")
         print(f"{'='*50}")
 
 def main():
     """메인 실행"""
     print("*** 실시간 트레이딩 시뮬레이터 ***")
-    print("📈 FMP API 실시간 데이터 사용")
+    print(" FMP API 실시간 데이터 사용")
     print("🚫 과거 데이터 학습 없음")
-    print("💡 실제 매매로만 학습")
+    print(" 실제 매매로만 학습")
     print()
 
     FMP_API_KEY = "5j69XWnoSpoBvEY0gKSUTB0zXcr0z2KI"
@@ -339,7 +339,7 @@ def main():
     # 시뮬레이터 생성
     simulator = RealtimeTradingSimulator(FMP_API_KEY)
 
-    print("🚀 실시간 시뮬레이션 시작!")
+    print(" 실시간 시뮬레이션 시작!")
     print("Ctrl+C로 종료")
     print()
 
@@ -377,9 +377,9 @@ def main():
         simulator.display_status()
         print("\n최종 결과:")
         if simulator.total_trades > 0:
-            print(f"✅ 총 수익률: {simulator.total_profit:+.2f}%")
-            print(f"✅ 승률: {simulator.win_rate:.1f}%")
-            print(f"✅ 최종 잔고: ${simulator.balance:,.0f}")
+            print(f" 총 수익률: {simulator.total_profit:+.2f}%")
+            print(f" 승률: {simulator.win_rate:.1f}%")
+            print(f" 최종 잔고: ${simulator.balance:,.0f}")
         else:
             print("거래가 없었습니다.")
 

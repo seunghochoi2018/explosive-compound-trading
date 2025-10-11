@@ -119,13 +119,13 @@ if response.status_code == 200:
                     if sell_resp.status_code == 200:
                         result = sell_resp.json()
                         if result.get('rt_cd') == '0':
-                            print(f"\n✅ 청산 완료!")
+                            print(f"\n 청산 완료!")
                             print(f"주문번호: {result.get('output', {}).get('ODNO', 'N/A')}")
                         else:
-                            print(f"\n❌ 실패: {result.get('msg1')}")
+                            print(f"\n 실패: {result.get('msg1')}")
                             print(f"오류 코드: {result.get('msg_cd')}")
                     else:
-                        print(f"\n❌ HTTP 오류: {sell_resp.status_code}")
+                        print(f"\n HTTP 오류: {sell_resp.status_code}")
                 else:
                     print(f"\n보유 없음")
                 break

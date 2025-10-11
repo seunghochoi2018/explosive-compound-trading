@@ -17,7 +17,7 @@ from typing import Dict, List, Tuple
 import statistics
 import requests
 
-# ⭐ Ollama LLM 설정 (11436 포트 - 자기개선 엔진 전용)
+#  Ollama LLM 설정 (11436 포트 - 자기개선 엔진 전용)
 OLLAMA_HOST = "http://127.0.0.1:11436"
 OLLAMA_MODEL = "qwen2.5:14b"
 OLLAMA_TIMEOUT = 60  # LLM 응답 타임아웃 60초
@@ -129,7 +129,7 @@ class SelfImprovementEngine:
         }
 
     def ask_llm(self, prompt: str) -> str:
-        """⭐ LLM에게 분석 요청 (11436 포트)"""
+        """ LLM에게 분석 요청 (11436 포트)"""
         try:
             response = requests.post(
                 f"{OLLAMA_HOST}/api/generate",
@@ -155,7 +155,7 @@ class SelfImprovementEngine:
             return ""
 
     def llm_analyze_trades(self, trades: List[Dict], performance: Dict) -> List[Dict]:
-        """⭐ LLM이 거래 패턴을 분석하고 개선안 제시"""
+        """ LLM이 거래 패턴을 분석하고 개선안 제시"""
         if len(trades) < 5:
             return []  # 데이터 부족
 
@@ -445,10 +445,10 @@ class SelfImprovementEngine:
             return
 
         # 리포트 생성
-        report = f"🤖 <b>{self.bot_name} 봇 자기 개선 리포트</b>\n\n"
+        report = f" <b>{self.bot_name} 봇 자기 개선 리포트</b>\n\n"
 
         # 성과
-        report += f"📊 <b>성과 (최근 24시간)</b>\n"
+        report += f" <b>성과 (최근 24시간)</b>\n"
         report += f"  거래: {performance['total_trades']}건 "
         report += f"(승: {performance['wins']}, 패: {performance['losses']})\n"
         report += f"  승률: {performance['win_rate']}%\n"
@@ -460,7 +460,7 @@ class SelfImprovementEngine:
 
         # 문제점
         if issues:
-            report += f"\n🔍 <b>발견된 문제점</b>\n"
+            report += f"\n <b>발견된 문제점</b>\n"
             for issue in issues[:3]:
                 report += f"  • {issue['description']}\n"
 
@@ -468,11 +468,11 @@ class SelfImprovementEngine:
         if applied:
             report += f"\n🔧 <b>자동 개선 적용</b>\n"
             for imp in applied:
-                report += f"  ✅ [{imp['grade']}급] {imp['description']}\n"
+                report += f"   [{imp['grade']}급] {imp['description']}\n"
 
         # 메타 학습
         if meta.get('total_improvements', 0) > 0:
-            report += f"\n🧠 <b>학습 현황</b>\n"
+            report += f"\n <b>학습 현황</b>\n"
             report += f"  총 개선 횟수: {meta['total_improvements']}회\n"
             if meta.get('most_effective'):
                 report += f"  가장 효과적: {meta['most_effective']}\n"
@@ -513,7 +513,7 @@ class SelfImprovementEngine:
         issues = self.find_issues(trades)
         print(f"[통계] 문제점 {len(issues)}개 발견")
 
-        # 3. ⭐ LLM 추가 분석 (더 똑똑한 패턴 인식)
+        # 3.  LLM 추가 분석 (더 똑똑한 패턴 인식)
         llm_issues = self.llm_analyze_trades(trades, performance)
         issues.extend(llm_issues)  # 통계 + LLM 결과 합치기
         print(f"[LLM] 추가 인사이트 {len(llm_issues)}개 발견")

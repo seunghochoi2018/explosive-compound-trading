@@ -129,8 +129,8 @@ class NVDLNVDQAdaptiveAutoTrader:
             auto_trading: 실제 자동매매 실행 여부
         """
         print("=" * 70)
-        print("🤖 NVDL/NVDQ 24시간 적응형 자동매매 시스템")
-        print("📊 실시간 학습 + 거래 주기 최적화")
+        print(" NVDL/NVDQ 24시간 적응형 자동매매 시스템")
+        print(" 실시간 학습 + 거래 주기 최적화")
         print("🌙 미국 장시간 24시간 자동 거래")
         print("=" * 70)
 
@@ -182,7 +182,7 @@ class NVDLNVDQAdaptiveAutoTrader:
         self.state_file = "adaptive_auto_trader_state.json"
         self.performance_file = "adaptive_performance_log.json"
 
-        print("✅ 적응형 자동매매 시스템 초기화 완료")
+        print(" 적응형 자동매매 시스템 초기화 완료")
 
     def load_state(self):
         """봇 상태 로드"""
@@ -371,12 +371,12 @@ class NVDLNVDQAdaptiveAutoTrader:
 
     def execute_trade(self, action: str, symbol: str, confidence: float):
         """거래 실행"""
-        print(f"\n🔄 거래 실행: {action} {symbol} (신뢰도: {confidence:.2f})")
+        print(f"\n 거래 실행: {action} {symbol} (신뢰도: {confidence:.2f})")
 
         # 현재가 조회
         current_price = self.get_current_price(symbol)
         if not current_price:
-            print(f"❌ {symbol} 현재가 조회 실패")
+            print(f" {symbol} 현재가 조회 실패")
             return
 
         if action == "ENTER":
@@ -386,7 +386,7 @@ class NVDLNVDQAdaptiveAutoTrader:
             self.trading_state.entry_price = current_price
             self.trading_state.current_pnl = 0.0
 
-            print(f"📈 {symbol} 포지션 진입: ${current_price:.2f}")
+            print(f" {symbol} 포지션 진입: ${current_price:.2f}")
 
             # 텔레그램 알림
             self.telegram.notify_position_change(
@@ -398,7 +398,7 @@ class NVDLNVDQAdaptiveAutoTrader:
 
             if self.auto_trading:
                 # 실제 주문 실행 (API 연동 필요)
-                print("🤖 실제 주문 실행 중...")
+                print(" 실제 주문 실행 중...")
                 # 여기에 실제 주문 로직 구현
 
         elif action == "EXIT":
@@ -421,7 +421,7 @@ class NVDLNVDQAdaptiveAutoTrader:
                 # 거래 기록
                 self.record_trade_result(symbol, leveraged_pnl, hold_time)
 
-                print(f"📊 {symbol} 포지션 청산: {leveraged_pnl:+.2f}% ({hold_time:.1f}시간)")
+                print(f" {symbol} 포지션 청산: {leveraged_pnl:+.2f}% ({hold_time:.1f}시간)")
 
                 # 텔레그램 알림
                 self.telegram.notify_trade_result(
@@ -442,7 +442,7 @@ class NVDLNVDQAdaptiveAutoTrader:
 
                 if self.auto_trading:
                     # 실제 청산 주문 실행
-                    print("🤖 실제 청산 주문 실행 중...")
+                    print(" 실제 청산 주문 실행 중...")
 
     def record_trade_result(self, symbol: str, pnl: float, hold_time: float):
         """거래 결과 기록 및 학습"""
@@ -508,7 +508,7 @@ class NVDLNVDQAdaptiveAutoTrader:
                 new_freq = self.frequency_manager.optimize_frequency()
 
                 if old_freq != new_freq:
-                    print(f"📊 거래 주기 최적화: {old_freq} → {new_freq}")
+                    print(f" 거래 주기 최적화: {old_freq} → {new_freq}")
 
                     # 새로운 체크 간격 적용
                     new_interval = self.frequency_manager.get_frequency_minutes(new_freq) * 60
@@ -516,7 +516,7 @@ class NVDLNVDQAdaptiveAutoTrader:
 
                     # 텔레그램 알림
                     self.telegram.send_message(
-                        f"📊 **거래 주기 최적화**\n\n"
+                        f" **거래 주기 최적화**\n\n"
                         f"이전: {old_freq}\n"
                         f"신규: {new_freq}\n"
                         f"새로운 체크 간격: {new_interval//60}분"
@@ -572,7 +572,7 @@ class NVDLNVDQAdaptiveAutoTrader:
 
     def run(self):
         """메인 실행 루프"""
-        print("\n🚀 24시간 적응형 자동매매 시작")
+        print("\n 24시간 적응형 자동매매 시작")
 
         # 상태 로드
         self.load_state()
@@ -582,13 +582,13 @@ class NVDLNVDQAdaptiveAutoTrader:
 
         # 시작 알림
         start_message = f"""
-🤖 **24시간 자동매매 시작**
+ **24시간 자동매매 시작**
 
-⚡ **모드**: {'실제 거래' if self.auto_trading else '시뮬레이션'}
-📊 **현재 주기**: {self.frequency_manager.current_optimal_frequency}
-🎯 **현재 포지션**: {self.trading_state.position or '없음'}
+ **모드**: {'실제 거래' if self.auto_trading else '시뮬레이션'}
+ **현재 주기**: {self.frequency_manager.current_optimal_frequency}
+ **현재 포지션**: {self.trading_state.position or '없음'}
 
-📈 **성과**:
+ **성과**:
 - 총 거래: {self.total_trades}회
 - 승률: {self.get_win_rate():.1f}%
 - 총 수익: {self.total_profit:+.2f}%
@@ -627,7 +627,7 @@ class NVDLNVDQAdaptiveAutoTrader:
         except KeyboardInterrupt:
             print("\n⏹️ 사용자에 의한 중단")
         except Exception as e:
-            print(f"\n❌ 시스템 오류: {e}")
+            print(f"\n 시스템 오류: {e}")
             self.telegram.notify_error("자동매매 시스템 오류", str(e))
         finally:
             self.running = False
@@ -652,19 +652,19 @@ class NVDLNVDQAdaptiveAutoTrader:
         current_pnl = self.trading_state.current_pnl if self.trading_state.position else 0.0
 
         status_message = f"""
-📊 **자동매매 상태 업데이트**
+ **자동매매 상태 업데이트**
 
 ⏱️ **가동 시간**: {uptime_str}
-📊 **현재 주기**: {self.frequency_manager.current_optimal_frequency}
-🎯 **포지션**: {self.trading_state.position or '없음'}
-💰 **현재 PnL**: {current_pnl:+.2f}%
+ **현재 주기**: {self.frequency_manager.current_optimal_frequency}
+ **포지션**: {self.trading_state.position or '없음'}
+ **현재 PnL**: {current_pnl:+.2f}%
 
-📈 **누적 성과**:
+ **누적 성과**:
 - 총 거래: {self.total_trades}회
 - 승률: {self.get_win_rate():.1f}%
 - 총 수익: {self.total_profit:+.2f}%
 
-⚡ **시스템 상태**: 정상 운영 중
+ **시스템 상태**: 정상 운영 중
         """.strip()
 
         self.telegram.send_message(status_message)
@@ -687,17 +687,17 @@ def main():
     trader = NVDLNVDQAdaptiveAutoTrader(args.api_key, auto_trading=auto_trading)
 
     # 데이터 및 모델 준비
-    print("📊 데이터 수집 및 모델 학습 중...")
+    print(" 데이터 수집 및 모델 학습 중...")
     if not trader.data_collector.load_data():
         trader.data_collector.collect_all_data()
         trader.data_collector.calculate_all_features()
         trader.data_collector.save_data()
 
     if not trader.trading_model.mass_learning():
-        print("❌ 모델 학습 실패")
+        print(" 모델 학습 실패")
         return
 
-    print("✅ 준비 완료!")
+    print(" 준비 완료!")
 
     # 자동매매 시작
     trader.run()

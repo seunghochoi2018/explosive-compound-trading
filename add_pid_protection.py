@@ -67,14 +67,14 @@ def remove_pid_file():
     # 중복 실행 체크
     running_pid = check_already_running()
     if running_pid:
-        colored_print(f"⚠️  통합매니저가 이미 실행 중입니다 (PID: {running_pid})", "red")
+        colored_print(f"  통합매니저가 이미 실행 중입니다 (PID: {running_pid})", "red")
         colored_print("기존 프로세스를 종료하거나 중복 실행을 원하면 PID 파일을 삭제하세요:", "yellow")
         colored_print(f"   {PID_FILE}", "yellow")
         return
 
     # PID 파일 생성
     write_pid_file()
-    colored_print(f"✅ PID 파일 생성 완료 (PID: {os.getpid()})", "green")
+    colored_print(f" PID 파일 생성 완료 (PID: {os.getpid()})", "green")
 
     colored_print("=" * 70, "cyan")'''
 

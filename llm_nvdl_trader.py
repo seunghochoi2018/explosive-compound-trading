@@ -3,7 +3,7 @@
 """
 LLM 기반 NVDL/NVDQ 신호 알림 시스템 v1.0
 
-⚠️ 주의: 이 봇은 자동매매를 하지 않습니다! ⚠️
+ 주의: 이 봇은 자동매매를 하지 않습니다! 
 
 사용자 요청: "자동매매 기능을 추가하는게 아니라 자동매매기능이 없으니까 fmp를 쓰라는 얘기야"
 사용자 요청: "그리고 텔레그램으로 알림만 주라고"
@@ -49,7 +49,7 @@ class LLMNVDLTrader:
         print("=" * 70)
 
         # LLM 분석기 초기화
-        # ⚠️⚠️⚠️ 중요: 사용자에게 물어보지 않고 멋대로 모델 변경 절대 금지! ⚠️⚠️⚠️
+        #  중요: 사용자에게 물어보지 않고 멋대로 모델 변경 절대 금지! 
         # 주석: 사용자 요청 "14b로 교체" - 32b는 CPU에서 HTTP 500 에러로 작동 불가
         # qwen2.5:14b - CPU 환경에서 실용적인 최고 모델
         # 정확도: 88-92% (우수), 메모리: 약 9GB, 응답속도: 3-4분 (CPU)
@@ -67,10 +67,10 @@ class LLMNVDLTrader:
             print("[INIT] 텔레그램 알림 활성화")
             # 봇 시작 알림 전송
             self.notifier.send_message(
-                "🚀 NVDL/NVDQ 신호 알림 봇 시작\n\n"
-                "⚠️ 자동매매 안 함 - 알림만 전송\n"
-                "📊 FMP API 가격 모니터링 중\n"
-                "🤖 LLM 분석 대기 중..."
+                " NVDL/NVDQ 신호 알림 봇 시작\n\n"
+                " 자동매매 안 함 - 알림만 전송\n"
+                " FMP API 가격 모니터링 중\n"
+                " LLM 분석 대기 중..."
             )
         except Exception as e:
             self.notifier = None
@@ -220,7 +220,7 @@ class LLMNVDLTrader:
                 self.current_signal = symbol
                 self.signal_price = price
                 self.signal_time = datetime.now()
-                # 주석: 진입 시 포트폴리오 가치 저장 (자산 기반 학습용 ⭐)
+                # 주석: 진입 시 포트폴리오 가치 저장 (자산 기반 학습용 )
                 self.entry_portfolio_value = self.portfolio_value
 
                 if self.notifier:
@@ -236,7 +236,7 @@ class LLMNVDLTrader:
                 if self.current_signal:
                     pnl = self.get_position_pnl(price)
 
-                    # 주석: 포트폴리오 가치 업데이트 (자산 기반 학습용 ⭐)
+                    # 주석: 포트폴리오 가치 업데이트 (자산 기반 학습용 )
                     self.portfolio_value = self.portfolio_value * (1 + pnl / 100)
 
                     self.stats['total_pnl'] += pnl
@@ -276,7 +276,7 @@ class LLMNVDLTrader:
                     'nvdl_trend': 'up' if len(self.nvdl_history) >= 2 and self.nvdl_history[-1] > self.nvdl_history[-2] else 'down',
                     'nvdq_trend': 'up' if len(self.nvdq_history) >= 2 and self.nvdq_history[-1] > self.nvdq_history[-2] else 'down',
                     'holding_time': int(holding_minutes) if self.signal_time else 0,
-                    'portfolio_before': self.entry_portfolio_value or self.portfolio_value  # 진입 시 저장한 포트폴리오 가치 (자산 기반 학습용 ⭐)
+                    'portfolio_before': self.entry_portfolio_value or self.portfolio_value  # 진입 시 저장한 포트폴리오 가치 (자산 기반 학습용 )
                 }
 
                 self.record_trade(
@@ -306,7 +306,7 @@ class LLMNVDLTrader:
         주석: 사용자 요청 "주기적으로 저장하고 시작할때 불러오기 기능 추가"
         주석: 사용자 요청 "통합안해도 돼? 메인봇하고?" - ETH봇과 동일한 보호 시스템 적용
 
-        ✅ 학습 데이터 보호 메커니즘:
+         학습 데이터 보호 메커니즘:
 
         1. **시작 시 자동 로드**
            - nvdl_trade_history.json 파일에서 과거 거래 로드
@@ -323,7 +323,7 @@ class LLMNVDLTrader:
            - 로드 실패 시에도 프로그램 계속 실행
            - 학습 데이터는 절대 삭제 안 됨
 
-        ⚠️ 중요: nvdl_trade_history.json 파일 절대 삭제 금지!
+         중요: nvdl_trade_history.json 파일 절대 삭제 금지!
         - 이 파일이 LLM의 "두뇌" (NVDL/NVDQ 거래 패턴)
         - 백업 권장: 정기적으로 복사 보관
         ====================================================================
@@ -348,12 +348,12 @@ class LLMNVDLTrader:
 
         주석: 사용자 요청 "주기적으로 저장하고"
 
-        ✅ 저장 시점:
+         저장 시점:
         1. 매 거래 완료 후 즉시
         2. 백그라운드 로더가 새 데이터 추가 시
         3. 프로그램 종료 시 (자동)
 
-        ⚠️ 이 함수가 호출 안 되면 학습 데이터 손실!
+         이 함수가 호출 안 되면 학습 데이터 손실!
         """
         try:
             # 임시 파일에 먼저 저장 (파일 손상 방지)
@@ -406,7 +406,7 @@ class LLMNVDLTrader:
         """
         거래 기록 저장 (Few-shot Learning용)
 
-        주석: 포트폴리오 가치 기반 학습 ⭐ 중요!
+        주석: 포트폴리오 가치 기반 학습  중요!
         - 사용자: "잔고기준으로 체크하면안돼? 이더잔고를 계속체크하니까 잔고가 계속 늘어나게끔 학습하면되잖아"
         - 사용자: "그럼 자연스레 수수료도 인식할꺼고"
         - NVDL은 모의거래이므로 포트폴리오 가치 변화를 기록하여 LLM이 직접 학습

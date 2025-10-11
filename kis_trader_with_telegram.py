@@ -85,32 +85,32 @@ class TelegramNotifier:
         if positions:
             pos = positions[0]
             message = f"""
-🚀 **KIS 자동매매 시작**
+ **KIS 자동매매 시작**
 
 ⏰ **시작 시간**: {timestamp}
 
 💼 **현재 포지션**:
-  📊 종목: {pos['symbol']}
-  💵 수량: {pos['qty']:.0f}주
-  📈 평균가: ${pos['avg_price']:.2f}
+   종목: {pos['symbol']}
+   수량: {pos['qty']:.0f}주
+   평균가: ${pos['avg_price']:.2f}
   💹 현재가: ${pos['current_price']:.2f}
-  📊 손익: {pos['pnl_pct']:+.2f}%
+   손익: {pos['pnl_pct']:+.2f}%
 
-💰 **USD 현금**: ${usd_cash:.2f}
+ **USD 현금**: ${usd_cash:.2f}
 
-🤖 **시스템**: 정상 가동 중
+ **시스템**: 정상 가동 중
             """.strip()
         else:
             message = f"""
-🚀 **KIS 자동매매 시작**
+ **KIS 자동매매 시작**
 
 ⏰ **시작 시간**: {timestamp}
 
 💼 **현재 포지션**: 없음
 
-💰 **USD 현금**: ${usd_cash:.2f}
+ **USD 현금**: ${usd_cash:.2f}
 
-🤖 **시스템**: 정상 가동 중
+ **시스템**: 정상 가동 중
             """.strip()
 
         self.send_message(message)
@@ -139,12 +139,12 @@ class TelegramNotifier:
 
 ⏰ **시간**: {timestamp}
 
-📊 **종목**: {symbol}
-💵 **수량**: {quantity}주
+ **종목**: {symbol}
+ **수량**: {quantity}주
 
-💡 **사유**: {reason}
+ **사유**: {reason}
 
-🎯 **전략**: KIS 추세돌파
+ **전략**: KIS 추세돌파
             """.strip()
 
         elif action == 'SELL':
@@ -157,14 +157,14 @@ class TelegramNotifier:
 
 ⏰ **시간**: {timestamp}
 
-📊 **종목**: {symbol}
-💵 **수량**: {quantity}주
+ **종목**: {symbol}
+ **수량**: {quantity}주
 
-💰 **손익**: {result_emoji} {old_pnl_pct:+.2f}%
+ **손익**: {result_emoji} {old_pnl_pct:+.2f}%
 
-💡 **사유**: {reason}
+ **사유**: {reason}
 
-🎯 **전략**: KIS 추세돌파
+ **전략**: KIS 추세돌파
             """.strip()
 
         self.send_message(message)
@@ -185,21 +185,21 @@ class TelegramNotifier:
         win_rate = (wins / total_trades * 100) if total_trades > 0 else 0
 
         message = f"""
-📊 **거래 요약**
+ **거래 요약**
 
 ⏰ **시간**: {timestamp}
 
-📈 **거래 현황**:
+ **거래 현황**:
   - 총 거래: {total_trades}회
   - 수익: {wins}회
   - 손실: {losses}회
   - 승률: {win_rate:.1f}%
 
-💰 **누적 손익**: {total_pnl:+.2f}%
+ **누적 손익**: {total_pnl:+.2f}%
 
 💼 **현재 포지션**: {current_position or '없음'}
 
-🤖 **시스템**: 정상 운영 중
+ **시스템**: 정상 운영 중
         """.strip()
 
         self.send_message(message, disable_notification=True)
@@ -215,7 +215,7 @@ class TelegramNotifier:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         message = f"""
-⚠️ **시스템 오류 알림**
+ **시스템 오류 알림**
 
 ⏰ **시간**: {timestamp}
 
@@ -231,7 +231,7 @@ class TelegramNotifier:
     def test_connection(self) -> bool:
         """텔레그램 연결 테스트"""
         try:
-            test_message = f"🧪 **연결 테스트**\n\n⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n🤖 KIS 트레이더 텔레그램 봇 정상 작동"
+            test_message = f"🧪 **연결 테스트**\n\n⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n KIS 트레이더 텔레그램 봇 정상 작동"
             return self.send_message(test_message)
         except Exception as e:
             print(f"[텔레그램] 연결 테스트 실패: {e}")

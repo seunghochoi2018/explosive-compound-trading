@@ -89,7 +89,7 @@ if response.status_code == 200:
                 print(f"  손절선: -3.5%")
 
                 if leveraged_pnl <= -3.5:
-                    print(f"\n⚠️  손절 조건 충족! 즉시 청산 필요!")
+                    print(f"\n  손절 조건 충족! 즉시 청산 필요!")
                     print(f"매도 주문 전송 중...")
 
                     # 실전투자 매도
@@ -119,7 +119,7 @@ if response.status_code == 200:
                     if sell_resp.status_code == 200:
                         result = sell_resp.json()
                         if result.get('rt_cd') == '0':
-                            print(f"\n✅ 청산 완료!")
+                            print(f"\n 청산 완료!")
 
                             # 거래 기록 업데이트
                             trades.append({
@@ -140,9 +140,9 @@ if response.status_code == 200:
 
                             print("거래 기록 업데이트 완료")
                         else:
-                            print(f"❌ 실패: {result.get('msg1')}")
+                            print(f" 실패: {result.get('msg1')}")
                 else:
-                    print(f"\n✅ 손절선 미도달, 유지")
+                    print(f"\n 손절선 미도달, 유지")
 
                 break
         else:

@@ -86,22 +86,22 @@ class TelegramNotifier:
         if current_position:
             if (signal == 'BULL' and current_position == 'SOXS') or \
                (signal == 'BEAR' and current_position == 'SOXL'):
-                position_change = f"\n\n⚠️ **포지션 전환 권장**\n현재: {current_position} (손익 {current_pnl_pct:+.2f}%)\n추천: {target}"
+                position_change = f"\n\n **포지션 전환 권장**\n현재: {current_position} (손익 {current_pnl_pct:+.2f}%)\n추천: {target}"
 
         message = f"""
 {emoji} **LLM 분석 신호**
 
 ⏰ **시간**: {timestamp}
 
-🤖 **14b×2 LLM 판단**:
+ **14b×2 LLM 판단**:
   - 신호: {action}
   - 종목: {target}
   - 신뢰도: {confidence:.0f}%
 
-💡 **분석 근거**:
+ **분석 근거**:
 {reasoning}{position_change}
 
-📊 **현재 포지션**: {current_position or '없음'}
+ **현재 포지션**: {current_position or '없음'}
         """.strip()
 
         self.send_message(message)
@@ -111,17 +111,17 @@ class TelegramNotifier:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         message = f"""
-🔄 **포지션 변경 감지!**
+ **포지션 변경 감지!**
 
 ⏰ **시간**: {timestamp}
 
-📊 **변경 내용**:
+ **변경 내용**:
   - 이전: {old_pos or '없음'}
   - 현재: {new_pos or '없음'}
 
-💰 **USD 현금**: ${usd_cash:.2f}
+ **USD 현금**: ${usd_cash:.2f}
 
-✅ 거래가 실행되었습니다.
+ 거래가 실행되었습니다.
         """.strip()
 
         self.send_message(message)
@@ -131,17 +131,17 @@ class TelegramNotifier:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         message = f"""
-🚀 **KIS LLM 신호 알림 시작**
+ **KIS LLM 신호 알림 시작**
 
 ⏰ **시작 시간**: {timestamp}
 
-🤖 **분석 모델**: 14b × 2 병렬 LLM
-📊 **전략**: 추세돌파 감지
+ **분석 모델**: 14b × 2 병렬 LLM
+ **전략**: 추세돌파 감지
 
 💼 **현재 포지션**: {initial_position or '없음'}
-💰 **USD 현금**: ${usd_cash:.2f}
+ **USD 현금**: ${usd_cash:.2f}
 
-🔔 매매 신호 알림을 시작합니다.
+ 매매 신호 알림을 시작합니다.
         """.strip()
 
         self.send_message(message)
@@ -655,9 +655,9 @@ def start_ollama():
             stderr=subprocess.DEVNULL,
             creationflags=subprocess.CREATE_NO_WINDOW
         )
-        print("  ✅ Ollama 시작 완료")
+        print("   Ollama 시작 완료")
     except Exception as e:
-        print(f"  ❌ Ollama 시작 실패: {e}")
+        print(f"   Ollama 시작 실패: {e}")
         print("  수동으로 start_ollama_11435.bat을 실행하세요")
         return False
 
@@ -669,7 +669,7 @@ def start_ollama():
             if response.status_code == 200:
                 result = response.json()
                 models = result.get('models', [])
-                print(f"  ✅ Ollama 서버 준비 완료")
+                print(f"   Ollama 서버 준비 완료")
                 print(f"  모델 개수: {len(models)}")
                 return True
         except Exception as e:
@@ -677,7 +677,7 @@ def start_ollama():
         print(f"  대기 중... ({i+1}/10)")
         time.sleep(2)
 
-    print("  ⚠️ Ollama 서버 응답 없음 (계속 진행)")
+    print("   Ollama 서버 응답 없음 (계속 진행)")
     return True
 
 

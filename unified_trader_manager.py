@@ -71,13 +71,13 @@ telegram = TelegramNotifier()
 
 # ===== 설정 =====
 RESTART_INTERVAL = 4 * 60 * 60  # 4시간 (초 단위)
-GUARDIAN_CHECK_INTERVAL = 10  # ⭐ 실시간 Ollama 체크: 10초마다
+GUARDIAN_CHECK_INTERVAL = 10  #  실시간 Ollama 체크: 10초마다
 
 # Ollama 설정
 OLLAMA_EXE = r"C:\Users\user\AppData\Local\Programs\Ollama\ollama.exe"
 OLLAMA_PORT_ETH = 11434  # 코드3 (ETH) 전용
 OLLAMA_PORT_KIS = 11435  # 코드4 (KIS) 전용
-OLLAMA_PORT_IMPROVEMENT = 11436  # ⭐ 자기개선 엔진 전용
+OLLAMA_PORT_IMPROVEMENT = 11436  #  자기개선 엔진 전용
 ALLOWED_PORTS = [OLLAMA_PORT_ETH, OLLAMA_PORT_KIS, OLLAMA_PORT_IMPROVEMENT]  # 허가된 포트
 
 # 트레이더 설정
@@ -90,7 +90,7 @@ KIS_TRADER_SCRIPT = r"C:\Users\user\Documents\코드4\kis_llm_trader_v2_explosiv
 KIS_PYTHON = r"C:\Users\user\AppData\Local\Programs\Python\Python311\python.exe"
 
 # 모델 전략 (메모리 최적화)
-# 현재: ETH 16b×1 + KIS 16b×1 + Self-Improvement 16b×1 = 24.9GB (안정적 ⭐)
+# 현재: ETH 16b×1 + KIS 16b×1 + Self-Improvement 16b×1 = 24.9GB (안정적 )
 # 향후: 메모리 여유 시 듀얼 앙상블 재적용 가능
 
 # ===== 리소스 모니터링 설정 =====
@@ -103,20 +103,20 @@ QUEUE_DETECT_THRESHOLD = 60  # 큐잉 감지: 60초 이상 CPU 0%
 response_times_eth = deque(maxlen=10)
 response_times_kis = deque(maxlen=10)
 
-# ⭐ 거래/수익 모니터링 설정
+#  거래/수익 모니터링 설정
 TRADING_CHECK_INTERVAL = 15 * 60  # 15분마다 거래 현황 체크
 ETH_TRADE_HISTORY = r"C:\Users\user\Documents\코드3\eth_trade_history.json"
 KIS_TRADE_HISTORY = r"C:\Users\user\Documents\코드4\kis_trade_history.json"
 
-# ⭐ 자기개선 엔진 설정 (통합) - 16b 단독 (메모리 최적화)
+#  자기개선 엔진 설정 (통합) - 16b 단독 (메모리 최적화)
 SELF_IMPROVEMENT_INTERVAL = 15 * 60  # 15분마다 자기 분석
 IMPROVEMENT_REPORT_INTERVAL = 6 * 60 * 60  # 6시간마다 텔레그램 리포트
 TELEGRAM_ALERT_INTERVAL = 6 * 60 * 60  # 6시간마다만 텔레그램 알림
 OLLAMA_IMPROVEMENT_HOST = f"http://127.0.0.1:{OLLAMA_PORT_IMPROVEMENT}"
 OLLAMA_IMPROVEMENT_MODEL = "deepseek-coder-v2:16b"  # 단독 모델
-OLLAMA_IMPROVEMENT_TIMEOUT = 300  # ⭐ 5분으로 증가 (Triple Validation용)
+OLLAMA_IMPROVEMENT_TIMEOUT = 300  #  5분으로 증가 (Triple Validation용)
 
-# ⭐ 32b LLM 감시 시스템 (전체 시스템 모니터링)
+#  32b LLM 감시 시스템 (전체 시스템 모니터링)
 OVERSIGHT_LLM_MODEL = "qwen2.5:32b"  # 강력한 32b 모델
 OVERSIGHT_CHECK_INTERVAL = 30 * 60  # 30분마다 전체 시스템 분석
 oversight_llm = None  # 32b LLM 인스턴스 (초기화는 main에서)
@@ -127,20 +127,20 @@ improvement_history_kis = []
 ETH_STRATEGY_FILE = r"C:\Users\user\Documents\코드3\eth_current_strategy.json"
 KIS_STRATEGY_FILE = r"C:\Users\user\Documents\코드4\kis_current_strategy.json"
 
-# ⭐ Option 4: Self-Improving Feedback Loop - 오류 패턴 학습
+#  Option 4: Self-Improving Feedback Loop - 오류 패턴 학습
 error_patterns_eth = []  # ETH 봇의 실패 패턴 (최근 100건)
 error_patterns_kis = []  # KIS 봇의 실패 패턴 (최근 100건)
 ERROR_PATTERN_FILE_ETH = r"C:\Users\user\Documents\코드3\eth_error_patterns.json"
 ERROR_PATTERN_FILE_KIS = r"C:\Users\user\Documents\코드4\kis_error_patterns.json"
 
-# ⭐ 백그라운드 학습 설정
+#  백그라운드 학습 설정
 FMP_API_KEY = "5j69XWnoSpoBvEY0gKSUTB0zXcr0z2KI"  # FMP API 키
 BACKGROUND_LEARNING_INTERVAL = 10 * 60  # 10분마다 백그라운드 학습
 HISTORICAL_DATA_DAYS = 90  # 과거 90일간 데이터 학습 (충분한 데이터 확보)
 learning_session_count = 0  # 학습 세션 카운터
 background_learning_thread = None  # 백그라운드 학습 스레드
 
-# ⭐ 자동 검증 및 적용 설정
+#  자동 검증 및 적용 설정
 VALIDATION_THRESHOLD = 3  # 동일 전략이 3번 이상 발견되면 검증 완료
 CONFIDENCE_THRESHOLD = 0.7  # Triple Validation 합의율 70% 이상
 validated_strategies_eth = {}  # ETH 검증 중인 전략 {strategy_type: count}
@@ -394,7 +394,7 @@ def llm_backtest_on_historical_data(trader_name, symbol, historical_data):
 
 def auto_validate_and_apply_strategy(trader_name, strategies, validation_dict, strategy_file, improvement_history):
     """
-    ⭐ 자동 검증 및 적용 시스템
+     자동 검증 및 적용 시스템
 
     동일한 전략이 여러 번 발견되면 자동으로 검증 완료 → 적용
 
@@ -430,7 +430,7 @@ def auto_validate_and_apply_strategy(trader_name, strategies, validation_dict, s
 
         current_count = validation_dict[strategy_type]['count']
 
-        colored_print(f"[{trader_name}] 🔍 전략 '{strategy_type}' 발견 횟수: {current_count}/{VALIDATION_THRESHOLD}", "cyan")
+        colored_print(f"[{trader_name}]  전략 '{strategy_type}' 발견 횟수: {current_count}/{VALIDATION_THRESHOLD}", "cyan")
 
         # 검증 완료 조건: N번 이상 발견
         if current_count >= VALIDATION_THRESHOLD:
@@ -447,7 +447,7 @@ def auto_validate_and_apply_strategy(trader_name, strategies, validation_dict, s
 
             if result:
                 applied.extend(result)
-                colored_print(f"[{trader_name}] 🎉 전략 '{strategy_type}' 자동 적용 완료!", "green")
+                colored_print(f"[{trader_name}]  전략 '{strategy_type}' 자동 적용 완료!", "green")
 
                 # 검증 완료된 전략은 카운터 리셋 (중복 적용 방지)
                 validation_dict[strategy_type]['count'] = 0
@@ -476,9 +476,9 @@ def background_learning_worker():
                 eth_strategies = llm_backtest_on_historical_data("ETH", "ETHUSD", eth_historical)
 
                 if eth_strategies:
-                    colored_print(f"[ETH] 💡 {len(eth_strategies)}개 새로운 전략 발견!", "cyan")
+                    colored_print(f"[ETH]  {len(eth_strategies)}개 새로운 전략 발견!", "cyan")
 
-                    # ⭐ 자동 검증 및 적용 시스템 실행
+                    #  자동 검증 및 적용 시스템 실행
                     global validated_strategies_eth
                     applied = auto_validate_and_apply_strategy(
                         "ETH",
@@ -489,7 +489,7 @@ def background_learning_worker():
                     )
 
                     if applied:
-                        colored_print(f"[ETH] 🎉 {len(applied)}개 전략 자동 적용 완료!", "green")
+                        colored_print(f"[ETH]  {len(applied)}개 전략 자동 적용 완료!", "green")
 
                     # 인사이트 기록 (히스토리 보관용)
                     import json
@@ -523,9 +523,9 @@ def background_learning_worker():
                 soxl_strategies = llm_backtest_on_historical_data("KIS", "SOXL", soxl_historical)
 
                 if soxl_strategies:
-                    colored_print(f"[KIS] 💡 {len(soxl_strategies)}개 새로운 전략 발견!", "cyan")
+                    colored_print(f"[KIS]  {len(soxl_strategies)}개 새로운 전략 발견!", "cyan")
 
-                    # ⭐ 자동 검증 및 적용 시스템 실행
+                    #  자동 검증 및 적용 시스템 실행
                     global validated_strategies_kis
                     applied = auto_validate_and_apply_strategy(
                         "KIS",
@@ -536,7 +536,7 @@ def background_learning_worker():
                     )
 
                     if applied:
-                        colored_print(f"[KIS] 🎉 {len(applied)}개 전략 자동 적용 완료!", "green")
+                        colored_print(f"[KIS]  {len(applied)}개 전략 자동 적용 완료!", "green")
 
                     # 인사이트 기록 (히스토리 보관용)
                     import json
@@ -660,7 +660,7 @@ def check_ollama_health(port):
         # 3. CPU 체크 (0%인데 요청 있으면 큐잉 의심)
         cpu_percent = ollama_proc.cpu_percent(interval=1)
 
-        # 4. API 응답 체크 (⭐ 타임아웃 증가: 30초)
+        # 4. API 응답 체크 ( 타임아웃 증가: 30초)
         start_time = time.time()
         try:
             response = requests.get(f"http://127.0.0.1:{port}/api/tags", timeout=30)
@@ -683,7 +683,7 @@ def check_ollama_health(port):
                 "action": "restart"
             }
         except requests.ConnectionError:
-            # ⭐ 연결 오류여도 프로세스가 살아있으면 재시작 안함
+            #  연결 오류여도 프로세스가 살아있으면 재시작 안함
             return {"status": "starting", "memory_mb": memory_mb}
 
     except Exception as e:
@@ -800,7 +800,7 @@ def get_ollama_processes():
     return processes
 
 def guardian_cleanup_rogue_ollama():
-    """⭐ 불필요한 Ollama 프로세스 자동 정리 (실시간)"""
+    """ 불필요한 Ollama 프로세스 자동 정리 (실시간)"""
     procs = get_ollama_processes()
     if not procs:
         return
@@ -837,7 +837,7 @@ def guardian_cleanup_rogue_ollama():
         time.sleep(2)  # 정리 후 대기
 
 def ask_llm_for_analysis(prompt: str) -> str:
-    """⭐ LLM에게 분석 요청 (11436 포트) - 16b 단독"""
+    """ LLM에게 분석 요청 (11436 포트) - 16b 단독"""
     try:
         response = requests.post(
             f"{OLLAMA_IMPROVEMENT_HOST}/api/generate",
@@ -864,7 +864,7 @@ def ask_llm_for_analysis(prompt: str) -> str:
 
 def ask_llm_triple_validation(primary_prompt: str, validator1_prompt: str, validator2_prompt: str) -> dict:
     """
-    ⭐ Option 1: Triple Validation System
+     Option 1: Triple Validation System
 
     3개의 다른 관점에서 분석하여 오판 확률 대폭 감소
     - Primary: 주 분석기 (일반적 관점)
@@ -936,7 +936,7 @@ def ask_llm_triple_validation(primary_prompt: str, validator1_prompt: str, valid
     }
 
 def load_error_patterns(error_file: str) -> list:
-    """⭐ Option 4: 저장된 오류 패턴 로드"""
+    """ Option 4: 저장된 오류 패턴 로드"""
     import json
     try:
         with open(error_file, 'r', encoding='utf-8') as f:
@@ -945,7 +945,7 @@ def load_error_patterns(error_file: str) -> list:
         return []
 
 def save_error_patterns(error_file: str, patterns: list):
-    """⭐ Option 4: 오류 패턴 저장 (최근 100건만)"""
+    """ Option 4: 오류 패턴 저장 (최근 100건만)"""
     import json
     try:
         # 최근 100건만 유지
@@ -957,7 +957,7 @@ def save_error_patterns(error_file: str, patterns: list):
 
 def analyze_losing_trades_for_patterns(trader_name: str, trades: list, error_patterns: list) -> list:
     """
-    ⭐ Option 4: Self-Improving Feedback Loop - 손실 거래에서 패턴 학습
+     Option 4: Self-Improving Feedback Loop - 손실 거래에서 패턴 학습
 
     손실 거래를 분석하여 반복되는 실수 패턴을 찾아냅니다.
     예: "상승 추세인데 숏 진입 → 3번 연속 손실" 같은 패턴
@@ -997,7 +997,7 @@ def analyze_losing_trades_for_patterns(trader_name: str, trades: list, error_pat
             'timestamp': datetime.now().isoformat()
         }
         new_patterns.append(pattern)
-        colored_print(f"[{trader_name}] 🔍 패턴 발견: {pattern['description']}", "yellow")
+        colored_print(f"[{trader_name}]  패턴 발견: {pattern['description']}", "yellow")
 
     # 패턴 2: 긴 보유 시간 (60분 이상 보유 후 손실)
     long_hold_losses = [l for l in recent_losses if l.get('holding_time_sec', 0) > 3600]  # 60분 = 3600초
@@ -1009,7 +1009,7 @@ def analyze_losing_trades_for_patterns(trader_name: str, trades: list, error_pat
             'timestamp': datetime.now().isoformat()
         }
         new_patterns.append(pattern)
-        colored_print(f"[{trader_name}] 🔍 패턴 발견: {pattern['description']}", "yellow")
+        colored_print(f"[{trader_name}]  패턴 발견: {pattern['description']}", "yellow")
 
     # 패턴 3: 낮은 신뢰도 진입 (신뢰도 < 70%)
     low_conf_losses = [l for l in recent_losses if l.get('confidence', 100) < 70]
@@ -1021,7 +1021,7 @@ def analyze_losing_trades_for_patterns(trader_name: str, trades: list, error_pat
             'timestamp': datetime.now().isoformat()
         }
         new_patterns.append(pattern)
-        colored_print(f"[{trader_name}] 🔍 패턴 발견: {pattern['description']}", "yellow")
+        colored_print(f"[{trader_name}]  패턴 발견: {pattern['description']}", "yellow")
 
     # 기존 패턴에 추가
     error_patterns.extend(new_patterns)
@@ -1029,17 +1029,17 @@ def analyze_losing_trades_for_patterns(trader_name: str, trades: list, error_pat
     return new_patterns
 
 def llm_analyze_trades_for_improvement(trader_name, trades, performance, error_patterns=None):
-    """⭐ LLM이 거래 패턴 분석 및 개선안 제시 (Option 1 + Option 4 통합)"""
+    """ LLM이 거래 패턴 분석 및 개선안 제시 (Option 1 + Option 4 통합)"""
     import json
 
     if len(trades) < 5:
         return []
 
-    # ⭐ Option 4: 먼저 오류 패턴 자동 학습
+    #  Option 4: 먼저 오류 패턴 자동 학습
     if error_patterns is not None:
         new_patterns = analyze_losing_trades_for_patterns(trader_name, trades, error_patterns)
         if new_patterns:
-            colored_print(f"[{trader_name}] 📚 새로운 오류 패턴 {len(new_patterns)}개 학습 완료", "cyan")
+            colored_print(f"[{trader_name}]  새로운 오류 패턴 {len(new_patterns)}개 학습 완료", "cyan")
 
     # 최근 20건만 분석
     recent_trades = trades[-20:]
@@ -1052,7 +1052,7 @@ def llm_analyze_trades_for_improvement(trader_name, trades, performance, error_p
 
     trades_text = "\n".join(trades_summary)
 
-    # ⭐ Option 4: 오류 패턴을 프롬프트에 포함
+    #  Option 4: 오류 패턴을 프롬프트에 포함
     error_context = ""
     if error_patterns and len(error_patterns) > 0:
         recent_errors = error_patterns[-5:]  # 최근 5개만
@@ -1062,7 +1062,7 @@ def llm_analyze_trades_for_improvement(trader_name, trades, performance, error_p
         error_context = "\n\n## [WARN] 최근 발견된 실패 패턴\n" + "\n".join(error_lines)
         error_context += "\n\n위 패턴을 고려하여 개선안을 제시하세요."
 
-    # ⭐ Option 1: Triple Validation - 3가지 프롬프트 생성
+    #  Option 1: Triple Validation - 3가지 프롬프트 생성
 
     # Primary Prompt (주 분석)
     primary_prompt = f"""당신은 트레이딩 전문가입니다. {trader_name} 봇의 거래 데이터를 분석하고 개선 방안을 제시하세요.
@@ -1111,7 +1111,7 @@ def llm_analyze_trades_for_improvement(trader_name, trades, performance, error_p
 
 2문장으로 답하세요."""
 
-    # ⭐ Triple Validation 실행
+    #  Triple Validation 실행
     validation_result = ask_llm_triple_validation(primary_prompt, validator1_prompt, validator2_prompt)
 
     if not validation_result['primary_response']:
@@ -1138,7 +1138,7 @@ def llm_analyze_trades_for_improvement(trader_name, trades, performance, error_p
     if "보유" in llm_response or "hold" in llm_response.lower():
         improvements.append({'type': 'reduce_hold_time', 'source': 'LLM_TRIPLE'})
 
-    # ⭐ Option 4: 오류 패턴 기반 개선안 추가
+    #  Option 4: 오류 패턴 기반 개선안 추가
     if error_patterns:
         for pattern in error_patterns[-5:]:  # 최근 5개 패턴만
             if pattern['type'] == 'trend_reverse' and pattern['count'] >= 3:
@@ -1151,7 +1151,7 @@ def llm_analyze_trades_for_improvement(trader_name, trades, performance, error_p
     return improvements
 
 def check_trading_health(trader_name, history_file):
-    """⭐ 거래 현황 및 수익 체크 (1시간마다)"""
+    """ 거래 현황 및 수익 체크 (1시간마다)"""
     import json
     from datetime import datetime, timedelta
 
@@ -1235,7 +1235,7 @@ def check_trading_health(trader_name, history_file):
         }
 
 def apply_strategy_improvements(trader_name, strategy_file, improvements, improvement_history):
-    """⭐ 전략 개선안 적용 (자동)"""
+    """ 전략 개선안 적용 (자동)"""
     import json
 
     if not improvements:
@@ -1280,7 +1280,7 @@ def apply_strategy_improvements(trader_name, strategy_file, improvements, improv
                 applied.append(f"보유시간 {old_hold}분 → {new_hold}분 ({source})")
                 colored_print(f"[{trader_name}] [개선 적용] 보유시간 {old_hold}분 → {new_hold}분 (출처: {source})", "green")
 
-            # ⭐ Option 4: 오류 패턴 기반 개선안
+            #  Option 4: 오류 패턴 기반 개선안
             elif imp_type == 'enforce_trend_following':
                 strategy['trend_check_enabled'] = True
                 strategy['block_counter_trend'] = True  # 추세 역행 완전 차단
@@ -1294,7 +1294,7 @@ def apply_strategy_improvements(trader_name, strategy_file, improvements, improv
                 applied.append(f"최소 신뢰도 {old_conf}% → {new_conf}% ({source})")
                 colored_print(f"[{trader_name}] [개선 적용] 최소 신뢰도 {old_conf}% → {new_conf}% (출처: {source})", "green")
 
-            # ⭐ 백그라운드 학습 발견 전략 (자동 검증 완료)
+            #  백그라운드 학습 발견 전략 (자동 검증 완료)
             elif imp_type == 'rsi_based_entry':
                 strategy['rsi_filter_enabled'] = True
                 strategy['rsi_oversold'] = 30  # RSI < 30 = 과매도 (매수 기회)
@@ -1350,7 +1350,7 @@ def parse_trader_log(line, trader_name):
     if not line:
         return None
 
-    # ⭐ 모든 로그 출력 (디버깅 모드)
+    #  모든 로그 출력 (디버깅 모드)
     # 단, 너무 많은 로그 방지를 위해 일부만 필터링
     skip_patterns = [
         r'^=+$',  # === 라인만
@@ -1485,7 +1485,7 @@ def main():
         kill_all_ollama()
         return
 
-    # ⭐ Self-Improvement Ollama (11436)
+    #  Self-Improvement Ollama (11436)
     colored_print(f"[OLLAMA] 포트 {OLLAMA_PORT_IMPROVEMENT} 시작 중 (자기개선 엔진용)...", "blue")
     ollama_improvement = start_ollama(OLLAMA_PORT_IMPROVEMENT)
     if not ollama_improvement:
@@ -1522,19 +1522,19 @@ def main():
     last_restart_time = time.time()
     last_guardian_check = time.time()
     last_status_print = time.time()
-    last_trading_check = time.time()  # ⭐ 거래 현황 체크
-    last_improvement_check = time.time()  # ⭐ 자기개선 체크
-    last_improvement_report = time.time()  # ⭐ 개선 리포트
-    last_telegram_alert = time.time()  # ⭐ 텔레그램 알림 (6시간 제한)
+    last_trading_check = time.time()  #  거래 현황 체크
+    last_improvement_check = time.time()  #  자기개선 체크
+    last_improvement_report = time.time()  #  개선 리포트
+    last_telegram_alert = time.time()  #  텔레그램 알림 (6시간 제한)
 
-    # ⭐ Option 4: 오류 패턴 로드
+    #  Option 4: 오류 패턴 로드
     global error_patterns_eth, error_patterns_kis
     error_patterns_eth = load_error_patterns(ERROR_PATTERN_FILE_ETH)
     error_patterns_kis = load_error_patterns(ERROR_PATTERN_FILE_KIS)
     colored_print(f"[SELF-IMPROVE] ETH 오류 패턴 {len(error_patterns_eth)}개 로드", "cyan")
     colored_print(f"[SELF-IMPROVE] KIS 오류 패턴 {len(error_patterns_kis)}개 로드\n", "cyan")
 
-    # ⭐ 백그라운드 학습 스레드 시작
+    #  백그라운드 학습 스레드 시작
     global background_learning_thread
     background_learning_thread = threading.Thread(
         target=background_learning_worker,
@@ -1559,14 +1559,14 @@ def main():
 
     try:
         while True:
-            time.sleep(GUARDIAN_CHECK_INTERVAL)  # ⭐ 10초마다 체크
+            time.sleep(GUARDIAN_CHECK_INTERVAL)  #  10초마다 체크
             current_time = time.time()
             elapsed = current_time - last_restart_time
 
-            # ⭐ Guardian: 불필요한 Ollama 정리 (10초마다)
+            #  Guardian: 불필요한 Ollama 정리 (10초마다)
             guardian_cleanup_rogue_ollama()
 
-            # ⭐ 거래 현황 및 수익 체크 (1시간마다)
+            #  거래 현황 및 수익 체크 (1시간마다)
             if (current_time - last_trading_check) >= TRADING_CHECK_INTERVAL:
                 colored_print("\n" + "="*70, "cyan")
                 colored_print("[거래 현황 체크] 시작", "cyan")
@@ -1593,7 +1593,7 @@ def main():
                 else:
                     colored_print(f"[OK] [KIS] {kis_health['message']}", "green")
 
-                # ⭐ 텔레그램 알림은 6시간마다만
+                #  텔레그램 알림은 6시간마다만
                 if (current_time - last_telegram_alert) >= TELEGRAM_ALERT_INTERVAL:
                     # 종합 리포트 텔레그램 전송
                     report = f"[REPORT] <b>거래 현황 리포트</b>\n\n"
@@ -1607,15 +1607,15 @@ def main():
 
                     telegram.send_message(report)
                     last_telegram_alert = current_time
-                    colored_print("📱 텔레그램 알림 전송 완료 (다음 알림: 6시간 후)", "cyan")
+                    colored_print(" 텔레그램 알림 전송 완료 (다음 알림: 6시간 후)", "cyan")
                 else:
                     time_until_next = (TELEGRAM_ALERT_INTERVAL - (current_time - last_telegram_alert)) / 3600
-                    colored_print(f"📱 텔레그램 알림 생략 (다음 알림: {time_until_next:.1f}시간 후)", "yellow")
+                    colored_print(f" 텔레그램 알림 생략 (다음 알림: {time_until_next:.1f}시간 후)", "yellow")
 
                 colored_print("="*70 + "\n", "cyan")
                 last_trading_check = current_time
 
-            # ⭐ 자기개선 엔진 (1시간마다 LLM 분석)
+            #  자기개선 엔진 (1시간마다 LLM 분석)
             if (current_time - last_improvement_check) >= SELF_IMPROVEMENT_INTERVAL:
                 import json
                 import statistics
@@ -1637,7 +1637,7 @@ def main():
                             'total_return': sum([t.get('profit_pct', 0) for t in eth_trades])
                         }
 
-                        # ⭐ Option 1 + 4: LLM 분석 (Triple Validation + Error Pattern Learning)
+                        #  Option 1 + 4: LLM 분석 (Triple Validation + Error Pattern Learning)
                         colored_print("[ETH] LLM 분석 중 (Option 1: 3중 검증 + Option 4: 오류 학습)...", "cyan")
                         eth_improvements = llm_analyze_trades_for_improvement("ETH", eth_trades, eth_perf, error_patterns_eth)
 
@@ -1663,7 +1663,7 @@ def main():
                             'total_return': sum([t.get('profit_pct', 0) for t in kis_trades])
                         }
 
-                        # ⭐ Option 1 + 4: LLM 분석 (Triple Validation + Error Pattern Learning)
+                        #  Option 1 + 4: LLM 분석 (Triple Validation + Error Pattern Learning)
                         colored_print("[KIS] LLM 분석 중 (Option 1: 3중 검증 + Option 4: 오류 학습)...", "cyan")
                         kis_improvements = llm_analyze_trades_for_improvement("KIS", kis_trades, kis_perf, error_patterns_kis)
 
@@ -1680,7 +1680,7 @@ def main():
                 if (current_time - last_improvement_report) >= IMPROVEMENT_REPORT_INTERVAL:
                     total_improvements = len(improvement_history_eth) + len(improvement_history_kis)
                     if total_improvements > 0:
-                        report = f"🧠 <b>자기개선 리포트</b>\n\n"
+                        report = f" <b>자기개선 리포트</b>\n\n"
                         report += f"총 개선 횟수: {total_improvements}회\n"
                         report += f"ETH: {len(improvement_history_eth)}회\n"
                         report += f"KIS: {len(improvement_history_kis)}회\n\n"

@@ -15,9 +15,9 @@ A: 직접 조회는 불가능하지만, 매수가능금액 API로 간접 확인 
 
 핵심 발견:
 1. 해외주식 잔고 조회 API (/inquire-balance)
-   → 보유 종목만 반환, USD 현금은 반환 안 함 ❌
+   → 보유 종목만 반환, USD 현금은 반환 안 함 
 
-2. 매수가능금액 조회 API (/inquire-psamount) ✅
+2. 매수가능금액 조회 API (/inquire-psamount) 
    → TR_ID: JTTT3007R (실전), TTTS3007R (모의)
    → 거래소 코드: AMEX (중요! NASD/NYSE는 실패)
    → 반환 필드: ord_psbl_frcr_amt = 실제 USD 현금
@@ -142,7 +142,7 @@ class KISAutoTrader:
             {
                 'success': bool,
                 'ord_psbl_cash': float,  # 주문가능현금
-                'ord_psbl_frcr_amt': float,  # 주문가능외화금액 (실제 USD!) ⭐
+                'ord_psbl_frcr_amt': float,  # 주문가능외화금액 (실제 USD!) 
                 'max_ord_psbl_qty': int  # 최대주문가능수량
             }
         """
@@ -189,7 +189,7 @@ class KISAutoTrader:
             return {
                 'success': True,
                 'ord_psbl_cash': ord_psbl_cash,
-                'ord_psbl_frcr_amt': ord_psbl_frcr_amt,  # 이게 실제 USD 현금! ⭐
+                'ord_psbl_frcr_amt': ord_psbl_frcr_amt,  # 이게 실제 USD 현금! 
                 'max_ord_psbl_qty': max_ord_psbl_qty
             }
 
