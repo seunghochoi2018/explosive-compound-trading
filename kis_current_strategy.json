@@ -10,5 +10,12 @@
   "verification_trades": 0,
   "created": "2025-10-10",
   "last_updated": "2025-10-10",
-  "status": "active"
+  "status": "active",
+  "rsi_filter_enabled": true,
+  "rsi_oversold": 30,
+  "rsi_overbought": 70,
+  "require_rsi_confirmation": true,
+  "min_confidence": 80,
+  "require_double_confirmation": true,
+  "min_volume_ratio": 1.2
 }
