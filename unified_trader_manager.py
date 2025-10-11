@@ -18,6 +18,23 @@ from pathlib import Path
 from collections import deque
 import threading
 import re
+import sys
+import io
+import json
+
+# UTF-8 인코딩 강제 설정 (Windows cp949 인코딩 오류 방지)
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
+# LLM 감시 시스템
+sys.path.append(r'C:\Users\user\Documents\코드5')
+try:
+    from llm_market_analyzer import LLMMarketAnalyzer
+    LLM_AVAILABLE = True
+except:
+    LLM_AVAILABLE = False
+    print("[WARNING] LLM 분석기 로드 실패, 기본 모니터링만 실행")
 
 # ===== 텔레그램 알림 =====
 class TelegramNotifier:
@@ -35,19 +52,19 @@ class TelegramNotifier:
             return False
 
     def notify_system_start(self):
-        message = "🚀 <b>통합 트레이더 시스템 시작</b>\n\n✅ ETH Trader\n✅ KIS Trader\n✅ Ollama 관리자"
+        message = "[START] <b>통합 트레이더 시스템 시작</b>\n\n[OK] ETH Trader\n[OK] KIS Trader\n[OK] Ollama 관리자"
         self.send_message(message)
 
     def notify_system_error(self, error_msg: str):
-        message = f"⚠️ <b>시스템 오류</b>\n\n{error_msg}"
+        message = f"[WARN] <b>시스템 오류</b>\n\n{error_msg}"
         self.send_message(message)
 
     def notify_position_change(self, trader: str, action: str, details: str):
-        message = f"🔄 <b>{trader} 포지션 변경</b>\n\n{action}\n{details}"
+        message = f"[RESTART] <b>{trader} 포지션 변경</b>\n\n{action}\n{details}"
         self.send_message(message)
 
     def notify_ollama_restart(self, trader: str, reason: str):
-        message = f"🔧 <b>{trader} Ollama 재시작</b>\n\n사유: {reason}"
+        message = f"[TOOL] <b>{trader} Ollama 재시작</b>\n\n사유: {reason}"
         self.send_message(message)
 
 telegram = TelegramNotifier()
@@ -98,6 +115,11 @@ TELEGRAM_ALERT_INTERVAL = 6 * 60 * 60  # 6시간마다만 텔레그램 알림
 OLLAMA_IMPROVEMENT_HOST = f"http://127.0.0.1:{OLLAMA_PORT_IMPROVEMENT}"
 OLLAMA_IMPROVEMENT_MODEL = "deepseek-coder-v2:16b"  # 단독 모델
 OLLAMA_IMPROVEMENT_TIMEOUT = 300  # ⭐ 5분으로 증가 (Triple Validation용)
+
+# ⭐ 32b LLM 감시 시스템 (전체 시스템 모니터링)
+OVERSIGHT_LLM_MODEL = "qwen2.5:32b"  # 강력한 32b 모델
+OVERSIGHT_CHECK_INTERVAL = 30 * 60  # 30분마다 전체 시스템 분석
+oversight_llm = None  # 32b LLM 인스턴스 (초기화는 main에서)
 
 # 자기개선 상태 추적
 improvement_history_eth = []
@@ -340,7 +362,7 @@ def llm_backtest_on_historical_data(trader_name, symbol, historical_data):
         colored_print(f"[BACKGROUND LEARNING #{learning_session_count}] 합의 실패 - 전략 탐색 보류", "yellow")
         return []
 
-    colored_print(f"[BACKGROUND LEARNING #{learning_session_count}] ✅ 새로운 인사이트 발견!", "green")
+    colored_print(f"[BACKGROUND LEARNING #{learning_session_count}] [OK] 새로운 인사이트 발견!", "green")
     colored_print(f"  {validation['final_decision'][:200]}...", "cyan")
 
     # 간단한 전략 추출
@@ -412,8 +434,8 @@ def auto_validate_and_apply_strategy(trader_name, strategies, validation_dict, s
 
         # 검증 완료 조건: N번 이상 발견
         if current_count >= VALIDATION_THRESHOLD:
-            colored_print(f"[{trader_name}] ✅ 전략 '{strategy_type}' 검증 완료! ({current_count}번 발견)", "green")
-            colored_print(f"[{trader_name}] 🚀 자동 적용 시작...", "green")
+            colored_print(f"[{trader_name}] [OK] 전략 '{strategy_type}' 검증 완료! ({current_count}번 발견)", "green")
+            colored_print(f"[{trader_name}] [START] 자동 적용 시작...", "green")
 
             # 자동 적용
             result = apply_strategy_improvements(
@@ -561,6 +583,50 @@ def colored_print(message, color="white"):
     }
     timestamp = datetime.now().strftime("%H:%M:%S")
     print(f"{colors.get(color, colors['white'])}[{timestamp}] {message}{colors['reset']}")
+
+
+# ===== PID 파일 관리 (중복 실행 방지) =====
+PID_FILE = Path(__file__).parent / ".unified_trader_manager.pid"
+
+def check_already_running():
+    """이미 실행 중인 인스턴스가 있는지 확인"""
+    if PID_FILE.exists():
+        try:
+            with open(PID_FILE, 'r') as f:
+                old_pid = int(f.read().strip())
+
+            # PID가 실제로 실행 중인지 확인
+            if psutil.pid_exists(old_pid):
+                try:
+                    proc = psutil.Process(old_pid)
+                    # unified_trader_manager 프로세스인지 확인
+                    cmdline = ' '.join(proc.cmdline())
+                    if 'unified_trader_manager' in cmdline:
+                        return old_pid
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
+        except (ValueError, FileNotFoundError):
+            pass
+
+    return None
+
+def write_pid_file():
+    """현재 프로세스 PID를 파일에 저장"""
+    try:
+        with open(PID_FILE, 'w') as f:
+            f.write(str(os.getpid()))
+        return True
+    except Exception as e:
+        colored_print(f"[WARNING] PID 파일 생성 실패: {e}", "yellow")
+        return False
+
+def remove_pid_file():
+    """PID 파일 삭제"""
+    try:
+        if PID_FILE.exists():
+            PID_FILE.unlink()
+    except Exception as e:
+        colored_print(f"[WARNING] PID 파일 삭제 실패: {e}", "yellow")
 
 # ===== Ollama 헬스 체크 =====
 def check_ollama_health(port):
@@ -739,7 +805,7 @@ def guardian_cleanup_rogue_ollama():
     if not procs:
         return
 
-    # ⚠️ Ollama는 각 모델마다 별도의 runner 프로세스를 생성함
+    # [WARN] Ollama는 각 모델마다 별도의 runner 프로세스를 생성함
     # runner 프로세스는 랜덤 포트를 사용하므로 포트로 구분 불가능!
     # 대신 메모리 기준으로만 판단 (15GB 초과만 정리)
 
@@ -854,7 +920,7 @@ def ask_llm_triple_validation(primary_prompt: str, validator1_prompt: str, valid
     agreement_count = sum([True, val1_agree, val2_agree])  # Primary는 항상 True
     consensus = agreement_count >= 2
 
-    colored_print(f"[TRIPLE VALIDATION] 합의 여부: {'✅ 동의 {}/3'.format(agreement_count) if consensus else '❌ 불일치'}",
+    colored_print(f"[TRIPLE VALIDATION] 합의 여부: {'[OK] 동의 {}/3'.format(agreement_count) if consensus else '[ERROR] 불일치'}",
                   "green" if consensus else "yellow")
 
     total_time = time.time() - primary_start
@@ -993,7 +1059,7 @@ def llm_analyze_trades_for_improvement(trader_name, trades, performance, error_p
         error_lines = []
         for err in recent_errors:
             error_lines.append(f"- {err.get('description', '알 수 없음')}")
-        error_context = "\n\n## ⚠️ 최근 발견된 실패 패턴\n" + "\n".join(error_lines)
+        error_context = "\n\n## [WARN] 최근 발견된 실패 패턴\n" + "\n".join(error_lines)
         error_context += "\n\n위 패턴을 고려하여 개선안을 제시하세요."
 
     # ⭐ Option 1: Triple Validation - 3가지 프롬프트 생성
@@ -1054,10 +1120,10 @@ def llm_analyze_trades_for_improvement(trader_name, trades, performance, error_p
     # 합의가 있을 때만 분석 결과 사용
     if validation_result['consensus']:
         llm_response = validation_result['final_decision']
-        colored_print(f"[{trader_name}] ✅ 3중 검증 합의 ({validation_result['agreement_count']}/3)", "green")
+        colored_print(f"[{trader_name}] [OK] 3중 검증 합의 ({validation_result['agreement_count']}/3)", "green")
         colored_print(f"[{trader_name}] [LLM 인사이트] {llm_response[:150]}...", "magenta")
     else:
-        colored_print(f"[{trader_name}] ⚠️ 3중 검증 불일치 - 개선안 보류", "yellow")
+        colored_print(f"[{trader_name}] [WARN] 3중 검증 불일치 - 개선안 보류", "yellow")
         return []  # 합의 없으면 개선 안 함 (안전)
 
     # 간단한 키워드 기반 개선안 추출
@@ -1269,7 +1335,7 @@ def apply_strategy_improvements(trader_name, strategy_file, improvements, improv
                 'applied': applied
             })
 
-            colored_print(f"[{trader_name}] ✅ {len(applied)}개 개선사항 적용 완료", "green")
+            colored_print(f"[{trader_name}] [OK] {len(applied)}개 개선사항 적용 완료", "green")
 
         return applied
 
@@ -1377,6 +1443,18 @@ def stop_process(process, name, timeout=30):
 
 # ===== 메인 관리 루프 =====
 def main():
+    # 중복 실행 체크
+    running_pid = check_already_running()
+    if running_pid:
+        colored_print(f"[WARN]  통합매니저가 이미 실행 중입니다 (PID: {running_pid})", "red")
+        colored_print("기존 프로세스를 종료하거나 중복 실행을 원하면 PID 파일을 삭제하세요:", "yellow")
+        colored_print(f"   {PID_FILE}", "yellow")
+        return
+
+    # PID 파일 생성
+    write_pid_file()
+    colored_print(f"[OK] PID 파일 생성 완료 (PID: {os.getpid()})", "green")
+
     colored_print("=" * 70, "cyan")
     colored_print("통합 트레이더 관리 시스템 시작", "cyan")
     colored_print(f"재시작 주기: {RESTART_INTERVAL // 3600}시간", "cyan")
@@ -1499,33 +1577,33 @@ def main():
 
                 # ETH 상태
                 if eth_health['alert']:
-                    colored_print(f"⚠️  [ETH] {eth_health['message']}", "red")
+                    colored_print(f"[WARN]  [ETH] {eth_health['message']}", "red")
                     if eth_health.get('warnings'):
                         for w in eth_health['warnings']:
                             colored_print(f"    - {w}", "yellow")
                 else:
-                    colored_print(f"✅ [ETH] {eth_health['message']}", "green")
+                    colored_print(f"[OK] [ETH] {eth_health['message']}", "green")
 
                 # KIS 상태
                 if kis_health['alert']:
-                    colored_print(f"⚠️  [KIS] {kis_health['message']}", "red")
+                    colored_print(f"[WARN]  [KIS] {kis_health['message']}", "red")
                     if kis_health.get('warnings'):
                         for w in kis_health['warnings']:
                             colored_print(f"    - {w}", "yellow")
                 else:
-                    colored_print(f"✅ [KIS] {kis_health['message']}", "green")
+                    colored_print(f"[OK] [KIS] {kis_health['message']}", "green")
 
                 # ⭐ 텔레그램 알림은 6시간마다만
                 if (current_time - last_telegram_alert) >= TELEGRAM_ALERT_INTERVAL:
                     # 종합 리포트 텔레그램 전송
-                    report = f"📊 <b>거래 현황 리포트</b>\n\n"
+                    report = f"[REPORT] <b>거래 현황 리포트</b>\n\n"
                     report += f"<b>ETH:</b> {eth_health['message']}\n"
                     report += f"<b>KIS:</b> {kis_health['message']}\n\n"
 
                     if eth_health['alert'] or kis_health['alert']:
-                        report += "⚠️ 문제 감지 - 자기개선 엔진이 분석 중입니다"
+                        report += "[WARN] 문제 감지 - 자기개선 엔진이 분석 중입니다"
                     else:
-                        report += "✅ 모든 봇 정상 작동 중"
+                        report += "[OK] 모든 봇 정상 작동 중"
 
                     telegram.send_message(report)
                     last_telegram_alert = current_time
@@ -1774,7 +1852,13 @@ def main():
 if __name__ == "__main__":
     try:
         main()
+    except KeyboardInterrupt:
+        colored_print("\n[INFO] 사용자 중단", "yellow")
     except Exception as e:
         colored_print(f"\n[CRITICAL ERROR] {e}", "red")
         colored_print("[CRITICAL ERROR] 프로세스 정리 중...", "red")
         kill_all_ollama()
+    finally:
+        # PID 파일 정리
+        remove_pid_file()
+        colored_print("[CLEANUP] PID 파일 삭제 완료", "green")
