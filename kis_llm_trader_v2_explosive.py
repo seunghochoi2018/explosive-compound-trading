@@ -758,9 +758,17 @@ class ExplosiveKISTrader:
                 print(f"  포지션: {self.current_position if self.current_position else '없음'}")
                 print(f"  잔고: ${current_balance:,.2f} ({balance_pct:+.2f}%)")
 
-                # 장 마감 체크
+                # 장 마감 체크 (주말/주중 구분)
                 if soxl_price == 0:
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}]   미국 장 마감, 대기 중...")
+                    weekday = datetime.now().weekday()  # 0=월요일, 6=일요일
+                    if weekday >= 5:  # 토요일(5) 또는 일요일(6)
+                        day_name = "토요일" if weekday == 5 else "일요일"
+                        print(f"[{datetime.now().strftime('%H:%M:%S')}]   주말 ({day_name}), 미국 장 마감")
+                        print(f"   다음 거래: 월요일 밤 22:30 (정규장 개장)")
+                    else:
+                        day_names = ["월요일", "화요일", "수요일", "목요일", "금요일"]
+                        print(f"[{datetime.now().strftime('%H:%M:%S')}]   평일 ({day_names[weekday]}), 미국 장 마감")
+                        print(f"   정규장 개장: 오늘 밤 22:30 (한국시간)")
 
                 #  자기 개선 엔진은 unified_trader_manager에서 실행됩니다
 
