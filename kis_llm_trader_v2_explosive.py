@@ -540,7 +540,7 @@ class ExplosiveKISTrader:
                 "CANO": self.account_no.split('-')[0],
                 "ACNT_PRDT_CD": self.account_no.split('-')[1],
                 "OVRS_EXCG_CD": "NASD",
-                "PDNO": symbol,  #  티커명 직접 사용 (SOXL/SOXS)
+                "PDNO": self.symbols[symbol]['pdno'],  # ✅ FIX: A980679 (SOXL) / A980680 (SOXS) 고유 코드 사용!
                 "ORD_QTY": str(qty),
                 "OVRS_ORD_UNPR": str(current_price),  # ✅ 수정: 시장가인데도 현재가 입력 필수!
                 "ORD_SVR_DVSN_CD": "0"
@@ -566,15 +566,18 @@ class ExplosiveKISTrader:
                     print(f"  메시지: {error_msg}")
                     print(f"  종목: {symbol}, 주문: {side}, 수량: {qty}주, 가격: ${current_price:.2f}")
 
-                    # 텔레그램 알림
+                    # 텔레그램 알림 (수동 거래 안내 추가)
+                    manual_action = "매수" if side == "BUY" else "매도"
                     self.telegram.send_message(
                         f"[ERROR] <b>KIS 자동매매 실패</b>\n\n"
                         f"<b>에러 코드:</b> {error_code}\n"
                         f"<b>메시지:</b> {error_msg}\n\n"
-                        f"종목: {symbol}\n"
-                        f"주문: {side}\n"
-                        f"수량: {qty}주\n"
-                        f"가격: ${current_price:.2f}\n\n"
+                        f"<b>종목:</b> {symbol}\n"
+                        f"<b>주문:</b> {side}\n"
+                        f"<b>수량:</b> {qty}주\n"
+                        f"<b>가격:</b> ${current_price:.2f}\n\n"
+                        f"⚠️ <b>수동 거래 필요!</b>\n"
+                        f"→ 한투 앱에서 직접 {manual_action} 진행하세요\n\n"
                         f"시간: {datetime.now().strftime('%H:%M:%S')}",
                         priority="important"
                     )
@@ -683,6 +686,21 @@ class ExplosiveKISTrader:
                     # 메인 분석 결과 사용
                     llm_signal = deep_signal
                     self.last_deep_analysis_time = current_time
+
+                    # 🔥 텔레그램 알림: LLM 신호 전송 (수동 거래 가능하도록!)
+                    signal_emoji = "🟢 BULL" if llm_signal == 'BULL' else ("🔴 BEAR" if llm_signal == 'BEAR' else "⚪ NEUTRAL")
+                    target_symbol = "SOXL (3X 롱)" if llm_signal == 'BULL' else ("SOXS (3X 숏)" if llm_signal == 'BEAR' else "대기")
+
+                    self.telegram.send_message(
+                        f"<b>[KIS LLM 신호]</b> {signal_emoji}\n\n"
+                        f"<b>추천 종목:</b> {target_symbol}\n"
+                        f"<b>추세:</b> {trend}\n"
+                        f"<b>SOXL 가격:</b> ${soxl_price:.2f}\n"
+                        f"<b>현재 포지션:</b> {self.current_position if self.current_position else '없음'}\n\n"
+                        f"<i>💡 자동매매 시도 중... 실패 시 수동 거래 필요</i>\n"
+                        f"시간: {datetime.now().strftime('%H:%M:%S')}",
+                        priority="important"
+                    )
 
                 else:
                     # 메인 분석이 없으면 7b 모니터 신호 사용

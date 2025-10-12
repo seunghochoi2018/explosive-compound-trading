@@ -1,0 +1,45 @@
+2🧠 1. Tensor Core (AI 전용 연산 유닛)
+
+RTX 2060에는 Tensor Core가 내장되어 있습니다.
+이는 인공지능 연산(특히 딥러닝 행렬 계산)을 위한 전용 하드웨어로, 다음 작업에서 강력한 가속을 제공합니다:
+	•	AI 학습/추론 가속 (TensorFlow, PyTorch, ONNX 등에서 GPU 연산 활용 시 속도 향상)
+	•	DLSS (Deep Learning Super Sampling): 게임에서 인공지능으로 해상도를 업스케일하여 성능 향상
+	•	NVIDIA Broadcast / RTX Voice: AI로 배경 소음 제거, 영상 배경 블러 처리
+	•	AI Video Enhancement: YouTube/OBS/Zoom 등에서 실시간 화질 향상
+
+⸻
+
+🎮 2. DLSS (Deep Learning Super Sampling)
+	•	AI가 저해상도 이미지를 고해상도로 업스케일하면서 프레임 손실 없이 화질을 유지
+	•	Tensor Core가 수행하는 딥러닝 기반 렌더링 기술
+	•	DLSS 1/2 버전은 RTX 2060에서도 지원 (DLSS 3은 일부 한정 지원 없음)
+
+⸻
+
+🎧 3. NVIDIA Broadcast / RTX Voice
+	•	딥러닝으로 음성에서 주변 소음 제거, 영상 배경 자동 블러/교체 가능
+	•	화상회의, 스트리밍, 녹화 등에 AI 기반 품질 향상
+	•	RTX 2060 이상 GPU에서 Tensor Core를 사용해 CPU 부하 없이 실시간 처리
+
+⸻
+
+📷 4. AI 영상 업스케일링 (RTX VSR, Video Super Resolution)
+	•	크롬/엣지에서 YouTube 등 동영상의 화질을 AI로 자동 업스케일링 (720p → 1080p/4K)
+	•	RTX 20 시리즈 이상 GPU에서 작동
+	•	NVIDIA 제어판 → “비디오 슈퍼 해상도(Video Super Resolution)” 기능에서 활성화 가능
+
+⸻
+
+🧩 5. AI Compute Framework 지원
+
+RTX 2060은 다음 AI 프레임워크를 하드웨어 가속으로 지원합니다:
+	•	TensorFlow, PyTorch, ONNX Runtime, CUDA-X AI, cuDNN
+→ AI 모델 훈련 및 추론 시 CPU 대비 최대 수십 배 연산 속도 향상
+
+⸻
+
+⚙️ 6. CUDA / TensorRT / cuDNN 통합
+	•	CUDA Core: 병렬 연산(벡터/행렬 처리)
+	•	TensorRT: AI 추론 최적화 엔진
+	•	cuDNN: 딥러닝 연산용 고속 라이브러리
+이 조합으로 RTX 2060은 AI 모델 학습·추론, 이미지 분류, 객체 인식, 음성 인식 등을 빠르게 수행할 수 있습니다.
