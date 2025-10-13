@@ -1191,14 +1191,19 @@ SOXL (반도체 3배 레버리지 ETF) 분석:
                 except Exception as e:
                     print(f"[ERROR] 거래 기록 저장 실패: {e}")
 
-                # 8. 통계 업데이트 (실제 잔고 기준)
+                # 8. 통계 업데이트 (수수료 고려한 실제 수익 기준)
                 real_profit = current_balance - self.entry_balance
-                if real_profit > 0:
+                real_profit_pct = (real_profit / self.entry_balance) * 100 if self.entry_balance > 0 else 0
+                
+                # 수수료 고려한 실제 수익성 판단 (0.2% 이상이어야 수익 - KIS 수수료가 더 높음)
+                if real_profit_pct > 0.2:  # 수수료 고려한 실제 수익
                     self.stats['wins'] += 1
                     self.consecutive_losses = 0  # 수익 시 연속 손실 리셋
+                    print(f"[복리 효과] 실제 수익: ${real_profit:+.2f} ({real_profit_pct:+.3f}%)")
                 else:
                     self.stats['losses'] += 1
                     self.consecutive_losses += 1  # 손실 시 연속 손실 증가
+                    print(f"[손실] 실제 손실: ${real_profit:+.2f} ({real_profit_pct:+.3f}%)")
                     
                     # 연속 손실 학습: 3회 연속 손실 시 해당 방향 진입 금지
                     if self.consecutive_losses >= self.max_consecutive_losses:
