@@ -305,13 +305,13 @@ class ExplosiveKISTrader:
                     last_time = datetime.fromisoformat(last_trade_time)
                     minutes_since = (datetime.now() - last_time).total_seconds() / 60
 
-                    # 30분당 -5% 조정
-                    adjustment = int(minutes_since / 30) * 5
-                    adjusted_threshold = max(40, current_threshold - adjustment)
+                    # 5분당 -5% 조정 (더 빠른 조정)
+                    adjustment = int(minutes_since / 5) * 5
+                    adjusted_threshold = max(30, current_threshold - adjustment)
 
                     if adjusted_threshold != current_threshold:
                         print(f"  [AUTO] 자동 조정: {current_threshold}% -> {adjusted_threshold}%")
-                        print(f"  이유: {minutes_since:.0f}분 거래 없음 (30분당 -5%)")
+                        print(f"  이유: {minutes_since:.0f}분 거래 없음 (5분당 -5%)")
                         current_threshold = adjusted_threshold
                         self.save_dynamic_threshold(current_threshold, last_trade_time)
 
