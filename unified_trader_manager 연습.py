@@ -154,7 +154,8 @@ OLLAMA_EXE = r"C:\Users\user\AppData\Local\Programs\Ollama\ollama.exe"
 OLLAMA_PORT_ETH = 11434  # 코드3 (ETH) 전용
 OLLAMA_PORT_KIS = 11435  # 코드4 (KIS) 전용
 OLLAMA_PORT_IMPROVEMENT = 11436  #  자기개선 엔진 전용
-ALLOWED_PORTS = [OLLAMA_PORT_ETH, OLLAMA_PORT_KIS, OLLAMA_PORT_IMPROVEMENT]  # 허가된 포트
+OLLAMA_PORT_14B_DEDICATED = 11437  # 14b 전용 포트 (직렬화 큐)
+ALLOWED_PORTS = [OLLAMA_PORT_ETH, OLLAMA_PORT_KIS, OLLAMA_PORT_IMPROVEMENT, OLLAMA_PORT_14B_DEDICATED]  # 허가된 포트
 
 # 트레이더 설정
 ETH_TRADER_DIR = r"C:\Users\user\Documents\코드3"
@@ -196,6 +197,7 @@ MEMORY_LIMITS = {
     11434: 9 * 1024,  # ETH: 9GB (14b 모델용)
     11435: 9 * 1024,  # KIS: 9GB (14b 모델용)
     11436: 9 * 1024,  # 자기개선: 9GB (14b 모델용, 사용자 요청으로 32b→14b 변경)
+    11437: 9 * 1024,  # 14b 전용: 9GB (직렬화 큐)
 }
 MAX_CPU_PERCENT = 5.0  # 정상 상태 CPU: 5% 이하
 RESPONSE_TIMEOUT = 10  # API 응답 타임아웃: 10초
@@ -905,6 +907,147 @@ Start-Process -FilePath "{OLLAMA_EXE}" -ArgumentList "serve" -WindowStyle Hidden
         colored_print(f"Ollama 포트 {port} 시작 오류: {e}", "red")
         return None
 
+# ===== 14b 전용 직렬화 큐 시스템 =====
+import queue
+import threading
+from concurrent.futures import ThreadPoolExecutor
+
+class LLMQueue:
+    """14b 전용 직렬화 큐 (한 번에 1건만 처리)"""
+    def __init__(self, port: int):
+        self.port = port
+        self.queue = queue.Queue()
+        self.executor = ThreadPoolExecutor(max_workers=1)
+        self.running = False
+        self.worker_thread = None
+        
+    def start(self):
+        """큐 워커 시작"""
+        if not self.running:
+            self.running = True
+            self.worker_thread = threading.Thread(target=self._worker, daemon=True)
+            self.worker_thread.start()
+            colored_print(f"[14b 큐] 포트 {self.port} 직렬화 큐 시작", "blue")
+    
+    def stop(self):
+        """큐 워커 중지"""
+        self.running = False
+        if self.worker_thread:
+            self.worker_thread.join(timeout=5)
+    
+    def _worker(self):
+        """큐 워커: 한 번에 1건씩 순차 처리"""
+        while self.running:
+            try:
+                # 큐에서 요청 대기 (1초 타임아웃)
+                request = self.queue.get(timeout=1)
+                if request is None:  # 종료 신호
+                    break
+                    
+                # 14b 분석 실행
+                self._process_request(request)
+                self.queue.task_done()
+                
+            except queue.Empty:
+                continue
+            except Exception as e:
+                colored_print(f"[14b 큐] 처리 오류: {e}", "red")
+    
+    def _process_request(self, request):
+        """14b 요청 처리 (압축된 프롬프트)"""
+        try:
+            # 압축된 프롬프트 생성
+            compressed_prompt = self._compress_prompt(request)
+            
+            url = f"http://127.0.0.1:{self.port}/api/generate"
+            payload = {
+                "model": "qwen2.5:14b",
+                "prompt": compressed_prompt,
+                "stream": False,
+                "options": {
+                    "num_predict": 128,  # 응답 토큰 제한 (성능 향상)
+                    "temperature": 0.7
+                }
+            }
+            
+            start_time = time.time()
+            response = requests.post(url, json=payload, timeout=30)
+            duration = time.time() - start_time
+            
+            if response.status_code == 200:
+                result = response.json()
+                colored_print(f"[14b 큐] 처리 완료 ({duration:.1f}초)", "green")
+                # 결과를 콜백으로 전달
+                if request.get('callback'):
+                    request['callback'](result, duration)
+            else:
+                colored_print(f"[14b 큐] API 오류: {response.status_code}", "red")
+                
+        except Exception as e:
+            colored_print(f"[14b 큐] 처리 실패: {e}", "red")
+    
+    def _compress_prompt(self, request):
+        """프롬프트 압축 (핵심 정보만)"""
+        data = request.get('data', {})
+        
+        # 핵심 상태만 추출
+        position = data.get('position', 'NONE')
+        pnl = data.get('pnl', 0.0)
+        price = data.get('price', 0.0)
+        
+        # 최근 3틱만 요약
+        recent_prices = data.get('recent_prices', [])[-3:] if data.get('recent_prices') else []
+        price_summary = f"{recent_prices}" if recent_prices else "N/A"
+        
+        # 압축된 프롬프트 (토큰 수 대폭 감소)
+        compressed = f"""상태: {position}, PNL: {pnl:+.1f}%, 가격: ${price:.2f}
+최근: {price_summary}
+분석: {request.get('analysis_type', 'market')}"""
+        
+        return compressed
+    
+    def add_request(self, data, analysis_type, callback=None):
+        """14b 분석 요청 추가 (비동기)"""
+        request = {
+            'data': data,
+            'analysis_type': analysis_type,
+            'callback': callback,
+            'timestamp': time.time()
+        }
+        self.queue.put(request)
+        colored_print(f"[14b 큐] 요청 추가: {analysis_type}", "cyan")
+
+# 전역 14b 큐 인스턴스
+llm_queue_14b = None
+
+def start_14b_dedicated_queue():
+    """14b 전용 큐 시작"""
+    global llm_queue_14b
+    if llm_queue_14b is None:
+        llm_queue_14b = LLMQueue(OLLAMA_PORT_14B_DEDICATED)
+        llm_queue_14b.start()
+        colored_print("[14b 전용] 직렬화 큐 시스템 시작", "blue")
+
+def warmup_ollama_model(port: int, model: str, prompt: str = "warmup") -> bool:
+    """모델 워밍업: 짧은 프롬프트로 모델을 미리 로드하여 응답 지연을 줄임"""
+    try:
+        url = f"http://127.0.0.1:{port}/api/generate"
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "stream": False
+        }
+        response = requests.post(url, json=payload, timeout=20)
+        if response.status_code == 200:
+            colored_print(f"[WARMUP] 포트 {port} 모델 '{model}' 워밍업 완료", "green")
+            return True
+        else:
+            colored_print(f"[WARMUP] 포트 {port} 모델 '{model}' 실패: HTTP {response.status_code}", "yellow")
+            return False
+    except Exception as e:
+        colored_print(f"[WARMUP] 포트 {port} 모델 '{model}' 오류: {e}", "yellow")
+        return False
+
 def get_port_by_pid(pid):
     """PID로 사용 중인 포트 찾기"""
     try:
@@ -1134,7 +1277,7 @@ def ask_llm_triple_validation(primary_prompt: str, validator1_prompt: str, valid
     colored_print(f"[TRIPLE VALIDATION] 합의 여부: {'[OK] 동의 {}/3'.format(agreement_count) if consensus else '[ERROR] 불일치'}",
                   "green" if consensus else "yellow")
 
-    total_time = time.time() - primary_start
+    total_time = time.time() - start_time
     colored_print(f"[TRIPLE VALIDATION] 총 소요 시간: {total_time:.1f}초", "cyan")
 
     return {
@@ -1499,8 +1642,7 @@ def check_trading_health(trader_name, history_file):
                 f"3. 샘플 편향으로 인한 과적합\n\n"
                 f"<b>조치:</b>\n"
                 f"임계값 최적화 알고리즘 재계산 중\n"
-                f"(수수료 + 기대값 기반 최적화)",
-                priority="important"
+                f"(수수료 + 기대값 기반 최적화)"
             )
 
         return {
@@ -1841,6 +1983,16 @@ def main():
     else:
         colored_print(f"[OLLAMA] 자기개선 엔진용 Ollama 활성화 완료!", "green")
 
+    # 14b 전용 Ollama (11437) - 직렬화 큐
+    colored_print(f"[OLLAMA] 포트 {OLLAMA_PORT_14B_DEDICATED} 시작 중 (14b 전용 큐)...", "blue")
+    ollama_14b_dedicated = start_ollama(OLLAMA_PORT_14B_DEDICATED)
+    if not ollama_14b_dedicated:
+        colored_print(f"\n[WARNING] Ollama 포트 {OLLAMA_PORT_14B_DEDICATED} 시작 실패 (14b 큐 비활성화)", "yellow")
+    else:
+        colored_print(f"[OLLAMA] 14b 전용 큐 활성화 완료!", "green")
+        # 14b 전용 큐 시작
+        start_14b_dedicated_queue()
+
     colored_print("[OLLAMA] 모든 인스턴스 시작 완료!", "green")
 
     # 트레이더 시작
@@ -1864,6 +2016,15 @@ def main():
 
     if not trader_eth or not trader_kis:
         colored_print("\n[WARNING] 일부 트레이더 시작 실패", "yellow")
+
+    # 14b 모델 워밍업 (응답 지연 최소화)
+    try:
+        colored_print("\n[WARMUP] 14b 모델 워밍업 시작...", "cyan")
+        warmup_ollama_model(OLLAMA_PORT_ETH, "qwen2.5:14b", prompt="price: 1000, trend: bear → ok")
+        warmup_ollama_model(OLLAMA_PORT_KIS, "qwen2.5:14b", prompt="price: 100, trend: bull → ok")
+        warmup_ollama_model(OLLAMA_PORT_IMPROVEMENT, OLLAMA_IMPROVEMENT_MODEL, prompt="ready")
+    except Exception as e:
+        colored_print(f"[WARMUP] 모델 워밍업 오류: {e}", "yellow")
 
     # 재시작 타이머
     last_restart_time = time.time()
@@ -2132,6 +2293,10 @@ def main():
                 ollama_eth = start_ollama(OLLAMA_PORT_ETH)
                 ollama_kis = start_ollama(OLLAMA_PORT_KIS)
                 ollama_improvement = start_ollama(OLLAMA_PORT_IMPROVEMENT)
+                ollama_14b_dedicated = start_ollama(OLLAMA_PORT_14B_DEDICATED)
+                
+                # 14b 전용 큐 시작
+                start_14b_dedicated_queue()
 
                 if not ollama_eth or not ollama_kis:
                     logger.critical("Ollama 재시작 실패 - 시스템 종료")
@@ -2142,6 +2307,14 @@ def main():
 
                 # 트레이더 재시작
                 colored_print("[SMART_RESTART] 트레이더 재시작 중...", "green")
+                # 재시작 후 14b 재워밍업 (지연 최소화)
+                try:
+                    colored_print("[WARMUP] 재시작 후 14b 모델 재워밍업...", "cyan")
+                    warmup_ollama_model(OLLAMA_PORT_ETH, "qwen2.5:14b", prompt="price: 1000, trend: bear → ok")
+                    warmup_ollama_model(OLLAMA_PORT_KIS, "qwen2.5:14b", prompt="price: 100, trend: bull → ok")
+                    warmup_ollama_model(OLLAMA_PORT_IMPROVEMENT, OLLAMA_IMPROVEMENT_MODEL, prompt="ready")
+                except Exception as e:
+                    colored_print(f"[WARMUP] 재시작 워밍업 오류: {e}", "yellow")
                 trader_eth = start_trader(
                     ETH_TRADER_SCRIPT,
                     ETH_PYTHON,
@@ -2208,6 +2381,14 @@ def main():
 
                 # 3. 트레이더 재시작
                 colored_print("[RESTART 3/3] 트레이더 재시작 중...", "green")
+                # 재시작 후 14b 재워밍업 (지연 최소화)
+                try:
+                    colored_print("[WARMUP] 재시작 후 14b 모델 재워밍업...", "cyan")
+                    warmup_ollama_model(OLLAMA_PORT_ETH, "qwen2.5:14b", prompt="price: 1000, trend: bear → ok")
+                    warmup_ollama_model(OLLAMA_PORT_KIS, "qwen2.5:14b", prompt="price: 100, trend: bull → ok")
+                    warmup_ollama_model(OLLAMA_PORT_IMPROVEMENT, OLLAMA_IMPROVEMENT_MODEL, prompt="ready")
+                except Exception as e:
+                    colored_print(f"[WARMUP] 재시작 워밍업 오류: {e}", "yellow")
                 trader_eth = start_trader(
                     ETH_TRADER_SCRIPT,
                     ETH_PYTHON,
