@@ -849,18 +849,25 @@ class ExplosiveKISTrader:
                             new_symbol = 'SOXL' if llm_signal == 'BULL' else 'SOXS'
                             self.open_position(new_symbol)
 
-                # 포지션 없으면 진입 조건 체크
-                else:
-                    # ETH와 동일한 로직: 신뢰도 체크 + BULL/BEAR
-                    if llm_signal in ['BULL', 'BEAR']:
-                        # 신뢰도 체크 (동적 임계값)
-                        llm_confidence = 50  # 기본값 (실제로는 LLM에서 받아야 함)
-                        if llm_confidence >= self.MIN_CONFIDENCE:
-                            target_symbol = 'SOXL' if llm_signal == 'BULL' else 'SOXS'
+                # 피라미딩 허용: 포지션이 있어도 같은 방향이면 추가 진입
+                if llm_signal in ['BULL', 'BEAR']:
+                    # 신뢰도 체크 (동적 임계값)
+                    llm_confidence = 50  # 기본값 (실제로는 LLM에서 받아야 함)
+                    if llm_confidence >= self.MIN_CONFIDENCE:
+                        target_symbol = 'SOXL' if llm_signal == 'BULL' else 'SOXS'
+                        
+                        # 피라미딩 체크: 같은 방향이면 추가 진입 허용
+                        if self.current_position:
+                            if (self.current_position == 'SOXL' and llm_signal == 'BULL') or (self.current_position == 'SOXS' and llm_signal == 'BEAR'):
+                                print(f"[피라미딩] {self.current_position} 포지션 + {llm_signal} 신호 → 추가 진입 허용")
+                                self.open_position(target_symbol)
+                            else:
+                                print(f"[진입 차단] {self.current_position} 포지션 + {llm_signal} 신호 → 반대 방향")
+                        else:
                             print(f"[진입 조건] {llm_signal} 신호, 신뢰도 {llm_confidence}% (임계값 {self.MIN_CONFIDENCE}%)")
                             self.open_position(target_symbol)
-                        else:
-                            print(f"[진입 차단] 신뢰도 부족: {llm_confidence}% < {self.MIN_CONFIDENCE}%")
+                    else:
+                        print(f"[진입 차단] 신뢰도 부족: {llm_confidence}% < {self.MIN_CONFIDENCE}%")
 
                 # 상태 출력
                 current_balance = self.get_usd_balance()
