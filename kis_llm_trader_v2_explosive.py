@@ -739,13 +739,29 @@ class ExplosiveKISTrader:
                     print(f"[{datetime.now().strftime('%H:%M:%S')}] [WATCH]  7b 실시간 모니터 감시 중...")
                     monitor_start = datetime.now()
 
-                    # 7b LLM 실제 분석 (추세 기반이 아닌 LLM 판단)
+                    # 7b LLM 실제 분석 (더 공격적으로 BULL/BEAR 생성)
                     try:
                         # 간단한 LLM 분석 (7b 빠른 응답)
                         monitor_signal = self.get_llm_signal_7b(soxl_price, trend)
-                    except:
-                        # LLM 실패 시 추세 기반 폴백
-                        monitor_signal = 'BULL' if trend == 'BULL' else ('BEAR' if trend == 'BEAR' else 'NEUTRAL')
+                    except Exception as e:
+                        print(f"[WARN] 7b LLM 분석 실패: {e}")
+                        # LLM 실패 시 더 공격적인 폴백 (NEUTRAL 최소화)
+                        if trend == 'BULL':
+                            monitor_signal = 'BULL'
+                        elif trend == 'BEAR':
+                            monitor_signal = 'BEAR'
+                        else:
+                            # NEUTRAL일 때도 가격 변화에 따라 판단
+                            if len(self.price_history) >= 2:
+                                price_change = (soxl_price - self.price_history[-2]) / self.price_history[-2] * 100
+                                if price_change > 0.5:
+                                    monitor_signal = 'BULL'
+                                elif price_change < -0.5:
+                                    monitor_signal = 'BEAR'
+                                else:
+                                    monitor_signal = 'NEUTRAL'
+                            else:
+                                monitor_signal = 'NEUTRAL'
 
                     monitor_duration = (datetime.now() - monitor_start).total_seconds()
                     print(f"[{datetime.now().strftime('%H:%M:%S')}] [OK] 7b 모니터: {monitor_signal} ({monitor_duration:.1f}초)")
@@ -761,12 +777,28 @@ class ExplosiveKISTrader:
                     print(f"[{datetime.now().strftime('%H:%M:%S')}]  14b 메인 분석 시작 (15분 주기)...")
                     deep_start = datetime.now()
 
-                    # 14b LLM 실제 분석 (깊은 시장 분석)
+                    # 14b LLM 실제 분석 (더 공격적으로 BULL/BEAR 생성)
                     try:
                         deep_signal = self.get_llm_signal_14b(soxl_price, trend)
-                    except:
-                        # LLM 실패 시 추세 기반 폴백
-                        deep_signal = 'BULL' if trend == 'BULL' else ('BEAR' if trend == 'BEAR' else 'NEUTRAL')
+                    except Exception as e:
+                        print(f"[WARN] 14b LLM 분석 실패: {e}")
+                        # LLM 실패 시 더 공격적인 폴백 (NEUTRAL 최소화)
+                        if trend == 'BULL':
+                            deep_signal = 'BULL'
+                        elif trend == 'BEAR':
+                            deep_signal = 'BEAR'
+                        else:
+                            # NEUTRAL일 때도 가격 변화에 따라 판단
+                            if len(self.price_history) >= 2:
+                                price_change = (soxl_price - self.price_history[-2]) / self.price_history[-2] * 100
+                                if price_change > 0.3:  # 14b는 더 민감하게
+                                    deep_signal = 'BULL'
+                                elif price_change < -0.3:
+                                    deep_signal = 'BEAR'
+                                else:
+                                    deep_signal = 'NEUTRAL'
+                            else:
+                                deep_signal = 'NEUTRAL'
 
                     deep_duration = (datetime.now() - deep_start).total_seconds()
                     print(f"[{datetime.now().strftime('%H:%M:%S')}] [OK] 14b 분석: {deep_signal} ({deep_duration:.1f}초)")
