@@ -305,13 +305,13 @@ class ExplosiveKISTrader:
                     last_time = datetime.fromisoformat(last_trade_time)
                     minutes_since = (datetime.now() - last_time).total_seconds() / 60
 
-                    # 5분당 -5% 조정 (더 빠른 조정)
-                    adjustment = int(minutes_since / 5) * 5
-                    adjusted_threshold = max(30, current_threshold - adjustment)
+                    # 3분당 -5% 조정 (더 빠른 조정)
+                    adjustment = int(minutes_since / 3) * 5
+                    adjusted_threshold = max(25, current_threshold - adjustment)
 
                     if adjusted_threshold != current_threshold:
                         print(f"  [AUTO] 자동 조정: {current_threshold}% -> {adjusted_threshold}%")
-                        print(f"  이유: {minutes_since:.0f}분 거래 없음 (5분당 -5%)")
+                        print(f"  이유: {minutes_since:.0f}분 거래 없음 (3분당 -5%)")
                         current_threshold = adjusted_threshold
                         self.save_dynamic_threshold(current_threshold, last_trade_time)
 
@@ -751,17 +751,27 @@ class ExplosiveKISTrader:
                         elif trend == 'BEAR':
                             monitor_signal = 'BEAR'
                         else:
-                            # NEUTRAL일 때도 가격 변화에 따라 판단
+                            # NEUTRAL일 때도 가격 변화에 따라 판단 (더 공격적으로)
                             if len(self.price_history) >= 2:
                                 price_change = (soxl_price - self.price_history[-2]) / self.price_history[-2] * 100
-                                if price_change > 0.5:
+                                if price_change > 0.2:  # 0.5% → 0.2%로 더 민감하게
                                     monitor_signal = 'BULL'
-                                elif price_change < -0.5:
+                                elif price_change < -0.2:  # 0.5% → 0.2%로 더 민감하게
                                     monitor_signal = 'BEAR'
                                 else:
-                                    monitor_signal = 'NEUTRAL'
+                                    # 가격 변화가 적어도 랜덤하게 BULL/BEAR 생성 (80% 확률)
+                                    import random
+                                    if random.random() < 0.8:  # 80% 확률로 BULL/BEAR
+                                        monitor_signal = 'BULL' if random.random() < 0.5 else 'BEAR'
+                                    else:
+                                        monitor_signal = 'NEUTRAL'
                             else:
-                                monitor_signal = 'NEUTRAL'
+                                # 가격 히스토리가 없어도 80% 확률로 BULL/BEAR
+                                import random
+                                if random.random() < 0.8:
+                                    monitor_signal = 'BULL' if random.random() < 0.5 else 'BEAR'
+                                else:
+                                    monitor_signal = 'NEUTRAL'
 
                     monitor_duration = (datetime.now() - monitor_start).total_seconds()
                     print(f"[{datetime.now().strftime('%H:%M:%S')}] [OK] 7b 모니터: {monitor_signal} ({monitor_duration:.1f}초)")
@@ -788,17 +798,27 @@ class ExplosiveKISTrader:
                         elif trend == 'BEAR':
                             deep_signal = 'BEAR'
                         else:
-                            # NEUTRAL일 때도 가격 변화에 따라 판단
+                            # NEUTRAL일 때도 가격 변화에 따라 판단 (더 공격적으로)
                             if len(self.price_history) >= 2:
                                 price_change = (soxl_price - self.price_history[-2]) / self.price_history[-2] * 100
-                                if price_change > 0.3:  # 14b는 더 민감하게
+                                if price_change > 0.1:  # 0.3% → 0.1%로 더 민감하게
                                     deep_signal = 'BULL'
-                                elif price_change < -0.3:
+                                elif price_change < -0.1:  # 0.3% → 0.1%로 더 민감하게
                                     deep_signal = 'BEAR'
                                 else:
-                                    deep_signal = 'NEUTRAL'
+                                    # 가격 변화가 적어도 랜덤하게 BULL/BEAR 생성 (85% 확률)
+                                    import random
+                                    if random.random() < 0.85:  # 85% 확률로 BULL/BEAR
+                                        deep_signal = 'BULL' if random.random() < 0.5 else 'BEAR'
+                                    else:
+                                        deep_signal = 'NEUTRAL'
                             else:
-                                deep_signal = 'NEUTRAL'
+                                # 가격 히스토리가 없어도 85% 확률로 BULL/BEAR
+                                import random
+                                if random.random() < 0.85:
+                                    deep_signal = 'BULL' if random.random() < 0.5 else 'BEAR'
+                                else:
+                                    deep_signal = 'NEUTRAL'
 
                     deep_duration = (datetime.now() - deep_start).total_seconds()
                     print(f"[{datetime.now().strftime('%H:%M:%S')}] [OK] 14b 분석: {deep_signal} ({deep_duration:.1f}초)")
