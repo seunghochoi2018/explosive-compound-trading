@@ -739,8 +739,13 @@ class ExplosiveKISTrader:
                     print(f"[{datetime.now().strftime('%H:%M:%S')}] [WATCH]  7b 실시간 모니터 감시 중...")
                     monitor_start = datetime.now()
 
-                    # 간단한 시장 분석 (7b는 빠르게)
-                    monitor_signal = 'BULL' if trend == 'BULL' else ('BEAR' if trend == 'BEAR' else 'NEUTRAL')
+                    # 7b LLM 실제 분석 (추세 기반이 아닌 LLM 판단)
+                    try:
+                        # 간단한 LLM 분석 (7b 빠른 응답)
+                        monitor_signal = self.get_llm_signal_7b(soxl_price, trend)
+                    except:
+                        # LLM 실패 시 추세 기반 폴백
+                        monitor_signal = 'BULL' if trend == 'BULL' else ('BEAR' if trend == 'BEAR' else 'NEUTRAL')
 
                     monitor_duration = (datetime.now() - monitor_start).total_seconds()
                     print(f"[{datetime.now().strftime('%H:%M:%S')}] [OK] 7b 모니터: {monitor_signal} ({monitor_duration:.1f}초)")
@@ -756,8 +761,12 @@ class ExplosiveKISTrader:
                     print(f"[{datetime.now().strftime('%H:%M:%S')}]  14b 메인 분석 시작 (15분 주기)...")
                     deep_start = datetime.now()
 
-                    # 14b로 깊은 분석 (간단 구현 - 추세 기반)
-                    deep_signal = 'BULL' if trend == 'BULL' else ('BEAR' if trend == 'BEAR' else 'NEUTRAL')
+                    # 14b LLM 실제 분석 (깊은 시장 분석)
+                    try:
+                        deep_signal = self.get_llm_signal_14b(soxl_price, trend)
+                    except:
+                        # LLM 실패 시 추세 기반 폴백
+                        deep_signal = 'BULL' if trend == 'BULL' else ('BEAR' if trend == 'BEAR' else 'NEUTRAL')
 
                     deep_duration = (datetime.now() - deep_start).total_seconds()
                     print(f"[{datetime.now().strftime('%H:%M:%S')}] [OK] 14b 분석: {deep_signal} ({deep_duration:.1f}초)")
@@ -858,6 +867,49 @@ class ExplosiveKISTrader:
             except Exception as e:
                 print(f"[ERROR] 메인 루프: {e}")
                 time.sleep(300)
+
+    def get_llm_signal_7b(self, price: float, trend: str) -> str:
+        """7b LLM 빠른 분석"""
+        try:
+            # 간단한 프롬프트로 빠른 분석
+            prompt = f"SOXL 현재가: ${price:.2f}, 추세: {trend}\n반도체 3배 레버리지 ETF 거래 신호를 BULL/BEAR/NEUTRAL로 답하세요."
+            
+            # 7b 모델로 빠른 분석 (포트 11435)
+            response = self.analyzer.analyze_market_simple(prompt)
+            
+            if 'BULL' in response.upper():
+                return 'BULL'
+            elif 'BEAR' in response.upper():
+                return 'BEAR'
+            else:
+                return 'NEUTRAL'
+        except:
+            return 'NEUTRAL'
+    
+    def get_llm_signal_14b(self, price: float, trend: str) -> str:
+        """14b LLM 깊은 분석"""
+        try:
+            # 상세한 프롬프트로 깊은 분석
+            prompt = f"""
+SOXL (반도체 3배 레버리지 ETF) 분석:
+- 현재가: ${price:.2f}
+- 추세: {trend}
+- 가격 히스토리: {self.price_history[-5:] if len(self.price_history) >= 5 else 'N/A'}
+
+3배 레버리지 특성을 고려하여 거래 신호를 BULL/BEAR/NEUTRAL로 답하세요.
+"""
+            
+            # 14b 모델로 깊은 분석 (포트 11436)
+            response = self.analyzer.analyze_market_simple(prompt)
+            
+            if 'BULL' in response.upper():
+                return 'BULL'
+            elif 'BEAR' in response.upper():
+                return 'BEAR'
+            else:
+                return 'NEUTRAL'
+        except:
+            return 'NEUTRAL'
 
     def get_ensemble_signal(self, trend: str) -> str:
         """7b + 14b 앙상블 LLM 신호"""
