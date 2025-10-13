@@ -129,6 +129,11 @@ class ExplosiveKISTrader:
         # 마지막 LLM 분석
         self.last_llm_signal = None
         self.last_llm_confidence = 0
+        
+        # 안전장치 관련 변수 (ETH와 동일)
+        self.last_safety_time = None
+        self.consecutive_losses = 0
+        self.max_consecutive_losses = 3
 
         # 초기 잔고
         self.initial_balance = self.get_usd_balance()
@@ -728,6 +733,45 @@ class ExplosiveKISTrader:
                     if len(self.price_history) > self.max_history:
                         self.price_history.pop(0)
                     print(f"[{datetime.now().strftime('%H:%M:%S')}] [UP] 가격 히스토리: {len(self.price_history)}개")
+                
+                # ===== [SAFETY] 안전장치 선평가 (LLM 판단보다 우선) =====
+                if self.current_position:
+                    current_price = self.get_current_price(self.current_position)
+                    if current_price > 0:
+                        pnl = self.get_position_pnl(current_price)
+                        holding_time_sec = (datetime.now() - self.entry_time).total_seconds() if self.entry_time else 0
+                        holding_time_min = holding_time_sec / 60
+
+                        # 1. 보유시간 초과 시 즉시 청산
+                        if holding_time_sec > self.MAX_HOLDING_TIME:
+                            print(f"[SAFETY] 보유시간 초과 ({holding_time_min:.0f}분) → 즉시 청산 (PNL:{pnl:+.2f}%)")
+                            self.close_position("MAX_HOLD_TIME_SAFETY")
+                            self.last_safety_time = datetime.now()
+                            time.sleep(5)  # 재진입 방지 잠시 대기
+                            continue
+
+                        # 2. 동적 손절 임계 도달 시 즉시 청산
+                        if pnl <= self.DYNAMIC_STOP_LOSS:
+                            print(f"[SAFETY] 손절 임계 도달 → 즉시 청산 (PNL:{pnl:+.2f}%)")
+                            self.close_position("STOP_LOSS_SAFETY")
+                            self.last_safety_time = datetime.now()
+                            self.consecutive_losses += 1
+                            time.sleep(5)
+                            continue
+
+                        # 3. 단기 급락 보호 (최근 5틱 대비 -5% 이상 급락 시)
+                        if len(self.price_history) >= 5:
+                            recent_prices = self.price_history[-5:]
+                            min_price_in_5_ticks = min(recent_prices)
+                            max_price_in_5_ticks = max(recent_prices)
+                            
+                            # 현재 가격이 최근 최고가 대비 5% 이상 급락했는지 확인
+                            if max_price_in_5_ticks > 0 and (current_price - max_price_in_5_ticks) / max_price_in_5_ticks * 100 <= -5.0:
+                                print(f"[SAFETY] 단기 급락 감지 (최근 최고가 ${max_price_in_5_ticks:.2f} 대비 -5% 이상) → 즉시 청산 (PNL:{pnl:+.2f}%)")
+                                self.close_position("SUDDEN_DROP_SAFETY")
+                                self.last_safety_time = datetime.now()
+                                time.sleep(5)
+                                continue
 
                 # 추세 판단
                 print(f"[{datetime.now().strftime('%H:%M:%S')}]  추세 분석 중...")
@@ -876,6 +920,12 @@ class ExplosiveKISTrader:
                     if llm_confidence >= self.MIN_CONFIDENCE:
                         target_symbol = 'SOXL' if llm_signal == 'BULL' else 'SOXS'
                         
+                        # 연속 손실 차단: 3회 연속 손실 시 해당 방향 진입 금지
+                        if self.consecutive_losses >= self.max_consecutive_losses:
+                            if (target_symbol == 'SOXL' and llm_signal == 'BULL') or (target_symbol == 'SOXS' and llm_signal == 'BEAR'):
+                                print(f"[진입 차단] 연속 손실 {self.consecutive_losses}회 → {target_symbol} 진입 금지")
+                                continue
+                        
                         # 피라미딩 체크: 같은 방향이면 추가 진입 허용
                         if self.current_position:
                             if (self.current_position == 'SOXL' and llm_signal == 'BULL') or (self.current_position == 'SOXS' and llm_signal == 'BEAR'):
@@ -969,6 +1019,20 @@ SOXL (반도체 3배 레버리지 ETF) 분석:
                 return 'NEUTRAL'
         except:
             return 'NEUTRAL'
+
+    def get_position_pnl(self, current_price: float) -> float:
+        """포지션 PNL 계산 (3배 레버리지)"""
+        if not self.current_position or not self.entry_price:
+            return 0.0
+
+        if self.current_position == 'SOXL':
+            # SOXL: 상승 시 수익
+            pnl = ((current_price - self.entry_price) / self.entry_price) * 100 * 3
+        else:  # SOXS
+            # SOXS: 하락 시 수익
+            pnl = ((self.entry_price - current_price) / self.entry_price) * 100 * 3
+
+        return pnl
 
     def get_ensemble_signal(self, trend: str) -> str:
         """7b + 14b 앙상블 LLM 신호"""
@@ -1131,8 +1195,22 @@ SOXL (반도체 3배 레버리지 ETF) 분석:
                 real_profit = current_balance - self.entry_balance
                 if real_profit > 0:
                     self.stats['wins'] += 1
+                    self.consecutive_losses = 0  # 수익 시 연속 손실 리셋
                 else:
                     self.stats['losses'] += 1
+                    self.consecutive_losses += 1  # 손실 시 연속 손실 증가
+                    
+                    # 연속 손실 학습: 3회 연속 손실 시 해당 방향 진입 금지
+                    if self.consecutive_losses >= self.max_consecutive_losses:
+                        print(f"[학습] 연속 손실 {self.consecutive_losses}회 → {symbol} 방향 진입 금지")
+                        self.telegram.send_message(
+                            f"[학습] <b>연속 손실 패턴 감지</b>\n\n"
+                            f"<b>종목:</b> {symbol}\n"
+                            f"<b>연속 손실:</b> {self.consecutive_losses}회\n"
+                            f"<b>학습 결과:</b> {symbol} 방향 진입 금지\n"
+                            f"<b>시간:</b> {datetime.now().strftime('%H:%M:%S')}",
+                            priority="important"
+                        )
 
                 # 9. 텔레그램 알림 (실제 잔고 변화 포함)
                 emoji = "[OK]" if real_profit > 0 else "[ERROR]"
