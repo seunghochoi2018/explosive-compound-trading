@@ -1,0 +1,163 @@
+simulate_mode = True  # 테스트 중에는 True
+
+if simulate_mode:
+    print("[TEST MODE] 주문하지 않고 로직만 테스트합니다.")
+else:
+    place_order("A980679", qty=2, price=0, side="buy")  # 실제 주문
+
+simulate_mode = True  # 테스트 중에는 True
+
+if simulate_mode:
+    print("[TEST MODE] 주문하지 않고 로직만 테스트합니다.")
+else:
+    place_order("A980679", qty=2, price=0, side="buy")  # 실제 주문
+🧪 1. “가짜 주문”으로 논리만 테스트 (실매수 X)
+
+시세 조회 없이, 주문 로직만 점검하는 “시뮬레이션 모드” 또는 **“dry-run 모드”**를 코드에 넣어두는 것이 가장 좋습니다.
+
+예시 (Python 코드 상에서):
+
+🔁 2. 실제 주문 API 요청은 보내되, 응답만 점검
+	•	장 마감 시간에 시장가 주문을 보내면 대부분 주문단가 오류 또는 거래시간 외 에러 발생
+	•	이 에러 코드가 잘 처리되는지만 확인하는 것도 테스트입니
+
+response = place_order(...)
+print("응답 코드:", response['msg_cd'])  # 예: APBK1101, APBK1234 등
+
+테스트입니다.# 장 중에 자동매매는 이렇게 돌겠구나... 하는 흐름만 확인
+while True:
+    price = get_current_price("SOXL")
+    print(f"[시세 확인] 현재가: {price}")
+
+    if price and price < 38:
+        print("매수 조건 만족 (단, 장외라 주문은 안 함)")
+        # place_order()는 주석처리 or simulate_mode
+
+    time.sleep(60)  # 1분마다 확인
+
+항목
+테스트 시점
+테스트 방법
+시세 조회
+장 마감 중
+일부 종목 테스트 (NVDA, NVDL)
+매매 조건 로직
+언제든지
+simulate_mode로 테스트
+주문 API 응답 확인
+장 마감 중
+실패 응답 코드 처리 확인
+실제 주문
+장 개장 중
+"ORD_DVSN": "00", "OVRS_ORD_UNPR": "0" 설정 필수
+
+import time
+import datetime
+import requests
+
+# === 설정 영역 ===
+APP_KEY = "your_appkey"
+APP_SECRET = "your_appsecret"
+ACCESS_TOKEN = "your_access_token"
+ACCOUNT_NO = "43113014"
+PRODUCT_CODE = "01"
+PDNO_SOXL = "A980679"  # SOXL 종목코드
+EXCHANGE_CODE = "NASD"
+simulate_mode = True   # ❗ True면 주문 실행 안함
+
+def get_current_price(pdno: str):
+    url = "https://openapi.koreainvestment.com:9443/uapi/overseas-price/v1/quotations/price"
+    headers = {
+        "authorization": f"Bearer {ACCESS_TOKEN}",
+        "appkey": APP_KEY,
+        "appsecret": APP_SECRET,
+        "tr_id": "HHDFS00000300",
+        "custtype": "P"
+    }
+    params = {
+        "FID_COND_MRKT_DIV_CODE": "N",
+        "FID_INPUT_ISCD": pdno  # 종목코드 (예: SOXL)
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+    try:
+        data = response.json()
+        if data.get("rt_cd") == "0":
+            price = float(data["output"]["last"])
+            return price
+        else:
+            print(f"[시세 조회 실패] 코드: {data.get('msg_cd')}, 메시지: {data.get('msg1')}")
+            return None
+    except Exception as e:
+        print("[오류] 시세 조회 예외:", str(e))
+        return None
+
+def place_order(price: str, qty: str, side: str):
+    url = "https://openapi.koreainvestment.com:9443/uapi/overseas-stock/v1/trading/order"
+    headers = {
+        "authorization": f"Bearer {ACCESS_TOKEN}",
+        "appkey": APP_KEY,
+        "appsecret": APP_SECRET,
+        "custtype": "P",
+        "tr_id": "TTTT1002U" if side == "buy" else "TTTT1006U",
+        "hashkey": "your_hash_key"  # TODO: hashkey 생성 함수 연동 필요
+    }
+
+    data = {
+        "CANO": ACCOUNT_NO,
+        "ACNT_PRDT_CD": PRODUCT_CODE,
+        "OVRS_EXCG_CD": EXCHANGE_CODE,
+        "PDNO": PDNO_SOXL,
+        "ORD_QTY": qty,
+        "OVRS_ORD_UNPR": "0",             # 시장가 = 0
+        "ORD_SVR_DVSN_CD": "0",
+        "ORD_DVSN": "00"                  # 시장가
+    }
+
+    if simulate_mode:
+        print(f"[SIMULATION] {'매수' if side=='buy' else '매도'} 주문 로직 실행됨 (가격: {price}, 수량: {qty})")
+        return
+
+    response = requests.post(url, headers=headers, json=data)
+    print("[주문 응답]", response.status_code, response.text)
+
+# === 자동매매 루프 ===
+while True:
+    now = datetime.datetime.now()
+    print(f"[{now.strftime('%H:%M:%S')}] 💹 SOXL 현재가 조회 중...")
+
+    price = get_current_price("SOXL")
+    if price:
+        print(f"→ 현재가: ${price:.2f}")
+
+        # 예: 35달러 이하로 떨어지면 매수
+        if price <= 35:
+            print("📥 매수 조건 충족")
+            place_order(price="0", qty="2", side="buy")
+        # 예: 42달러 이상이면 매도
+        elif price >= 42:
+            print("📤 매도 조건 충족")
+            place_order(price="0", qty="2", side="sell")
+        else:
+            print("⏳ 조건 불충분 → 대기")
+
+    else:
+        print("⚠️ 가격 조회 실패")
+
+    print("⏸️ 60초 대기...\n")
+    time.sleep(60)
+
+⸻
+
+📉 3. 실시간 가격 조회 API는 장 마감 시 일부 종목에서 오류
+	•	HHDFS00000300 (해외주식 현재가 API)는 장 마감 시 일부 종목에서 HTTP 500 또는 빈 응답 발생
+	•	해결법:
+	•	✅ 특정 종목만 테스트 (ex. NVDL, NVDA는 응답 잘 옴)
+	•	✅ 실패도 로직에 반영 (예: None 응답 시 로그만 출력)
+
+⸻
+
+🔂 4. 주기적 로직 테스트만 수행
+
+
+

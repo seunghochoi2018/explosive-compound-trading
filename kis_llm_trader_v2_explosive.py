@@ -102,12 +102,22 @@ class ExplosiveKISTrader:
         self.learning_file = "kis_trade_history.json"
         self.load_trade_history()
 
-        #  복리 폭발 전략 설정 (학습 기반 동적 값)
-        self.MAX_HOLDING_TIME = self._calculate_optimal_holding_time()
-        self.DYNAMIC_STOP_LOSS = self._calculate_optimal_stop_loss()
-        self.MIN_CONFIDENCE = self._calculate_optimal_confidence()
-        # 임계값 제거 - LLM 자율 판단 (추세는 14b/32b가 직접 분석)
+        # ETH와 동일한 로직 적용
+        self.MAX_HOLDING_TIME = 60 * 60  # 60분 (ETH와 동일)
+        self.DYNAMIC_STOP_LOSS = -2.0  # -2% (ETH와 동일)
+        
+        # 동적 임계값 시스템 (ETH와 동일)
+        self.threshold_file = "kis_dynamic_threshold.json"
+        self.MIN_CONFIDENCE = self.load_dynamic_threshold()
         self.TREND_CHECK_ENABLED = True
+        
+        # 잔고 기반 공격적 모드 (ETH와 동일)
+        current_balance = self.get_usd_balance()
+        if current_balance <= 1000:
+            self.MIN_CONFIDENCE = 40  # $1000 이하: 40% (공격적)
+            print(f"  [공격적 모드] 잔고 ${current_balance:.2f} → 임계값 40% (빠른 성장)")
+        else:
+            print(f"  [기존 모드] 잔고 ${current_balance:.2f} → 임계값 {self.MIN_CONFIDENCE}%")
 
         print(f"\n[전략 설정 - 학습 기반 + LLM 자율 판단]")
         print(f"  최대 보유시간: {self.MAX_HOLDING_TIME/3600:.1f}시간")
@@ -279,6 +289,67 @@ class ExplosiveKISTrader:
                 return conf
 
         return 60
+
+    def load_dynamic_threshold(self) -> int:
+        """동적 임계값 로드 (ETH와 동일)"""
+        try:
+            with open(self.threshold_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                current_threshold = data.get('current_threshold', 60)
+                last_trade_time = data.get('last_trade_time', None)
+
+                print(f"\n[동적 임계값] 로드: {current_threshold}%")
+
+                # 마지막 거래 시간 체크
+                if last_trade_time:
+                    last_time = datetime.fromisoformat(last_trade_time)
+                    minutes_since = (datetime.now() - last_time).total_seconds() / 60
+
+                    # 30분당 -5% 조정
+                    adjustment = int(minutes_since / 30) * 5
+                    adjusted_threshold = max(40, current_threshold - adjustment)
+
+                    if adjusted_threshold != current_threshold:
+                        print(f"  [AUTO] 자동 조정: {current_threshold}% -> {adjusted_threshold}%")
+                        print(f"  이유: {minutes_since:.0f}분 거래 없음 (30분당 -5%)")
+                        current_threshold = adjusted_threshold
+                        self.save_dynamic_threshold(current_threshold, last_trade_time)
+
+                return current_threshold
+
+        except FileNotFoundError:
+            # 첫 실행: 기본값 60%
+            print(f"\n[동적 임계값] 초기화: 60%")
+            self.save_dynamic_threshold(60, None)
+            return 60
+
+    def save_dynamic_threshold(self, threshold: int, last_trade_time: str = None):
+        """동적 임계값 저장"""
+        try:
+            data = {
+                'current_threshold': threshold,
+                'last_trade_time': last_trade_time,
+                'updated_at': datetime.now().isoformat()
+            }
+            with open(self.threshold_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"[WARN] 임계값 저장 실패: {e}")
+
+    def adjust_threshold_on_trade(self, success: bool):
+        """거래 후 임계값 조정"""
+        if success:
+            # 성공 → +2% (최대 65%)
+            new_threshold = min(65, self.MIN_CONFIDENCE + 2)
+            if new_threshold != self.MIN_CONFIDENCE:
+                print(f"[임계값 상승] {self.MIN_CONFIDENCE}% → {new_threshold}% (거래 성공)")
+                self.MIN_CONFIDENCE = new_threshold
+
+        # 마지막 거래 시간 업데이트
+        self.save_dynamic_threshold(
+            self.MIN_CONFIDENCE,
+            datetime.now().isoformat()
+        )
 
     def _calculate_optimal_ma_threshold(self, direction: str) -> float:
         """학습 기반 MA 임계값"""
@@ -739,9 +810,16 @@ class ExplosiveKISTrader:
 
                 # 포지션 없으면 진입 조건 체크
                 else:
+                    # ETH와 동일한 로직: 신뢰도 체크 + BULL/BEAR
                     if llm_signal in ['BULL', 'BEAR']:
-                        target_symbol = 'SOXL' if llm_signal == 'BULL' else 'SOXS'
-                        self.open_position(target_symbol)
+                        # 신뢰도 체크 (동적 임계값)
+                        llm_confidence = 50  # 기본값 (실제로는 LLM에서 받아야 함)
+                        if llm_confidence >= self.MIN_CONFIDENCE:
+                            target_symbol = 'SOXL' if llm_signal == 'BULL' else 'SOXS'
+                            print(f"[진입 조건] {llm_signal} 신호, 신뢰도 {llm_confidence}% (임계값 {self.MIN_CONFIDENCE}%)")
+                            self.open_position(target_symbol)
+                        else:
+                            print(f"[진입 차단] 신뢰도 부족: {llm_confidence}% < {self.MIN_CONFIDENCE}%")
 
                 # 상태 출력
                 current_balance = self.get_usd_balance()
@@ -772,7 +850,7 @@ class ExplosiveKISTrader:
 
                 #  자기 개선 엔진은 unified_trader_manager에서 실행됩니다
 
-                time.sleep(300)  # 5분 간격
+                time.sleep(300)  # 5분 간격 (기존)
 
             except KeyboardInterrupt:
                 print("\n[종료] 사용자 중단")
@@ -803,9 +881,20 @@ class ExplosiveKISTrader:
                 print(f"[ERROR] 잔고 부족: ${balance:.2f}")
                 return
 
-            # 3. 매수 수량 계산 (잔고의 95% 사용)
-            max_invest = balance * 0.95
+            # 3. 매수 수량 계산 (잔고 구간별 이용률)
+            if balance <= 1000:
+                # $1000 이하: 100% 이용 (공격적)
+                invest_ratio = 1.00
+                grade = "풀베팅 (100%)"
+            else:
+                # $1000 초과: 95% 이용 (기존)
+                invest_ratio = 0.95
+                grade = "적극적 (95%)"
+            
+            max_invest = balance * invest_ratio
             qty = int(max_invest / current_price)
+            
+            print(f"[잔고 이용률] ${balance:.2f} → {grade} (${max_invest:.2f})")
 
             if qty < 1:
                 print(f"[ERROR] 매수 수량 부족 (잔고: ${balance:.2f}, 가격: ${current_price:.2f})")
@@ -895,7 +984,10 @@ class ExplosiveKISTrader:
 
             # 5. 매도 주문 실행
             if self.place_order(symbol, 'SELL', qty):
-                # 6. 거래 기록 저장
+                # 6. 실제 잔고 조회 (허수가 아닌 실제 수익 기록)
+                current_balance = self.get_usd_balance()
+
+                # 7. 거래 기록 저장 (실제 잔고 변화 포함)
                 trade_record = {
                     'symbol': symbol,
                     'entry_price': self.entry_price,
@@ -905,7 +997,10 @@ class ExplosiveKISTrader:
                     'holding_hours': holding_hours,
                     'pnl_pct': pnl,
                     'exit_reason': reason,
-                    'quantity': qty
+                    'quantity': qty,
+                    'balance_before': self.entry_balance,  # 실제 잔고 (진입 시)
+                    'balance_after': current_balance,      # 실제 잔고 (청산 시)
+                    'balance_change': current_balance - self.entry_balance  # 실제 수익 (USD)
                 }
 
                 self.all_trades.append(trade_record)
@@ -921,21 +1016,24 @@ class ExplosiveKISTrader:
                 except Exception as e:
                     print(f"[ERROR] 거래 기록 저장 실패: {e}")
 
-                # 7. 통계 업데이트
-                if pnl > 0:
+                # 8. 통계 업데이트 (실제 잔고 기준)
+                real_profit = current_balance - self.entry_balance
+                if real_profit > 0:
                     self.stats['wins'] += 1
                 else:
                     self.stats['losses'] += 1
 
-                # 8. 텔레그램 알림 (거래 청산 - 항상 전송)
-                emoji = "[OK]" if pnl > 0 else "[ERROR]"
+                # 9. 텔레그램 알림 (실제 잔고 변화 포함)
+                emoji = "[OK]" if real_profit > 0 else "[ERROR]"
                 self.telegram.send_message(
                     f"{emoji} KIS 청산 완료\n\n"
                     f"종목: {symbol}\n"
                     f"수량: {qty}주\n"
                     f"진입: ${self.entry_price:.2f}\n"
                     f"청산: ${current_price:.2f}\n"
-                    f"PNL: {pnl:+.2f}%\n"
+                    f"PNL (레버리지): {pnl:+.2f}%\n"
+                    f"실제 수익: ${real_profit:+.2f} ({real_profit/self.entry_balance*100:+.2f}%)\n"
+                    f"잔고: ${self.entry_balance:.2f} → ${current_balance:.2f}\n"
                     f"보유: {holding_hours:.1f}시간\n"
                     f"이유: {reason}\n\n"
                     f"누적 승률: {self.stats['wins']}/{self.stats['total_trades']}건 "
@@ -943,9 +1041,11 @@ class ExplosiveKISTrader:
                     priority="important"
                 )
 
-                print(f"[SUCCESS] {symbol} {qty}주 청산 완료 @${current_price:.2f} (PNL: {pnl:+.2f}%)")
+                print(f"[SUCCESS] {symbol} {qty}주 청산 완료 @${current_price:.2f}")
+                print(f"  레버리지 PNL: {pnl:+.2f}%")
+                print(f"  실제 수익: ${real_profit:+.2f} ({real_profit/self.entry_balance*100:+.2f}%)")
 
-                # 9. 포지션 정보 초기화
+                # 10. 포지션 정보 초기화
                 self.current_position = None
                 self.entry_price = 0
                 self.entry_time = None
