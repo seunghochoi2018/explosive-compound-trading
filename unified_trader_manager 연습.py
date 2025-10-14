@@ -1,39 +1,167 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-시박햤
-"""2
-통합 트레이더 관리 시스템start 로가 확인
+# -*- coding: utf-8 -*-
+"""
+통합 트레이더 관리 시스템
 - 코드3 (ETH 트레이더) + 코드4 (KIS 트레이더) 동시 관리
 - Ollama 2개 독립 실행 (포트 충돌 방지)
 - 지능적 리소스 관리 (메모리, CPU, 큐잉 감지) 코드4
 - 타임아웃 자동 복구
 - 주기적 재시작 (4시간)
 """
-import subprocess
-import time
-import psutil
-import os
-import requests
-from datetime import datetime
-from pathlib import Path
-from collections import deque
-import threading
-import re
-import sys
-import io
-import json
-import logging
-from logging.handlers import RotatingFileHandler
+
+# 안전한 import를 위한 예외 처리
+try:
+    import subprocess
+    import time
+    import psutil
+    import os
+    import requests
+    from datetime import datetime
+    from pathlib import Path
+    from collections import deque
+    import threading
+    import re
+    import sys
+    import io
+    import json
+    import logging
+    from logging.handlers import RotatingFileHandler
+    print("[INFO] 모든 필수 라이브러리 로드 완료")
+except ImportError as e:
+    print(f"[ERROR] 라이브러리 로드 실패: {e}")
+    print("[INFO] 필요한 라이브러리 설치 중...")
+    import subprocess
+    subprocess.run([sys.executable, "-m", "pip", "install", "requests", "psutil"], check=True)
+    print("[INFO] 라이브러리 재설치 완료, 스크립트를 다시 실행하세요.")
+    sys.exit(1)
+except Exception as e:
+    print(f"[ERROR] 초기화 오류: {e}")
+    sys.exit(1)
 
 # UTF-8 인코딩 강제 설정 (Windows cp949 인코딩 오류 방지)
-if sys.platform == 'win32':
+if sys.platform == 'win32':                                                                                                 
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
+# 메모리 사용량 모니터링 및 제한
+def check_memory_usage():
+    """메모리 사용량 체크 및 제한"""
+    try:
+        process = psutil.Process(os.getpid())
+        memory_mb = process.memory_info().rss / 1024 / 1024
+        if memory_mb > 2000:  # 2GB 초과 시 경고
+            print(f"[WARNING] 메모리 사용량 높음: {memory_mb:.1f}MB")
+            return False
+        return True
+    except Exception as e:
+        print(f"[ERROR] 메모리 체크 실패: {e}")
+        return True
+
+# 글로벌 네트워크 재시도 미들웨어
+def http_retry_with_backoff(url, max_retries=3, base_delay=1, **kwargs):
+    """HTTP 요청 재시도 (지수 백오프)"""
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(url, timeout=10, **kwargs)
+            if response.status_code == 200:
+                return response
+            elif response.status_code >= 500:
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)
+                    print(f"[RETRY] HTTP {response.status_code} → {delay}s 대기 후 재시도")
+                    time.sleep(delay)
+                    continue
+        except requests.exceptions.RequestException as e:
+            if attempt < max_retries - 1:
+                delay = base_delay * (2 ** attempt)
+                print(f"[RETRY] 네트워크 오류: {e} → {delay}s 대기 후 재시도")
+                time.sleep(delay)
+                continue
+        except Exception as e:
+            print(f"[ERROR] HTTP 요청 실패: {e}")
+            break
+    return None
+
+# Ollama 헬스 체크
+def check_ollama_health(port):
+    """Ollama 포트 헬스 체크"""
+    try:
+        response = http_retry_with_backoff(f"http://127.0.0.1:{port}/api/tags")
+        if response and response.status_code == 200:
+            return True
+    except Exception as e:
+        print(f"[HEALTH] Ollama 포트 {port} 체크 실패: {e}")
+    return False
+
+# 메모리/CPU 가드
+def system_resource_guard():
+    """시스템 리소스 모니터링 및 제한"""
+    try:
+        # 메모리 사용률 체크
+        memory = psutil.virtual_memory()
+        if memory.percent > 85:
+            print(f"[GUARD] 메모리 사용률 높음: {memory.percent}%")
+            return False
+        
+        # CPU 사용률 체크
+        cpu_percent = psutil.cpu_percent(interval=1)
+        if cpu_percent > 90:
+            print(f"[GUARD] CPU 사용률 높음: {cpu_percent}%")
+            return False
+            
+        return True
+    except Exception as e:
+        print(f"[ERROR] 리소스 가드 실패: {e}")
+        return True
+
+# 안전한 종료 처리
+def graceful_shutdown(signum=None, frame=None):
+    """안전한 종료 처리"""
+    print("\n[SHUTDOWN] 안전한 종료 시작...")
+    
+    # 상태 저장
+    try:
+        state = {
+            "shutdown_time": datetime.now().isoformat(),
+            "eth_status": "shutdown",
+            "kis_status": "shutdown"
+        }
+        with open("trader_state.json", "w", encoding="utf-8") as f:
+            json.dump(state, f, indent=2, ensure_ascii=False)
+        print("[SHUTDOWN] 상태 저장 완료")
+    except Exception as e:
+        print(f"[SHUTDOWN] 상태 저장 실패: {e}")
+    
+    # 프로세스 종료
+    try:
+        global trader_eth, trader_kis
+        if trader_eth:
+            trader_eth.terminate()
+        if trader_kis:
+            trader_kis.terminate()
+        print("[SHUTDOWN] 트레이더 프로세스 종료 완료")
+    except Exception as e:
+        print(f"[SHUTDOWN] 프로세스 종료 실패: {e}")
+    
+    print("[SHUTDOWN] 안전한 종료 완료")
+    sys.exit(0)
+
+# 시그널 핸들러 등록
+import signal
+signal.signal(signal.SIGINT, graceful_shutdown)
+signal.signal(signal.SIGTERM, graceful_shutdown)
+
+# 초기 메모리 체크
+if not check_memory_usage():
+    print("[WARNING] 메모리 사용량이 높습니다. 스크립트 실행을 계속하시겠습니까?")
+    print("메모리 부족으로 인한 KeyboardInterrupt가 발생할 수 있습니다.")
 
 # LLM 감시 시스템
 sys.path.append(r'C:\Users\user\Documents\코드5')
 try:
     from llm_market_analyzer import LLMMarketAnalyzer
     LLM_AVAILABLE = True
+    print("[INFO] LLM 분석기 로드 성공 - 고성능 모드")
 except:
     LLM_AVAILABLE = False
     print("[WARNING] LLM 분석기 로드 실패, 기본 모니터링만 실행")
@@ -47,6 +175,30 @@ log_file = Path(r"C:\Users\user\Documents\코드5\unified_trader_realtime.log")
 file_handler = RotatingFileHandler(log_file, maxBytes=50*1024*1024, backupCount=5, encoding='utf-8')
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(log_formatter)
+
+# 로그 로테이션 함수
+def rotate_logs():
+    """로그 파일 로테이션 및 압축"""
+    try:
+        # 기존 로그 파일들 압축
+        log_dir = log_file.parent
+        for i in range(1, 6):  # backupCount=5
+            backup_file = log_file.with_suffix(f'.log.{i}')
+            if backup_file.exists():
+                # 압축 파일명
+                compressed_file = backup_file.with_suffix('.log.gz')
+                if not compressed_file.exists():
+                    try:
+                        import gzip
+                        with open(backup_file, 'rb') as f_in:
+                            with gzip.open(compressed_file, 'wb') as f_out:
+                                f_out.writelines(f_in)
+                        backup_file.unlink()  # 원본 삭제
+                        print(f"[LOG_ROTATION] {backup_file.name} → {compressed_file.name}")
+                    except Exception as e:
+                        print(f"[LOG_ROTATION] 압축 실패: {e}")
+    except Exception as e:
+        print(f"[LOG_ROTATION] 로그 로테이션 실패: {e}")
 
 # 콘솔 핸들러
 console_handler = logging.StreamHandler()
@@ -1818,6 +1970,8 @@ def parse_trader_log(line, trader_name):
 
     return line  # 모든 로그 반환!
 
+last_log_time = {"ETH": 0.0, "KIS": 0.0}
+
 def log_reader_thread(process, trader_name):
     """트레이더 로그 읽기 스레드"""
     # 트레이더별 로그 파일 경로
@@ -1853,6 +2007,12 @@ def log_reader_thread(process, trader_name):
             important_info = parse_trader_log(decoded_line, trader_name)
             if important_info:
                 colored_print(f"[{trader_name}] {important_info}", "magenta")
+            # 하트비트 갱신
+            try:
+                key = "ETH" if "ETH" in trader_name else ("KIS" if "KIS" in trader_name else trader_name)
+                last_log_time[key] = time.time()
+            except Exception:
+                pass
     except Exception as e:
         colored_print(f"[{trader_name}] 로그 읽기 오류: {e}", "red")
     finally:
@@ -1902,6 +2062,21 @@ def start_trader(script_path, python_exe, working_dir, trader_name, ollama_port)
         colored_print(f"{trader_name} 시작 오류: {e}", "red")
         return None
 
+def start_trader_with_backoff(name: str, script_path: str, python_exe: str, working_dir: str, ollama_port: int, max_retries: int = 5):
+    """트레이더 시작을 지수 백오프로 재시도 (최대 N회, 1→2→4→8→16s)"""
+    attempt = 0
+    backoff = 1
+    while attempt < max_retries:
+        proc = start_trader(script_path, python_exe, working_dir, name, ollama_port)
+        if proc is not None:
+            return proc
+        colored_print(f"[RETRY] {name} 시작 재시도 {attempt+1}/{max_retries} (대기 {backoff}s)", "yellow")
+        time.sleep(backoff)
+        backoff = min(backoff * 2, 30)
+        attempt += 1
+    colored_print(f"[FAIL] {name} 시작 실패 (재시도 {max_retries}회 초과)", "red")
+    return None
+
 def stop_process(process, name, timeout=30):
     """프로세스 정상 종료"""
     try:
@@ -1920,17 +2095,31 @@ def stop_process(process, name, timeout=30):
 
 # ===== 메인 관리 루프 =====
 def main():
-    # 중복 실행 체크
-    running_pid = check_already_running()
-    if running_pid:
-        colored_print(f"[WARN]  통합매니저가 이미 실행 중입니다 (PID: {running_pid})", "red")
-        colored_print("기존 프로세스를 종료하거나 중복 실행을 원하면 PID 파일을 삭제하세요:", "yellow")
-        colored_print(f"   {PID_FILE}", "yellow")
-        return
+    try:
+        # 메모리 사용량 체크
+        if not check_memory_usage():
+            colored_print("[WARNING] 메모리 사용량이 높습니다. 계속 실행하시겠습니까?", "yellow")
+            colored_print("메모리 부족으로 인한 KeyboardInterrupt가 발생할 수 있습니다.", "yellow")
+            time.sleep(2)  # 사용자가 확인할 시간 제공
+        
+        # 중복 실행 체크
+        running_pid = check_already_running()
+        if running_pid:
+            colored_print(f"[WARN]  통합매니저가 이미 실행 중입니다 (PID: {running_pid})", "red")
+            colored_print("기존 프로세스를 종료하거나 중복 실행을 원하면 PID 파일을 삭제하세요:", "yellow")
+            colored_print(f"   {PID_FILE}", "yellow")
+            return
 
-    # PID 파일 생성
-    write_pid_file()
-    colored_print(f"[OK] PID 파일 생성 완료 (PID: {os.getpid()})", "green")
+        # PID 파일 생성
+        write_pid_file()
+        colored_print(f"[OK] PID 파일 생성 완료 (PID: {os.getpid()})", "green")
+        
+    except KeyboardInterrupt:
+        colored_print("\n[INFO] 사용자에 의한 중단 (Ctrl+C)", "yellow")
+        return
+    except Exception as e:
+        colored_print(f"[ERROR] 초기화 중 오류: {e}", "red")
+        return
 
     colored_print("=" * 70, "cyan")
     colored_print("통합 트레이더 관리 시스템 시작", "cyan")
@@ -1997,7 +2186,7 @@ def main():
 
     # 트레이더 시작
     colored_print("\n[TRADER] 시작 중...", "blue")
-    trader_eth = start_trader(
+    trader_eth = start_trader_with_backoff(
         ETH_TRADER_SCRIPT,
         ETH_PYTHON,
         ETH_TRADER_DIR,
@@ -2006,7 +2195,7 @@ def main():
     )
     time.sleep(3)
 
-    trader_kis = start_trader(
+    trader_kis = start_trader_with_backoff(
         KIS_TRADER_SCRIPT,
         KIS_PYTHON,
         KIS_TRADER_DIR,
@@ -2034,6 +2223,7 @@ def main():
     last_improvement_check = time.time()  #  자기개선 체크
     last_improvement_report = time.time()  #  개선 리포트
     last_telegram_alert = time.time()  #  텔레그램 알림 (6시간 제한)
+    last_log_rotation = time.time()  #  로그 로테이션 (6시간마다)
 
     #  Option 4: 오류 패턴 로드
     global error_patterns_eth, error_patterns_kis
@@ -2067,9 +2257,24 @@ def main():
 
     try:
         while True:
-            time.sleep(GUARDIAN_CHECK_INTERVAL)  #  10초마다 체크
-            current_time = time.time()
-            elapsed = current_time - last_restart_time
+            try:
+                # 메모리 사용량 주기적 체크
+                if not check_memory_usage():
+                    colored_print("[WARNING] 메모리 사용량이 높습니다. 가비지 컬렉션 실행...", "yellow")
+                    import gc
+                    gc.collect()
+                    time.sleep(1)
+                
+                time.sleep(GUARDIAN_CHECK_INTERVAL)  #  10초마다 체크
+                current_time = time.time()
+                elapsed = current_time - last_restart_time
+            except KeyboardInterrupt:
+                colored_print("\n[INFO] 사용자에 의한 중단 (Ctrl+C)", "yellow")
+                break
+            except Exception as e:
+                colored_print(f"[ERROR] 메인 루프 오류: {e}", "red")
+                time.sleep(5)  # 오류 시 5초 대기 후 계속
+                continue
 
             #  Guardian: 불필요한 Ollama 정리 (10초마다)
             guardian_cleanup_rogue_ollama()
@@ -2159,6 +2364,11 @@ def main():
                 colored_print("="*70 + "\n", "cyan")
                 last_trading_check = current_time
 
+            # 로그 로테이션 (6시간마다)
+            if (current_time - last_log_rotation) >= 6 * 3600:  # 6시간
+                rotate_logs()
+                last_log_rotation = current_time
+
             #  자기개선 엔진 (1시간마다 LLM 분석)
             if (current_time - last_improvement_check) >= SELF_IMPROVEMENT_INTERVAL:
                 import json
@@ -2247,11 +2457,36 @@ def main():
             if not should_check_status:
                 continue
 
+            # 시스템 리소스 가드
+            if not system_resource_guard():
+                print("[GUARD] 시스템 리소스 부족 → 트레이더 일시 정지")
+                time.sleep(30)
+                continue
+
             last_status_print = current_time
 
             # 트레이더 상태 체크
             eth_alive = trader_eth and trader_eth.poll() is None
             kis_alive = trader_kis and trader_kis.poll() is None
+
+            # 로그 하트비트 워치독: 최근 5분간 출력 없으면 비정상으로 간주하여 재시작
+            try:
+                hb_now = time.time()
+                for key, proc, restart in [
+                    ("ETH", trader_eth, lambda: start_trader_with_backoff(ETH_TRADER_SCRIPT, ETH_PYTHON, ETH_TRADER_DIR, "ETH Trader (코드3)", OLLAMA_PORT_ETH)),
+                    ("KIS", trader_kis, lambda: start_trader_with_backoff(KIS_TRADER_SCRIPT, KIS_PYTHON, KIS_TRADER_DIR, "KIS Trader (코드4)", OLLAMA_PORT_KIS)),
+                ]:
+                    last_ts = last_log_time.get(key, 0)
+                    if proc and proc.poll() is None and last_ts and hb_now - last_ts > 300:
+                        colored_print(f"[WATCHDOG] {key} 로그 정지 {int(hb_now - last_ts)}s → 안전 재시작", "yellow")
+                        stop_process(proc, f"{key} Trader", timeout=10)
+                        if key == "ETH":
+                            trader_eth = start_trader_with_backoff(ETH_TRADER_SCRIPT, ETH_PYTHON, ETH_TRADER_DIR, "ETH Trader (코드3)", OLLAMA_PORT_ETH)
+                        else:
+                            trader_kis = start_trader_with_backoff(KIS_TRADER_SCRIPT, KIS_PYTHON, KIS_TRADER_DIR, "KIS Trader (코드4)", OLLAMA_PORT_KIS)
+                        last_log_time[key] = time.time()
+            except Exception:
+                pass
 
             # 프로세스 중단 감지 및 텔레그램 알림
             if not eth_alive and trader_eth:
@@ -2337,7 +2572,7 @@ def main():
             if not eth_alive and not need_restart_ollama:
                 colored_print("\n[AUTO_RECOVERY] ETH Trader 크래시 → 재시작...", "yellow")
                 logger.warning("ETH Trader 크래시 감지 - 자동 재시작 시작")
-                trader_eth = start_trader(
+                trader_eth = start_trader_with_backoff(
                     ETH_TRADER_SCRIPT,
                     ETH_PYTHON,
                     ETH_TRADER_DIR,
@@ -2349,7 +2584,7 @@ def main():
             if not kis_alive and not need_restart_ollama:
                 colored_print("\n[AUTO_RECOVERY] KIS Trader 크래시 → 재시작...", "yellow")
                 logger.warning("KIS Trader 크래시 감지 - 자동 재시작 시작")
-                trader_kis = start_trader(
+                trader_kis = start_trader_with_backoff(
                     KIS_TRADER_SCRIPT,
                     KIS_PYTHON,
                     KIS_TRADER_DIR,

@@ -74,8 +74,8 @@ class ExplosiveKISTrader:
         # [WARN]  중요: PDNO는 "SOXL"이 아니라 "A980679"를 사용해야 함!
         # [WARN]  KIS API에서 종목코드는 A980XXX 형식의 고유 코드 필수!
         self.symbols = {
-            'SOXL': {'pdno': 'A980679', 'name': '반도체 3배 레버리지 롱'},  # DIREXION DAILY SEMICONDUCTOR BULL 3X
-            'SOXS': {'pdno': 'A980680', 'name': '반도체 3배 레버리지 숏'}   # DIREXION DAILY SEMICONDUCTOR BEAR 3X
+            'SOXL': {'pdno': 'A980679', 'name': 'SOXL (3x semi bull)'},  # DIREXION DAILY SEMICONDUCTOR BULL 3X
+            'SOXS': {'pdno': 'A980680', 'name': 'SOXS (3x semi bear)'}   # DIREXION DAILY SEMICONDUCTOR BEAR 3X
         }
 
         # 상태
