@@ -2061,20 +2061,53 @@ def start_trader(script_path, python_exe, working_dir, trader_name, ollama_port)
         env = os.environ.copy()
         env["OLLAMA_HOST"] = f"127.0.0.1:{ollama_port}"  # http:// 제거 (트레이더 내부에서 추가)
         env["PYTHONIOENCODING"] = "utf-8"
+        env["PYTHONUTF8"] = "1"
 
         # RTX 2060 Tensor Core 최적화 환경변수 적용
         for key, value in GPU_OPTIMIZATION.items():
             env[key] = value
 
-        process = subprocess.Popen(
-            [python_exe, "-u", script_path],  # -u: unbuffered output
-            cwd=working_dir,
-            env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            bufsize=0,  # unbuffered
-            universal_newlines=False  # 바이트 모드
-        )
+        # 작업 디렉터리 검증 (없으면 스크립트 폴더로 대체)
+        try:
+            wd = working_dir if working_dir and os.path.isdir(working_dir) else str(Path(script_path).parent)
+        except Exception:
+            wd = working_dir
+
+        # 인터프리터 경로 강제: 항상 현재 프로세스의 파이썬 사용
+        try:
+            python_exe = sys.executable if os.path.isfile(sys.executable) else python_exe
+        except Exception:
+            pass
+
+        # 1차 시도: 표준 Popen
+        try:
+            process = subprocess.Popen(
+                [python_exe, "-u", "-X", "utf8", script_path],  # -u: unbuffered, -X utf8 강제
+                cwd=wd,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=0,
+                universal_newlines=False
+            )
+        except Exception as e1:
+            # 2차 시도: CREATE_NO_WINDOW + 현재 파이썬으로 대체
+            try:
+                CREATE_NO_WINDOW = 0x08000000
+                py_fallback = sys.executable if os.path.isfile(sys.executable) else python_exe
+                process = subprocess.Popen(
+                    [py_fallback, "-u", "-X", "utf8", script_path],
+                    cwd=wd,
+                    env=env,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    bufsize=0,
+                    universal_newlines=False,
+                    creationflags=CREATE_NO_WINDOW
+                )
+            except Exception as e2:
+                colored_print(f"{trader_name} 시작 오류: {e1} | {e2}", "red")
+                return None
 
         # 로그 읽기 스레드 시작
         log_thread = threading.Thread(
