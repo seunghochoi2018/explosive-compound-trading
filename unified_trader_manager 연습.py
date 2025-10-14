@@ -2055,80 +2055,260 @@ def log_reader_thread(process, trader_name):
             log_file.close()
 
 # ===== 트레이더 관리 =====
-def start_trader(script_path, python_exe, working_dir, trader_name, ollama_port):
-    """트레이더 시작 (로그 캡처, RTX 2060 Tensor Core 최적화)"""
-    try:
+    def start_trader(script_path, python_exe, working_dir, trader_name, ollama_port):
+        """트레이더 시작 (다중 폴백 안전장치 시스템)"""
+        colored_print(f"[{trader_name}] 다중 폴백 시스템 시작...", "yellow")
+        
+        # 환경변수 설정
         env = os.environ.copy()
-        env["OLLAMA_HOST"] = f"127.0.0.1:{ollama_port}"  # http:// 제거 (트레이더 내부에서 추가)
+        env["OLLAMA_HOST"] = f"127.0.0.1:{ollama_port}"
         env["PYTHONIOENCODING"] = "utf-8"
         env["PYTHONUTF8"] = "1"
-
-        # RTX 2060 Tensor Core 최적화 환경변수 적용
         for key, value in GPU_OPTIMIZATION.items():
             env[key] = value
 
-        # 작업 디렉터리 검증 (없으면 스크립트 폴더로 대체)
-        try:
-            wd = working_dir if working_dir and os.path.isdir(working_dir) else str(Path(script_path).parent)
-        except Exception:
-            wd = working_dir
+        # 스크립트 파일 존재 확인
+        if not os.path.isfile(script_path):
+            colored_print(f"[{trader_name}] ❌ 스크립트 파일 없음: {script_path}", "red")
+            return None
 
-        # 인터프리터 경로 강제: 항상 현재 프로세스의 파이썬 사용
+        # ===== 폴백 1: 배치 파일 방식 =====
         try:
-            python_exe = sys.executable if os.path.isfile(sys.executable) else python_exe
-        except Exception:
-            pass
-
-        # 1차 시도: 표준 Popen
-        try:
+            colored_print(f"[{trader_name}] 폴백 1: 배치 파일 방식 시도...", "yellow")
+            batch_file = os.path.join(working_dir, f"start_{trader_name.lower().replace(' ', '_')}.bat")
+            
+            batch_content = f"""@echo off
+cd /d "{working_dir}"
+set OLLAMA_HOST=127.0.0.1:{ollama_port}
+set PYTHONIOENCODING=utf-8
+set PYTHONUTF8=1
+python "{script_path}"
+"""
+            
+            with open(batch_file, 'w', encoding='utf-8') as f:
+                f.write(batch_content)
+            
+            CREATE_NO_WINDOW = 0x08000000
             process = subprocess.Popen(
-                [python_exe, "-u", "-X", "utf8", script_path],  # -u: unbuffered, -X utf8 강제
-                cwd=wd,
+                [batch_file],
+                cwd=working_dir,
                 env=env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 bufsize=0,
-                universal_newlines=False
+                universal_newlines=False,
+                creationflags=CREATE_NO_WINDOW
             )
-        except Exception as e1:
-            # 2차 시도: CREATE_NO_WINDOW + 현재 파이썬으로 대체
-            try:
-                CREATE_NO_WINDOW = 0x08000000
-                py_fallback = sys.executable if os.path.isfile(sys.executable) else python_exe
-                process = subprocess.Popen(
-                    [py_fallback, "-u", "-X", "utf8", script_path],
-                    cwd=wd,
-                    env=env,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    bufsize=0,
-                    universal_newlines=False,
-                    creationflags=CREATE_NO_WINDOW
-                )
-            except Exception as e2:
-                colored_print(f"{trader_name} 시작 오류: {e1} | {e2}", "red")
-                return None
 
-        # 로그 읽기 스레드 시작
-        log_thread = threading.Thread(
-            target=log_reader_thread,
-            args=(process, trader_name),
-            daemon=True
-        )
-        log_thread.start()
+            # 로그 읽기 스레드 시작
+            log_thread = threading.Thread(
+                target=log_reader_thread,
+                args=(process, trader_name),
+                daemon=True
+            )
+            log_thread.start()
 
-        time.sleep(2)
+            time.sleep(3)
 
-        if process.poll() is None:
-            colored_print(f"{trader_name} 시작 완료 (PID: {process.pid}, Ollama: {ollama_port})", "green")
-            return process
-        else:
-            colored_print(f"{trader_name} 시작 실패", "red")
-            return None
+            if process.poll() is None and process.pid and process.pid > 0:
+                colored_print(f"[{trader_name}] ✅ 폴백 1 성공 (PID: {process.pid})", "green")
+                return process
+            else:
+                colored_print(f"[{trader_name}] ❌ 폴백 1 실패", "red")
+        except Exception as e:
+            colored_print(f"[{trader_name}] ❌ 폴백 1 오류: {e}", "red")
 
-    except Exception as e:
-        colored_print(f"{trader_name} 시작 오류: {e}", "red")
+        # ===== 폴백 2: PowerShell 방식 =====
+        try:
+            colored_print(f"[{trader_name}] 폴백 2: PowerShell 방식 시도...", "yellow")
+            ps_script = f"""
+$env:OLLAMA_HOST = "127.0.0.1:{ollama_port}"
+$env:PYTHONIOENCODING = "utf-8"
+$env:PYTHONUTF8 = "1"
+Set-Location "{working_dir}"
+python "{script_path}"
+"""
+            
+            process = subprocess.Popen(
+                ["powershell", "-Command", ps_script],
+                cwd=working_dir,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=0,
+                universal_newlines=False,
+                creationflags=CREATE_NO_WINDOW
+            )
+
+            log_thread = threading.Thread(
+                target=log_reader_thread,
+                args=(process, trader_name),
+                daemon=True
+            )
+            log_thread.start()
+
+            time.sleep(3)
+
+            if process.poll() is None and process.pid and process.pid > 0:
+                colored_print(f"[{trader_name}] ✅ 폴백 2 성공 (PID: {process.pid})", "green")
+                return process
+            else:
+                colored_print(f"[{trader_name}] ❌ 폴백 2 실패", "red")
+        except Exception as e:
+            colored_print(f"[{trader_name}] ❌ 폴백 2 오류: {e}", "red")
+
+        # ===== 폴백 3: 직접 Python 실행 =====
+        try:
+            colored_print(f"[{trader_name}] 폴백 3: 직접 Python 실행 시도...", "yellow")
+            import sys
+            python_cmd = [sys.executable, script_path]
+            
+            process = subprocess.Popen(
+                python_cmd,
+                cwd=working_dir,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=0,
+                universal_newlines=False,
+                creationflags=CREATE_NO_WINDOW
+            )
+
+            log_thread = threading.Thread(
+                target=log_reader_thread,
+                args=(process, trader_name),
+                daemon=True
+            )
+            log_thread.start()
+
+            time.sleep(3)
+
+            if process.poll() is None and process.pid and process.pid > 0:
+                colored_print(f"[{trader_name}] ✅ 폴백 3 성공 (PID: {process.pid})", "green")
+                return process
+            else:
+                colored_print(f"[{trader_name}] ❌ 폴백 3 실패", "red")
+        except Exception as e:
+            colored_print(f"[{trader_name}] ❌ 폴백 3 오류: {e}", "red")
+
+        # ===== 폴백 4: CMD 방식 =====
+        try:
+            colored_print(f"[{trader_name}] 폴백 4: CMD 방식 시도...", "yellow")
+            cmd_script = f'cd /d "{working_dir}" && set OLLAMA_HOST=127.0.0.1:{ollama_port} && set PYTHONIOENCODING=utf-8 && set PYTHONUTF8=1 && python "{script_path}"'
+            
+            process = subprocess.Popen(
+                ["cmd", "/c", cmd_script],
+                cwd=working_dir,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=0,
+                universal_newlines=False,
+                creationflags=CREATE_NO_WINDOW
+            )
+
+            log_thread = threading.Thread(
+                target=log_reader_thread,
+                args=(process, trader_name),
+                daemon=True
+            )
+            log_thread.start()
+
+            time.sleep(3)
+
+            if process.poll() is None and process.pid and process.pid > 0:
+                colored_print(f"[{trader_name}] ✅ 폴백 4 성공 (PID: {process.pid})", "green")
+                return process
+            else:
+                colored_print(f"[{trader_name}] ❌ 폴백 4 실패", "red")
+        except Exception as e:
+            colored_print(f"[{trader_name}] ❌ 폴백 4 오류: {e}", "red")
+
+        # ===== 모든 폴백 실패 =====
+        colored_print(f"[{trader_name}] ❌ 모든 폴백 실패 - 트레이더 시작 불가", "red")
+        
+        # 실패 알림 전송
+        send_trader_failure_alert(trader_name, "모든 시작 방식 실패 (배치파일, PowerShell, Python, CMD)")
+        
+        # 시스템 진단 정보 수집
+        try:
+            import psutil
+            import shutil
+            
+            # 시스템 리소스 상태
+            cpu_percent = psutil.cpu_percent()
+            memory = psutil.virtual_memory()
+            disk = shutil.disk_usage(working_dir)
+            
+            diagnostic_info = f"""
+시스템 진단 정보:
+- CPU 사용률: {cpu_percent}%
+- 메모리 사용률: {memory.percent}%
+- 디스크 여유공간: {disk.free / (1024**3):.1f}GB
+- 작업 디렉터리: {working_dir}
+- 스크립트 경로: {script_path}
+"""
+            
+            colored_print(f"[{trader_name}] 🔍 시스템 진단:\n{diagnostic_info}", "yellow")
+            
+        except Exception as e:
+            colored_print(f"[{trader_name}] ❌ 진단 정보 수집 실패: {e}", "red")
+        
         return None
+
+def monitor_trader_health(trader_name: str, process, max_restart_attempts: int = 10):
+    """트레이더 상태 실시간 모니터링 (안전장치)"""
+    restart_count = 0
+    last_activity = time.time()
+    
+    while restart_count < max_restart_attempts:
+        try:
+            # 프로세스 상태 확인
+            if process.poll() is not None:
+                colored_print(f"[{trader_name}] ❌ 프로세스 종료 감지 - 자동 재시작 시도 {restart_count + 1}/{max_restart_attempts}", "red")
+                restart_count += 1
+                
+                # 재시작 시도
+                time.sleep(5)  # 5초 대기
+                # 여기서 재시작 로직을 호출할 수 있음
+                return False
+            
+            # 활동 확인 (30초마다)
+            if time.time() - last_activity > 30:
+                colored_print(f"[{trader_name}] ⚠️ 활동 없음 - 상태 확인 중...", "yellow")
+                last_activity = time.time()
+            
+            time.sleep(10)  # 10초마다 체크
+            
+        except Exception as e:
+            colored_print(f"[{trader_name}] ❌ 모니터링 오류: {e}", "red")
+            time.sleep(5)
+    
+    colored_print(f"[{trader_name}] ❌ 최대 재시작 시도 초과 - 모니터링 중단", "red")
+    return False
+
+def send_trader_failure_alert(trader_name: str, error_details: str):
+    """트레이더 시작 실패 시 텔레그램 알림"""
+    try:
+        from telegram_notifier import TelegramNotifier
+        telegram = TelegramNotifier()
+        
+        alert_message = f"""
+🚨 <b>트레이더 시작 실패 알림</b>
+
+<b>트레이더:</b> {trader_name}
+<b>시간:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+<b>오류:</b> {error_details}
+
+<b>자동 복구 시도 중...</b>
+<i>수동 개입이 필요할 수 있습니다.</i>
+"""
+        
+        telegram.send_message(alert_message, priority="critical")
+        colored_print(f"[{trader_name}] 🚨 텔레그램 알림 전송 완료", "red")
+        
+    except Exception as e:
+        colored_print(f"[{trader_name}] ❌ 텔레그램 알림 전송 실패: {e}", "red")
 
 def start_trader_with_backoff(name: str, script_path: str, python_exe: str, working_dir: str, ollama_port: int, max_retries: int = 5):
     """트레이더 시작을 지수 백오프로 재시도 (최대 N회, 1→2→4→8→16s)"""
@@ -2577,11 +2757,13 @@ def main():
                 telegram.notify_bot_down("ETH Trader", "프로세스가 예기치 않게 종료됨")
                 colored_print("[ERROR] ETH 트레이더 중단 감지 - 텔레그램 알림 전송", "red")
                 logger.error("ETH Trader 프로세스 중단 감지 - 자동 재시작 준비 중")
+                send_trader_failure_alert("ETH Trader", "프로세스가 예기치 않게 종료됨")
 
             if not kis_alive and trader_kis:
                 telegram.notify_bot_down("KIS Trader", "프로세스가 예기치 않게 종료됨")
                 colored_print("[ERROR] KIS 트레이더 중단 감지 - 텔레그램 알림 전송", "red")
                 logger.error("KIS Trader 프로세스 중단 감지 - 자동 재시작 준비 중")
+                send_trader_failure_alert("KIS Trader", "프로세스가 예기치 않게 종료됨")
 
             # Ollama 헬스 체크 (지능적 관리)
             health_eth = check_ollama_health(OLLAMA_PORT_ETH)
