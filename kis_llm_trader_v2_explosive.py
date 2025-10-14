@@ -1039,8 +1039,20 @@ class ExplosiveKISTrader:
                     )
 
                 else:
-                    # 메인 분석이 없으면 7b 모니터 신호 사용
-                    llm_signal = monitor_signal if soxl_price > 0 else 'NEUTRAL'
+                    # 메인 분석이 없으면 7b 모니터 신호 사용 (디버깅 추가)
+                    print(f"[DEBUG] 14b 분석 없음 - 7b만 사용")
+                    print(f"[DEBUG] quick_buy: {quick_buy}, quick_sell: {quick_sell}")
+                    
+                    # 7b 신호만으로 결정 (NEUTRAL 제거)
+                    if quick_buy > quick_sell:
+                        llm_signal = 'BULL'
+                        final_confidence = quick_confidence
+                    else:
+                        llm_signal = 'BEAR'
+                        final_confidence = quick_confidence
+                    
+                    print(f"[DEBUG] 7b만 사용 결과: {llm_signal} (신뢰도 {final_confidence:.1f}%)")
+                    
                     if soxl_price > 0:
                         mins_until_deep = int((self.DEEP_ANALYSIS_INTERVAL - (current_time - self.last_deep_analysis_time)) / 60)
                         print(f"[{datetime.now().strftime('%H:%M:%S')}]  14b 분석까지 {mins_until_deep}분 대기 (7b 신호 사용)")
@@ -1105,6 +1117,13 @@ class ExplosiveKISTrader:
                 print(f"  LLM 신호: {llm_signal}")
                 print(f"  포지션: {self.current_position if self.current_position else '없음'}")
                 print(f"  잔고: ${current_balance:,.2f} ({balance_pct:+.2f}%)")
+                
+                # 디버깅: 가중치 시스템 상태 출력
+                print(f"\n[디버깅] 가중치 시스템 상태:")
+                print(f"  quick_buy: {quick_buy}, quick_sell: {quick_sell}")
+                print(f"  deep_buy: {deep_buy if 'deep_buy' in locals() else 'N/A'}, deep_sell: {deep_sell if 'deep_sell' in locals() else 'N/A'}")
+                print(f"  weighted_buy: {weighted_buy if 'weighted_buy' in locals() else 'N/A'}, weighted_sell: {weighted_sell if 'weighted_sell' in locals() else 'N/A'}")
+                print(f"  최종 신호: {llm_signal} (NEUTRAL 제거됨)")
 
                 # 장 마감 체크 (주말/주중 구분)
                 if soxl_price == 0:
