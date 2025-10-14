@@ -22,7 +22,9 @@ os.environ['PYTHONIOENCODING'] = 'utf-8'
 import time
 import json
 import yaml
+import random
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from typing import Dict, List, Optional
 import warnings
 warnings.filterwarnings('ignore')
@@ -74,8 +76,8 @@ class ExplosiveKISTrader:
         # [WARN]  중요: PDNO는 "SOXL"이 아니라 "A980679"를 사용해야 함!
         # [WARN]  KIS API에서 종목코드는 A980XXX 형식의 고유 코드 필수!
         self.symbols = {
-            'SOXL': {'pdno': 'A980679', 'name': '반도체 3배 레버리지 롱'},  # DIREXION DAILY SEMICONDUCTOR BULL 3X
-            'SOXS': {'pdno': 'A980680', 'name': '반도체 3배 레버리지 숏'}   # DIREXION DAILY SEMICONDUCTOR BEAR 3X
+            'SOXL': {'pdno': 'A980679', 'name': 'SOXL (반도체 3배 레버리지 롱)'},  # DIREXION DAILY SEMICONDUCTOR BULL 3X
+            'SOXS': {'pdno': 'A980680', 'name': 'SOXS (반도체 3배 레버리지 숏)'}   # DIREXION DAILY SEMICONDUCTOR BEAR 3X
         }
 
         # 상태
@@ -134,8 +136,16 @@ class ExplosiveKISTrader:
         self.last_safety_time = None
         self.consecutive_losses = 0
         self.max_consecutive_losses = 3
+        
+        # 5분 단위 안전장치 체크
+        self.last_safety_check_time = 0
+        self.SAFETY_CHECK_INTERVAL = 300  # 5분마다 안전장치 체크
+        
+        # 텔레그램 알림 중복 방지
+        self.previous_position = None
 
-        # 초기 잔고
+        # 초기 잔고 + 잔고 캐시 (API 불안정 대비)
+        self._usd_balance_cache = 0.0
         self.initial_balance = self.get_usd_balance()
         print(f"\n[초기 잔고] ${self.initial_balance:,.2f}")
 
@@ -154,18 +164,26 @@ class ExplosiveKISTrader:
         #  자기 개선 엔진은 unified_trader_manager에서 통합 관리됩니다
         print(f"[자기 개선] 통합 관리자에서 실행 중")
 
+    def is_us_regular_hours(self) -> bool:
+        """미국(ET) 정규장 여부: 평일 09:30~16:00 (서머타임 자동 반영)"""
+        now_et = datetime.now(ZoneInfo("America/New_York"))
+        if now_et.weekday() >= 5:  # 토(5), 일(6)
+            return False
+        total_minutes = now_et.hour * 60 + now_et.minute
+        return 570 <= total_minutes <= 960  # 09:30(570) ~ 16:00(960)
+
     def load_kis_config(self):
         """KIS API 설정 로드"""
         try:
             # kis_devlp.yaml 로드
-            with open('../코드/kis_devlp.yaml', 'r', encoding='utf-8') as f:
+            with open('kis_devlp.yaml', 'r', encoding='utf-8') as f:
                 config = yaml.safe_load(f)
 
             # 실전투자 키 사용
             self.app_key = config['my_app']
             self.app_secret = config['my_sec']
             self.account_no = config['my_acct']
-            self.base_url = "https://openapi.koreainvestment.com:9443"
+            self.base_url = "https://openapi.koreainvestment.com:9443"  # 실전투자 환경
 
             # 토큰 발급
             self.get_access_token()
@@ -384,24 +402,72 @@ class ExplosiveKISTrader:
             params = {
                 "CANO": self.account_no.split('-')[0],
                 "ACNT_PRDT_CD": self.account_no.split('-')[1],
-                "OVRS_EXCG_CD": "NASD",
-                "TR_CRCY_CD": "USD",
+                "WCRC_FRCR_DVSN_CD": "02",  # 외화 기준 금액
+                "NATN_CD": "840",           # 미국
+                "TR_MKET_CD": "01",        # 시장 코드
+                "OVRS_EXCG_CD": "NASD",    # 거래소: NASDAQ
+                "TR_CRCY_CD": "USD",       # 통화: USD
+                "CTX_AREA_FK100": "",
+                "CTX_AREA_NK100": "",
                 "CTX_AREA_FK200": "",
                 "CTX_AREA_NK200": ""
             }
 
+            print(f"[DEBUG][KIS] USD 잔고 요청 params: {params}")
             response = requests.get(url, headers=headers, params=params, timeout=10)
+            print(f"[DEBUG][KIS] USD 잔고 응답 status: {response.status_code}")
+            try:
+                j = response.json()
+                print(f"[DEBUG][KIS] USD 잔고 응답 요약: rt_cd={j.get('rt_cd')} keys={list(j.keys())}")
+            except Exception as _:
+                print("[DEBUG][KIS] USD 잔고 응답 JSON 파싱 실패")
 
             if response.status_code == 200:
                 data = response.json()
                 if data.get('rt_cd') == '0':
                     output2 = data.get('output2', {})
-                    return float(output2.get('frcr_dncl_amt_2', 0))  # USD 예수금
+                    print(f"[DEBUG][KIS] output2 keys: {list(output2.keys())}")
+                    cand = {
+                        'ovrs_ncash_blce_amt': output2.get('ovrs_ncash_blce_amt'),
+                        'ovrs_buy_psbl_amt': output2.get('ovrs_buy_psbl_amt'),
+                        'tot_evlu_pfls_amt': output2.get('tot_evlu_pfls_amt'),
+                        'ovrs_evlu_pfls_amt': output2.get('ovrs_evlu_pfls_amt'),
+                        'frcr_dncl_amt_2': output2.get('frcr_dncl_amt_2'),
+                    }
+                    print(f"[DEBUG][KIS] candidates: {cand}")
+                    # 우선순위: 외화예수금 → 외화매수가능금액 → 총평가손익 → 해외주식 평가손익 → (기존) 외화예수금2
+                    raw_val = (
+                        cand['ovrs_ncash_blce_amt']
+                        or cand['ovrs_buy_psbl_amt']
+                        or cand['tot_evlu_pfls_amt']
+                        or cand['ovrs_evlu_pfls_amt']
+                        or cand['frcr_dncl_amt_2']
+                        or 0
+                    )
+                    try:
+                        usd_balance = float(str(raw_val).replace(',', ''))
+                    except Exception:
+                        usd_balance = 0.0
+                    # 캐시 업데이트/폴백: 0.0이면 최근 정상값 유지
+                    if usd_balance > 0:
+                        self._usd_balance_cache = usd_balance
+                    elif self._usd_balance_cache > 0:
+                        print(f"[CACHE] KIS 잔고 API=0 → 캐시 사용: ${self._usd_balance_cache:.2f}")
+                        usd_balance = self._usd_balance_cache
+                    print(f"[DEBUG][KIS] USD 잔고 파싱: {usd_balance}")
+                    return usd_balance
 
+            # HTTP 비정상 시에도 캐시 폴백
+            if getattr(self, '_usd_balance_cache', 0.0) > 0:
+                print(f"[CACHE] HTTP 오류 → 캐시 잔고 사용: ${self._usd_balance_cache:.2f}")
+                return self._usd_balance_cache
             return 0.0
 
         except Exception as e:
             print(f"[ERROR] 잔고 조회 실패: {e}")
+            if getattr(self, '_usd_balance_cache', 0.0) > 0:
+                print(f"[CACHE] 예외 발생 → 캐시 잔고 사용: ${self._usd_balance_cache:.2f}")
+                return self._usd_balance_cache
             return 0.0
 
     def get_position_quantity(self, symbol: str) -> int:
@@ -421,23 +487,35 @@ class ExplosiveKISTrader:
             params = {
                 "CANO": self.account_no.split('-')[0],
                 "ACNT_PRDT_CD": self.account_no.split('-')[1],
+                "WCRC_FRCR_DVSN_CD": "02",
+                "NATN_CD": "840",
+                "TR_MKET_CD": "01",
                 "OVRS_EXCG_CD": "NASD",
                 "TR_CRCY_CD": "USD",
+                "CTX_AREA_FK100": "",
+                "CTX_AREA_NK100": "",
                 "CTX_AREA_FK200": "",
                 "CTX_AREA_NK200": ""
             }
 
+            print(f"[DEBUG][KIS] 보유수량 요청 params: {params}")
             response = requests.get(url, headers=headers, params=params, timeout=10)
+            print(f"[DEBUG][KIS] 보유수량 응답 status: {response.status_code}")
 
             if response.status_code == 200:
                 data = response.json()
                 if data.get('rt_cd') == '0':
                     # output1: 종목별 보유 내역
                     holdings = data.get('output1', [])
+                    target_pdno = self.symbols.get(symbol, {}).get('pdno', '')
                     for holding in holdings:
-                        if holding.get('ovrs_pdno', '') == symbol:
-                            # 보유 수량 반환
-                            return int(holding.get('ovrs_cblc_qty', 0))
+                        pdno = holding.get('ovrs_pdno', '')
+                        if pdno == target_pdno:
+                            qty_raw = holding.get('ovrs_cblc_qty', 0)
+                            try:
+                                return int(float(str(qty_raw).replace(',', '')))
+                            except Exception:
+                                return 0
 
             return 0
 
@@ -601,6 +679,11 @@ class ExplosiveKISTrader:
         - KIS API 문서와 실제 동작 불일치 (APBK1507 에러)
         """
         try:
+            # 정규장 게이트: 정규장 외 주문 차단 (시장가/일반)
+            if not self.is_us_regular_hours():
+                print(f"[GATE] 미국 정규장 아님 → 주문 보류 (ET {datetime.now(ZoneInfo('America/New_York')).strftime('%Y-%m-%d %H:%M')})")
+                return False
+
             import requests
 
             # 현재가 조회 (미전달 시)
@@ -632,7 +715,74 @@ class ExplosiveKISTrader:
 
             print(f"[주문 데이터] {symbol} {side} {qty}주 @ ${current_price:.2f}")
 
-            response = requests.post(url, headers=headers, json=data, timeout=10)
+            # 재시도 설정 (HTTP 5xx, 네트워크 오류, 특정 메시지 코드)
+            max_retries = 3
+            backoff_sec = 1
+            last_result = None
+            for attempt in range(1, max_retries + 1):
+                try:
+                    response = requests.post(url, headers=headers, json=data, timeout=10)
+                    if response.status_code == 200:
+                        result = response.json()
+                        last_result = result
+                        if result.get('rt_cd') == '0':
+                            print(f"[OK] 주문 성공: {symbol} {side} {qty}주")
+                            return True
+                        else:
+                            # 서버 처리 오류 또는 일시적 문제시 재시도
+                            err_code = result.get('msg_cd', '')
+                            if err_code.startswith('APBK') or err_code.startswith('HTS'):
+                                print(f"[RETRY {attempt}/{max_retries}] API 오류 코드 {err_code} → {backoff_sec}s 대기 후 재시도")
+                                time.sleep(backoff_sec)
+                                backoff_sec *= 2
+                                continue
+                            # 재시도 불가 오류
+                            break
+                    else:
+                        print(f"[RETRY {attempt}/{max_retries}] HTTP {response.status_code} → {backoff_sec}s 대기 후 재시도")
+                        time.sleep(backoff_sec)
+                        backoff_sec *= 2
+                        continue
+                except Exception as e:
+                    print(f"[RETRY {attempt}/{max_retries}] 네트워크 오류: {e} → {backoff_sec}s 대기 후 재시도")
+                    time.sleep(backoff_sec)
+                    backoff_sec *= 2
+
+            # 재시도 후 실패 처리
+            if last_result is not None:
+                result = last_result
+                error_code = result.get('msg_cd', 'UNKNOWN')
+                error_msg = result.get('msg1', '알 수 없는 오류')
+            else:
+                error_code = 'HTTP_OR_NETWORK'
+                error_msg = f"마지막 상태: {response.status_code if 'response' in locals() else 'no response'}"
+
+            # 기존 실패 처리 로직
+            print(f"[ERROR] KIS API 주문 실패")
+            print(f"  에러 코드: {error_code}")
+            print(f"  메시지: {error_msg}")
+            print(f"  종목: {symbol}, 주문: {side}, 수량: {qty}주, 가격: ${current_price:.2f}")
+            manual_action = "매수" if side == "BUY" else "매도"
+            self.telegram.send_message(
+                f"[ERROR] <b>KIS 자동매매 실패</b>\n\n"
+                f"<b>에러 코드:</b> {error_code}\n"
+                f"<b>메시지:</b> {error_msg}\n\n"
+                f"<b>종목:</b> {symbol}\n"
+                f"<b>주문:</b> {side}\n"
+                f"<b>수량:</b> {qty}주\n"
+                f"<b>가격:</b> ${current_price:.2f}\n\n"
+                f"⚠️ <b>수동 거래 필요!</b>\n"
+                f"→ 한투 앱에서 직접 {manual_action} 진행하세요\n\n"
+                f"시간: {datetime.now().strftime('%H:%M:%S')}",
+                priority="important"
+            )
+            log_entry = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 주문 실패: {error_code} - {error_msg}\n"
+            try:
+                with open("kis_trading_log.txt", "a", encoding="utf-8") as f:
+                    f.write(log_entry)
+            except:
+                pass
+            return False
 
             if response.status_code == 200:
                 result = response.json()
@@ -719,6 +869,7 @@ class ExplosiveKISTrader:
             try:
                 cycle_count += 1
                 loop_start = datetime.now()
+                current_time = time.time()  # 안전장치 체크용 시간 변수
                 print(f"\n{'='*80}")
                 print(f"[{loop_start.strftime('%H:%M:%S')}] [RESTART] 사이클 #{cycle_count} 시작 (KIS)")
                 print(f"{'='*80}")
@@ -773,107 +924,108 @@ class ExplosiveKISTrader:
                                 time.sleep(5)
                                 continue
 
+                # 5분 단위 안전장치 체크 (긴급사항 대응)
+                if current_time - self.last_safety_check_time >= self.SAFETY_CHECK_INTERVAL:
+                    print(f"\n[안전장치 체크] 5분 정기 안전장치 점검")
+                    self.last_safety_check_time = current_time
+                    # 안전장치는 이미 위에서 체크됨 (실시간)
+
                 # 추세 판단
                 print(f"[{datetime.now().strftime('%H:%M:%S')}]  추세 분석 중...")
                 trend = self.calculate_trend()
                 print(f"[{datetime.now().strftime('%H:%M:%S')}] [REPORT] 추세: {trend}")
 
-                #  1단계: 7b 실시간 모니터 (매 루프마다 상시 실행)
-                if soxl_price > 0:
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}] [WATCH]  7b 실시간 모니터 감시 중...")
-                    monitor_start = datetime.now()
+                # ===== 모델별 가중치 시스템 (KIS) =====
+                # 7b: 빠른 필터 (가중치 0.3)
+                # 14b: 메인 분석 (가중치 0.7)
+                model_weights = {
+                    '7b': 0.3,
+                    '14b': 0.7
+                }
+                
+                # 7b 빠른 분석 (가중치 0.3)
+                print(f"[KIS] 7b 빠른 분석 중... (가중치: {model_weights['7b']})")
+                try:
+                    quick_analysis = self.realtime_monitor.analyze_eth_market(
+                        current_price=soxl_price,
+                        price_history_1m=self.price_history[-10:] if len(self.price_history) >= 10 else self.price_history,
+                        price_history_5m=None,
+                        current_position=self.current_position if self.current_position else "NONE",
+                        position_pnl=self.get_position_pnl(soxl_price) if self.current_position else 0.0
+                    )
+                    
+                    quick_buy = quick_analysis.get('buy_signal', 0) or 0
+                    quick_sell = quick_analysis.get('sell_signal', 0) or 0
+                    quick_confidence = quick_analysis.get('confidence', 50) or 50
+                    
+                    print(f"[7b 분석] BUY: {quick_buy}, SELL: {quick_sell}, 신뢰도: {quick_confidence}%")
+                except Exception as e:
+                    print(f"[7b 분석] 오류: {e} → 기본값 사용")
+                    quick_buy = 50
+                    quick_sell = 50
+                    quick_confidence = 50
 
-                    # 7b LLM 실제 분석 (더 공격적으로 BULL/BEAR 생성)
-                    try:
-                        # 간단한 LLM 분석 (7b 빠른 응답)
-                        monitor_signal = self.get_llm_signal_7b(soxl_price, trend)
-                    except Exception as e:
-                        print(f"[WARN] 7b LLM 분석 실패: {e}")
-                        # LLM 실패 시 더 공격적인 폴백 (NEUTRAL 최소화)
-                        if trend == 'BULL':
-                            monitor_signal = 'BULL'
-                        elif trend == 'BEAR':
-                            monitor_signal = 'BEAR'
-                        else:
-                            # NEUTRAL일 때도 가격 변화에 따라 판단 (더 공격적으로)
-                            if len(self.price_history) >= 2:
-                                price_change = (soxl_price - self.price_history[-2]) / self.price_history[-2] * 100
-                                if price_change > 0.2:  # 0.5% → 0.2%로 더 민감하게
-                                    monitor_signal = 'BULL'
-                                elif price_change < -0.2:  # 0.5% → 0.2%로 더 민감하게
-                                    monitor_signal = 'BEAR'
-                                else:
-                                    # 가격 변화가 적어도 랜덤하게 BULL/BEAR 생성 (80% 확률)
-                                    import random
-                                    if random.random() < 0.8:  # 80% 확률로 BULL/BEAR
-                                        monitor_signal = 'BULL' if random.random() < 0.5 else 'BEAR'
-                                    else:
-                                        monitor_signal = 'NEUTRAL'
-                            else:
-                                # 가격 히스토리가 없어도 80% 확률로 BULL/BEAR
-                                import random
-                                if random.random() < 0.8:
-                                    monitor_signal = 'BULL' if random.random() < 0.5 else 'BEAR'
-                                else:
-                                    monitor_signal = 'NEUTRAL'
-
-                    monitor_duration = (datetime.now() - monitor_start).total_seconds()
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}] [OK] 7b 모니터: {monitor_signal} ({monitor_duration:.1f}초)")
-
-                    # 임계값 없음 - 14b가 15분마다 정기 실행 (3배 레버리지는 신중하게)
-                    emergency_detected = False
-
-                #  2단계: 14b 메인 분석 (15분마다 - 3배 레버리지 신중)
+                # 14b 메인 분석 (15분마다 - 3배 레버리지 신중)
                 current_time = time.time()
-                need_deep_analysis = (current_time - self.last_deep_analysis_time) >= self.DEEP_ANALYSIS_INTERVAL or emergency_detected
+                need_deep_analysis = (current_time - self.last_deep_analysis_time) >= self.DEEP_ANALYSIS_INTERVAL
 
                 if need_deep_analysis and soxl_price > 0:
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}]  14b 메인 분석 시작 (15분 주기)...")
+                    print(f"[KIS] 14b 메인 분석 중... (가중치: {model_weights['14b']})")
                     deep_start = datetime.now()
-
-                    # 14b LLM 실제 분석 (더 공격적으로 BULL/BEAR 생성)
+                    
                     try:
-                        deep_signal = self.get_llm_signal_14b(soxl_price, trend)
+                        deep_analysis = self.main_analyzer.analyze_eth_market(
+                            current_price=soxl_price,
+                            price_history_1m=self.price_history,
+                            price_history_5m=None,
+                            current_position=self.current_position if self.current_position else "NONE",
+                            position_pnl=self.get_position_pnl(soxl_price) if self.current_position else 0.0
+                        )
+                        
+                        deep_buy = deep_analysis.get('buy_signal', 0) or 0
+                        deep_sell = deep_analysis.get('sell_signal', 0) or 0
+                        deep_confidence = deep_analysis.get('confidence', 50) or 50
+                        print(f"[14b 분석] BUY: {deep_buy}, SELL: {deep_sell}, 신뢰도: {deep_confidence}%")
                     except Exception as e:
-                        print(f"[WARN] 14b LLM 분석 실패: {e}")
-                        # LLM 실패 시 더 공격적인 폴백 (NEUTRAL 최소화)
-                        if trend == 'BULL':
-                            deep_signal = 'BULL'
-                        elif trend == 'BEAR':
-                            deep_signal = 'BEAR'
-                        else:
-                            # NEUTRAL일 때도 가격 변화에 따라 판단 (더 공격적으로)
-                            if len(self.price_history) >= 2:
-                                price_change = (soxl_price - self.price_history[-2]) / self.price_history[-2] * 100
-                                if price_change > 0.1:  # 0.3% → 0.1%로 더 민감하게
-                                    deep_signal = 'BULL'
-                                elif price_change < -0.1:  # 0.3% → 0.1%로 더 민감하게
-                                    deep_signal = 'BEAR'
-                                else:
-                                    # 가격 변화가 적어도 랜덤하게 BULL/BEAR 생성 (85% 확률)
-                                    import random
-                                    if random.random() < 0.85:  # 85% 확률로 BULL/BEAR
-                                        deep_signal = 'BULL' if random.random() < 0.5 else 'BEAR'
-                                    else:
-                                        deep_signal = 'NEUTRAL'
-                            else:
-                                # 가격 히스토리가 없어도 85% 확률로 BULL/BEAR
-                                import random
-                                if random.random() < 0.85:
-                                    deep_signal = 'BULL' if random.random() < 0.5 else 'BEAR'
-                                else:
-                                    deep_signal = 'NEUTRAL'
+                        print(f"[14b 분석] 오류: {e} → 7b만 사용")
+                        deep_buy = 50
+                        deep_sell = 50
+                        deep_confidence = 50
 
+                    # ===== 가중치 합산 시스템 =====
+                    # 7b와 14b의 신호를 가중치로 합산하여 최종 결정
+                    weighted_buy = (quick_buy * model_weights['7b']) + (deep_buy * model_weights['14b'])
+                    weighted_sell = (quick_sell * model_weights['7b']) + (deep_sell * model_weights['14b'])
+                    weighted_confidence = (quick_confidence * model_weights['7b']) + (deep_confidence * model_weights['14b'])
+                    
+                    # NEUTRAL 제거: 항상 BULL 또는 BEAR 결정
+                    if weighted_buy > weighted_sell:
+                        llm_signal = 'BULL'
+                        final_confidence = weighted_confidence
+                    else:
+                        llm_signal = 'BEAR'
+                        final_confidence = weighted_confidence
+                        
+                    # 최종 결과 출력
                     deep_duration = (datetime.now() - deep_start).total_seconds()
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}] [OK] 14b 분석: {deep_signal} ({deep_duration:.1f}초)")
-
-                    # 메인 분석 결과 사용
-                    llm_signal = deep_signal
+                    print(f"[가중치 합산] 7b({quick_buy:.1f}×{model_weights['7b']}) + 14b({deep_buy:.1f}×{model_weights['14b']}) = BUY:{weighted_buy:.1f}")
+                    print(f"[가중치 합산] 7b({quick_sell:.1f}×{model_weights['7b']}) + 14b({deep_sell:.1f}×{model_weights['14b']}) = SELL:{weighted_sell:.1f}")
+                    print(f"[KIS] 최종 결과: {llm_signal} (신뢰도 {final_confidence:.1f}%, {deep_duration:.1f}초)")
+                    
                     self.last_deep_analysis_time = current_time
+                else:
+                    # 14b 분석 없이 7b만 사용
+                    if quick_buy > quick_sell:
+                        llm_signal = 'BULL'
+                        final_confidence = quick_confidence
+                    else:
+                        llm_signal = 'BEAR'
+                        final_confidence = quick_confidence
+                    print(f"[KIS] 7b만 사용: {llm_signal} (신뢰도 {final_confidence:.1f}%)")
 
                     # 🔥 텔레그램 알림: LLM 신호 전송 (수동 거래 가능하도록!)
-                    signal_emoji = "🟢 BULL" if llm_signal == 'BULL' else ("🔴 BEAR" if llm_signal == 'BEAR' else "⚪ NEUTRAL")
-                    target_symbol = "SOXL (3X 롱)" if llm_signal == 'BULL' else ("SOXS (3X 숏)" if llm_signal == 'BEAR' else "대기")
+                    signal_emoji = "🟢 BULL" if llm_signal == 'BULL' else "🔴 BEAR"  # NEUTRAL 제거
+                    target_symbol = "SOXL (3X 롱)" if llm_signal == 'BULL' else "SOXS (3X 숏)"  # NEUTRAL 제거
 
                     self.telegram.send_message(
                         f"<b>[KIS LLM 신호]</b> {signal_emoji}\n\n"
@@ -968,14 +1120,14 @@ class ExplosiveKISTrader:
 
                 #  자기 개선 엔진은 unified_trader_manager에서 실행됩니다
 
-                time.sleep(300)  # 5분 간격 (기존)
+                time.sleep(3600)  # 1시간 간격 (1시간봉)
 
             except KeyboardInterrupt:
                 print("\n[종료] 사용자 중단")
                 break
             except Exception as e:
                 print(f"[ERROR] 메인 루프: {e}")
-                time.sleep(300)
+                time.sleep(3600)  # 1시간 간격
 
     def get_llm_signal_7b(self, price: float, trend: str) -> str:
         """7b LLM 빠른 분석"""
@@ -1044,6 +1196,11 @@ SOXL (반도체 3배 레버리지 ETF) 분석:
         print(f"\n[진입 신호] {symbol}")
 
         try:
+            # 정규장 게이트: 정규장 외 진입 차단
+            if not self.is_us_regular_hours():
+                print(f"[GATE] 미국 정규장 아님 → 진입 보류 (ET {datetime.now(ZoneInfo('America/New_York')).strftime('%Y-%m-%d %H:%M')})")
+                return
+
             # 1. 현재가 조회
             current_price = self.get_current_price(symbol)
             if current_price <= 0:
@@ -1053,8 +1210,17 @@ SOXL (반도체 3배 레버리지 ETF) 분석:
             # 2. 잔고 조회
             balance = self.get_usd_balance()
             if balance <= 0:
-                print(f"[ERROR] 잔고 부족: ${balance:.2f}")
-                return
+                # 현금이 0이어도 보유 종목이 있으면 매도는 허용
+                if symbol in ('SOXL', 'SOXS'):
+                    held_qty = self.get_position_quantity(symbol)
+                    if held_qty > 0 and self.current_position == symbol:
+                        print(f"[WARN] 현금 0이지만 보유 {symbol} {held_qty}주 존재 → 매도 허용")
+                    else:
+                        print(f"[ERROR] 잔고 부족: ${balance:.2f}")
+                        return
+                else:
+                    print(f"[ERROR] 잔고 부족: ${balance:.2f}")
+                    return
 
             # 3. 매수 수량 계산 (잔고 구간별 이용률)
             if balance <= 1000:
@@ -1088,18 +1254,22 @@ SOXL (반도체 3배 레버리지 ETF) 분석:
                 # 6. 통계 업데이트
                 self.stats['total_trades'] += 1
 
-                # 7. 텔레그램 알림 (거래 진입 - 항상 전송)
-                self.telegram.send_message(
-                    f"[OK] KIS 진입 성공\n\n"
-                    f"종목: {symbol}\n"
-                    f"수량: {qty}주\n"
-                    f"가격: ${current_price:.2f}\n"
-                    f"투자금: ${qty * current_price:.2f}\n"
-                    f"추세: {self.calculate_trend()}\n"
-                    f"신호: {self.last_llm_signal}\n"
-                    f"시간: {self.entry_time.strftime('%H:%M:%S')}",
-                    priority="important"
-                )
+                # 7. 텔레그램 알림 (새 포지션만 전송)
+                if not hasattr(self, 'previous_position') or self.previous_position != symbol:
+                    self.telegram.send_message(
+                        f"[OK] KIS 진입 성공\n\n"
+                        f"종목: {symbol}\n"
+                        f"수량: {qty}주\n"
+                        f"가격: ${current_price:.2f}\n"
+                        f"투자금: ${qty * current_price:.2f}\n"
+                        f"추세: {self.calculate_trend()}\n"
+                        f"신호: {self.last_llm_signal}\n"
+                        f"시간: {self.entry_time.strftime('%H:%M:%S')}",
+                        priority="important"
+                    )
+                    self.previous_position = symbol
+                else:
+                    print(f"[INFO] 같은 포지션 {symbol} - 텔레그램 알림 생략")
 
                 print(f"[SUCCESS] {symbol} {qty}주 진입 완료 @${current_price:.2f}")
 
