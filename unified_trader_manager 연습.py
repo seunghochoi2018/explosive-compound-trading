@@ -151,6 +151,41 @@ import signal
 signal.signal(signal.SIGINT, graceful_shutdown)
 signal.signal(signal.SIGTERM, graceful_shutdown)
 
+# 디스크 사용률 가드 (90% 이상)
+def disk_usage_guard():
+    try:
+        usage = psutil.disk_usage(str(Path(log_file).drive))
+        if usage.percent >= 90:
+            print(f"[GUARD] 디스크 사용률 높음: {usage.percent}% → 로그 정리/압축 수행")
+            rotate_logs()
+            # 오래된 압축 로그 추가 정리
+            try:
+                for p in Path(log_file).parent.glob("*.log.gz"):
+                    # 7일보다 오래된 압축 로그 삭제
+                    if time.time() - p.stat().st_mtime > 7 * 24 * 3600:
+                        p.unlink(missing_ok=True)
+            except Exception:
+                pass
+            return False
+        return True
+    except Exception as e:
+        print(f"[GUARD] 디스크 가드 실패: {e}")
+        return True
+
+# GPU VRAM 가드: VRAM 부족 시 다운스케일 알림
+def gpu_vram_guard(min_free_mb: int = 500):
+    try:
+        import subprocess
+        result = subprocess.run(["nvidia-smi", "--query-gpu=memory.free", "--format=csv,noheader,nounits"], capture_output=True, text=True, timeout=2)
+        free_list = [int(x.strip()) for x in result.stdout.strip().splitlines() if x.strip().isdigit()]
+        if free_list and min(free_list) < min_free_mb:
+            print(f"[GUARD] VRAM 여유 부족: {min(free_list)}MB → 14b 대신 7b 사용 권고")
+            return False
+        return True
+    except Exception:
+        # nvidia-smi 미존재 등은 무시
+        return True
+
 # 초기 메모리 체크
 if not check_memory_usage():
     print("[WARNING] 메모리 사용량이 높습니다. 스크립트 실행을 계속하시겠습니까?")
@@ -2464,6 +2499,22 @@ def main():
                 continue
 
             last_status_print = current_time
+
+            # 데드맨 스위치: 3시간 무활동(로그/신호/거래 없음) 경고
+            try:
+                deadman_now = time.time()
+                last_activity = max(last_trading_check, last_status_print, last_improvement_check)
+                if deadman_now - last_activity > 3 * 3600:
+                    telegram.send_message("[DEADMAN] 3시간 활동 없음 - 시스템 점검 필요 (로그/신호/거래)\n최근 로그 200줄 첨부는 매니저 로그 파일에서 확인.", priority="important")
+                    # 중복 전송 방지
+                    last_status_print = current_time
+            except Exception:
+                pass
+
+            # 디스크/VRAM 가드
+            if not disk_usage_guard():
+                time.sleep(30)
+            _ = gpu_vram_guard()
 
             # 트레이더 상태 체크
             eth_alive = trader_eth and trader_eth.poll() is None
