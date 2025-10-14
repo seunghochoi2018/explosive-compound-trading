@@ -1187,9 +1187,91 @@ SOXL (반도체 3배 레버리지 ETF) 분석:
         return pnl
 
     def get_ensemble_signal(self, trend: str) -> str:
-        """7b + 14b 앙상블 LLM 신호"""
-        # 간단 구현 (추세 기반)
-        return 'BULL' if trend == 'BULL' else ('BEAR' if trend == 'BEAR' else 'NEUTRAL')
+        """7b + 14b 가중치 앙상블 LLM 신호 (NEUTRAL 제거)"""
+        try:
+            # 모델별 가중치 시스템
+            model_weights = {
+                '7b': 0.3,
+                '14b': 0.7
+            }
+            
+            # 기본값 초기화 (모든 실행 경로에서 변수 보장)
+            llm_signal = 'BULL'  # NEUTRAL 제거, 기본값 BULL
+            quick_buy = 50
+            quick_sell = 50
+            quick_confidence = 50
+            deep_buy = 50
+            deep_sell = 50
+            deep_confidence = 50
+            
+            # 7b 빠른 분석 (가중치 0.3)
+            try:
+                quick_signal = self.get_llm_signal_7b(0, trend)  # 가격은 0으로 설정
+                if quick_signal == 'BULL':
+                    quick_buy = 80
+                    quick_sell = 20
+                    quick_confidence = 70
+                elif quick_signal == 'BEAR':
+                    quick_buy = 20
+                    quick_sell = 80
+                    quick_confidence = 70
+                else:
+                    quick_buy = 50
+                    quick_sell = 50
+                    quick_confidence = 50
+            except Exception as e:
+                print(f"[7b 분석] 오류: {e} → 기본값 사용")
+                quick_buy = 50
+                quick_sell = 50
+                quick_confidence = 50
+            
+            # 14b 메인 분석 (가중치 0.7)
+            try:
+                deep_signal = self.get_llm_signal_14b(0, trend)  # 가격은 0으로 설정
+                if deep_signal == 'BULL':
+                    deep_buy = 80
+                    deep_sell = 20
+                    deep_confidence = 80
+                elif deep_signal == 'BEAR':
+                    deep_buy = 20
+                    deep_sell = 80
+                    deep_confidence = 80
+                else:
+                    deep_buy = 50
+                    deep_sell = 50
+                    deep_confidence = 50
+            except Exception as e:
+                print(f"[14b 분석] 오류: {e} → 기본값 사용")
+                deep_buy = 50
+                deep_sell = 50
+                deep_confidence = 50
+            
+            # 가중치 합산 시스템
+            try:
+                weighted_buy = (quick_buy * model_weights['7b']) + (deep_buy * model_weights['14b'])
+                weighted_sell = (quick_sell * model_weights['7b']) + (deep_sell * model_weights['14b'])
+                weighted_confidence = (quick_confidence * model_weights['7b']) + (deep_confidence * model_weights['14b'])
+            except Exception as e:
+                print(f"[가중치 합산] 오류: {e} → 기본값 사용")
+                weighted_buy = 50
+                weighted_sell = 50
+                weighted_confidence = 50
+            
+            # NEUTRAL 제거: 항상 BULL 또는 BEAR 결정
+            if weighted_buy > weighted_sell:
+                llm_signal = 'BULL'
+            else:
+                llm_signal = 'BEAR'
+            
+            print(f"[가중치 합산] 7b({quick_buy:.1f}×{model_weights['7b']}) + 14b({deep_buy:.1f}×{model_weights['14b']}) = BUY:{weighted_buy:.1f}")
+            print(f"[가중치 합산] 7b({quick_sell:.1f}×{model_weights['7b']}) + 14b({deep_sell:.1f}×{model_weights['14b']}) = SELL:{weighted_sell:.1f}")
+            print(f"[앙상블] 최종 결과: {llm_signal} (신뢰도 {weighted_confidence:.1f}%)")
+            
+            return llm_signal
+            
+        except Exception as e:
+            print(f"[앙상블] 오류: {e} → 기본값 BULL 사용")
+            return 'BULL'
 
     def open_position(self, symbol: str):
         """포지션 진입 (자동매매)"""
