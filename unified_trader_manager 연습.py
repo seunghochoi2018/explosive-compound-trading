@@ -2891,19 +2891,19 @@ def main():
     # 트레이더 시작
     colored_print("\n[TRADER] 시작 중...", "blue")
     trader_eth = start_trader_with_backoff(
+        "ETH Trader (코드3)",
         ETH_TRADER_SCRIPT,
         ETH_PYTHON,
         ETH_TRADER_DIR,
-        "ETH Trader (코드3)",
         OLLAMA_PORT_ETH
     )
     time.sleep(3)
 
     trader_kis = start_trader_with_backoff(
+        "KIS Trader (코드4)",
         KIS_TRADER_SCRIPT,
         KIS_PYTHON,
         KIS_TRADER_DIR,
-        "KIS Trader (코드4)",
         OLLAMA_PORT_KIS
     )
 
@@ -3101,10 +3101,10 @@ def main():
                         time.sleep(3)
                         
                         trader_eth = start_trader_with_backoff(
+                            "ETH Trader (코드3)",
                             ETH_TRADER_SCRIPT,
                             ETH_PYTHON,
                             ETH_TRADER_DIR,
-                            "ETH Trader (코드3)",
                             OLLAMA_PORT_ETH
                         )
                         logger.info("ETH Trader 학습 강제 모드 재시작 완료")
@@ -3118,10 +3118,10 @@ def main():
                         time.sleep(3)
                         
                         trader_kis = start_trader_with_backoff(
+                            "KIS Trader (코드4)",
                             KIS_TRADER_SCRIPT,
                             KIS_PYTHON,
                             KIS_TRADER_DIR,
-                            "KIS Trader (코드4)",
                             OLLAMA_PORT_KIS
                         )
                         logger.info("KIS Trader 학습 강제 모드 재시작 완료")
@@ -3265,17 +3265,17 @@ def main():
             try:
                 hb_now = time.time()
                 for key, proc, restart in [
-                    ("ETH", trader_eth, lambda: start_trader_with_backoff(ETH_TRADER_SCRIPT, ETH_PYTHON, ETH_TRADER_DIR, "ETH Trader (코드3)", OLLAMA_PORT_ETH)),
-                    ("KIS", trader_kis, lambda: start_trader_with_backoff(KIS_TRADER_SCRIPT, KIS_PYTHON, KIS_TRADER_DIR, "KIS Trader (코드4)", OLLAMA_PORT_KIS)),
+                    ("ETH", trader_eth, lambda: start_trader_with_backoff("ETH Trader (코드3)", ETH_TRADER_SCRIPT, ETH_PYTHON, ETH_TRADER_DIR, OLLAMA_PORT_ETH)),
+                    ("KIS", trader_kis, lambda: start_trader_with_backoff("KIS Trader (코드4)", KIS_TRADER_SCRIPT, KIS_PYTHON, KIS_TRADER_DIR, OLLAMA_PORT_KIS)),
                 ]:
                     last_ts = last_log_time.get(key, 0)
                     if proc and proc.poll() is None and last_ts and hb_now - last_ts > 300:
                         colored_print(f"[WATCHDOG] {key} 로그 정지 {int(hb_now - last_ts)}s → 안전 재시작", "yellow")
                         stop_process(proc, f"{key} Trader", timeout=10)
                         if key == "ETH":
-                            trader_eth = start_trader_with_backoff(ETH_TRADER_SCRIPT, ETH_PYTHON, ETH_TRADER_DIR, "ETH Trader (코드3)", OLLAMA_PORT_ETH)
+                            trader_eth = start_trader_with_backoff("ETH Trader (코드3)", ETH_TRADER_SCRIPT, ETH_PYTHON, ETH_TRADER_DIR, OLLAMA_PORT_ETH)
                         else:
-                            trader_kis = start_trader_with_backoff(KIS_TRADER_SCRIPT, KIS_PYTHON, KIS_TRADER_DIR, "KIS Trader (코드4)", OLLAMA_PORT_KIS)
+                            trader_kis = start_trader_with_backoff("KIS Trader (코드4)", KIS_TRADER_SCRIPT, KIS_PYTHON, KIS_TRADER_DIR, OLLAMA_PORT_KIS)
                         last_log_time[key] = time.time()
             except Exception:
                 pass
@@ -3367,10 +3367,10 @@ def main():
                 colored_print("\n[AUTO_RECOVERY] ETH Trader 크래시 → 재시작...", "yellow")
                 logger.warning("ETH Trader 크래시 감지 - 자동 재시작 시작")
                 trader_eth = start_trader_with_backoff(
+                    "ETH Trader (코드3)",
                     ETH_TRADER_SCRIPT,
                     ETH_PYTHON,
                     ETH_TRADER_DIR,
-                    "ETH Trader (코드3)",
                     OLLAMA_PORT_ETH
                 )
                 logger.info("ETH Trader 재시작 완료")
@@ -3379,10 +3379,10 @@ def main():
                 colored_print("\n[AUTO_RECOVERY] KIS Trader 크래시 → 재시작...", "yellow")
                 logger.warning("KIS Trader 크래시 감지 - 자동 재시작 시작")
                 trader_kis = start_trader_with_backoff(
+                    "KIS Trader (코드4)",
                     KIS_TRADER_SCRIPT,
                     KIS_PYTHON,
                     KIS_TRADER_DIR,
-                    "KIS Trader (코드4)",
                     OLLAMA_PORT_KIS
                 )
                 logger.info("KIS Trader 재시작 완료")
