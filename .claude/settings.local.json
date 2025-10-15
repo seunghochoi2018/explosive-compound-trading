@@ -19,7 +19,9 @@
       "Bash(find:*)",
       "WebSearch",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:apiportal.koreainvestment.com)"
+      "WebFetch(domain:apiportal.koreainvestment.com)",
+      "Bash(cat:*)",
+      "Bash(timeout 240 python soxl_timeframe_backtest.py)"
     ],
     "deny": [],
     "ask": []

@@ -36,6 +36,7 @@ sys.path.append(r'C:\Users\user\Documents\코드5')
 
 from llm_market_analyzer import LLMMarketAnalyzer
 from telegram_notifier import TelegramNotifier
+from generate_learned_strategies_kis import generate_learned_strategies
 
 class ExplosiveKISTrader:
     """SOXL/SOXS 복리 폭발 전략"""
@@ -53,17 +54,15 @@ class ExplosiveKISTrader:
         # KIS API 설정
         self.load_kis_config()
 
-        #  2-티어 LLM 시스템 (GPU 최적화)
-        # 1. 7b 실시간 모니터: 매 5분마다 상시 감시 (GPU 완전 로드, 1-2초)
-        # 2. 14b 메인 분석기: 15분마다 깊은 분석 (3배 레버리지 신중 판단)
-        print("\n[LLM 시스템 초기화]")
-        print("  7b 실시간 모니터 로딩 중...")
+        #  7b 모델 2개 시스템 (앙상블 + 백업)
+        print("\n[7b 모델 2개 시스템 초기화]")
+        print("  7b 모델 1 로딩 중...")
         self.realtime_monitor = LLMMarketAnalyzer(model_name="qwen2.5:7b")
-        print("  [OK] 7b 모니터 준비 완료 (GPU 완전 로드, 1-2초)")
+        print("  [OK] 7b 모델 1 준비 완료 (실시간 모니터)")
 
-        print("  14b 메인 분석기 로딩 중... (SOXL/SOXS 전문)")
-        self.main_analyzer = LLMMarketAnalyzer(model_name="qwen2.5:14b")
-        print("  [OK] 14b 분석기 준비 완료 (중요한 판단)")
+        print("  7b 모델 2 로딩 중... (앙상블 백업)")
+        self.main_analyzer = LLMMarketAnalyzer(model_name="qwen2.5:7b")
+        print("  [OK] 7b 모델 2 준비 완료 (앙상블 분석)")
 
         self.last_deep_analysis_time = 0
         self.DEEP_ANALYSIS_INTERVAL = 15 * 60  # 15분 (SOXL/SOXS는 3배 레버리지, 신중하게)
@@ -935,175 +934,25 @@ class ExplosiveKISTrader:
                 trend = self.calculate_trend()
                 print(f"[{datetime.now().strftime('%H:%M:%S')}] [REPORT] 추세: {trend}")
 
-                # ===== 모델별 가중치 시스템 (KIS) =====
-                # 7b: 빠른 필터 (가중치 0.3)
-                # 14b: 메인 분석 (가중치 0.7)
-                model_weights = {
-                    '7b': 0.3,
-                    '14b': 0.7
-                }
-                
-                # 7b 빠른 분석 (가중치 0.3) - 상세 디버깅
-                print(f"[KIS] 7b 빠른 분석 중... (가중치: {model_weights['7b']})")
-                print(f"[DEBUG] 입력 파라미터:")
-                print(f"  - current_price: {soxl_price}")
-                print(f"  - price_history_1m: {len(self.price_history)}개")
-                print(f"  - current_position: {self.current_position if self.current_position else 'NONE'}")
-                print(f"  - position_pnl: {self.get_position_pnl(soxl_price) if self.current_position else 0.0}")
-                
-                try:
-                    quick_analysis = self.realtime_monitor.analyze_eth_market(
-                        current_price=soxl_price,
-                        price_history_1m=self.price_history[-10:] if len(self.price_history) >= 10 else self.price_history,
-                        price_history_5m=None,
-                        current_position=self.current_position if self.current_position else "NONE",
-                        position_pnl=self.get_position_pnl(soxl_price) if self.current_position else 0.0
-                    )
-                    
-                    print(f"[DEBUG] 7b 분석 원본 결과: {quick_analysis}")
-                    
-                    quick_buy = quick_analysis.get('buy_signal', 0) or 0
-                    quick_sell = quick_analysis.get('sell_signal', 0) or 0
-                    quick_confidence = quick_analysis.get('confidence', 50) or 50
-                    
-                    print(f"[7b 분석] BUY: {quick_buy}, SELL: {quick_sell}, 신뢰도: {quick_confidence}%")
-                    print(f"[DEBUG] 7b 신호 결정: {'BULL' if quick_buy > quick_sell else 'BEAR' if quick_sell > quick_buy else 'NEUTRAL'}")
-                except Exception as e:
-                    print(f"[7b 분석] 오류: {e} → 기본값 사용")
-                    import traceback
-                    traceback.print_exc()
-                    quick_buy = 50
-                    quick_sell = 50
-                    quick_confidence = 50
+                # ===== 가중치 앙상블 시스템 사용 =====
+                print(f"[KIS] 가중치 앙상블 시스템 시작...")
+                llm_signal = self.get_ensemble_signal(trend)
+                print(f"[KIS] 앙상블 결과: {llm_signal}")
 
-                # 14b 메인 분석 (15분마다 - 3배 레버리지 신중)
-                current_time = time.time()
-                need_deep_analysis = (current_time - self.last_deep_analysis_time) >= self.DEEP_ANALYSIS_INTERVAL
+                # 텔레그램 알림: LLM 신호 전송
+                signal_emoji = "🟢 BULL" if llm_signal == 'BULL' else "🔴 BEAR"  # NEUTRAL 제거
+                target_symbol = "SOXL (3X 롱)" if llm_signal == 'BULL' else "SOXS (3X 숏)"  # NEUTRAL 제거
 
-                if need_deep_analysis and soxl_price > 0:
-                    print(f"[KIS] 14b 메인 분석 중... (가중치: {model_weights['14b']})")
-                    print(f"[DEBUG] 14b 분석 조건:")
-                    print(f"  - need_deep_analysis: {need_deep_analysis}")
-                    print(f"  - soxl_price: {soxl_price}")
-                    print(f"  - 마지막 분석 시간: {self.last_deep_analysis_time}")
-                    print(f"  - 현재 시간: {current_time}")
-                    print(f"  - 분석 간격: {self.DEEP_ANALYSIS_INTERVAL}초")
-                    
-                    deep_start = datetime.now()
-                    
-                    try:
-                        deep_analysis = self.main_analyzer.analyze_eth_market(
-                            current_price=soxl_price,
-                            price_history_1m=self.price_history,
-                            price_history_5m=None,
-                            current_position=self.current_position if self.current_position else "NONE",
-                            position_pnl=self.get_position_pnl(soxl_price) if self.current_position else 0.0
-                        )
-                        
-                        print(f"[DEBUG] 14b 분석 원본 결과: {deep_analysis}")
-                        
-                        deep_buy = deep_analysis.get('buy_signal', 0) or 0
-                        deep_sell = deep_analysis.get('sell_signal', 0) or 0
-                        deep_confidence = deep_analysis.get('confidence', 50) or 50
-                        print(f"[14b 분석] BUY: {deep_buy}, SELL: {deep_sell}, 신뢰도: {deep_confidence}%")
-                        print(f"[DEBUG] 14b 신호 결정: {'BULL' if deep_buy > deep_sell else 'BEAR' if deep_sell > deep_buy else 'NEUTRAL'}")
-                    except Exception as e:
-                        print(f"[14b 분석] 오류: {e} → 7b만 사용")
-                        import traceback
-                        traceback.print_exc()
-                        deep_buy = 50
-                        deep_sell = 50
-                        deep_confidence = 50
-
-                    # ===== 가중치 합산 시스템 =====
-                    # 7b와 14b의 신호를 가중치로 합산하여 최종 결정
-                    print(f"[DEBUG] 가중치 합산 시작:")
-                    print(f"  - 7b: BUY={quick_buy}, SELL={quick_sell}, CONF={quick_confidence}")
-                    print(f"  - 14b: BUY={deep_buy}, SELL={deep_sell}, CONF={deep_confidence}")
-                    print(f"  - 가중치: 7b={model_weights['7b']}, 14b={model_weights['14b']}")
-                    
-                    weighted_buy = (quick_buy * model_weights['7b']) + (deep_buy * model_weights['14b'])
-                    weighted_sell = (quick_sell * model_weights['7b']) + (deep_sell * model_weights['14b'])
-                    weighted_confidence = (quick_confidence * model_weights['7b']) + (deep_confidence * model_weights['14b'])
-                    
-                    print(f"[DEBUG] 가중치 계산 결과:")
-                    print(f"  - weighted_buy: {quick_buy:.1f}×{model_weights['7b']} + {deep_buy:.1f}×{model_weights['14b']} = {weighted_buy:.1f}")
-                    print(f"  - weighted_sell: {quick_sell:.1f}×{model_weights['7b']} + {deep_sell:.1f}×{model_weights['14b']} = {weighted_sell:.1f}")
-                    print(f"  - weighted_confidence: {quick_confidence:.1f}×{model_weights['7b']} + {deep_confidence:.1f}×{model_weights['14b']} = {weighted_confidence:.1f}")
-                    
-                    # NEUTRAL 제거: 항상 BULL 또는 BEAR 결정
-                    if weighted_buy > weighted_sell:
-                        llm_signal = 'BULL'
-                        final_confidence = weighted_confidence
-                        print(f"[DEBUG] BULL 선택: {weighted_buy:.1f} > {weighted_sell:.1f}")
-                    else:
-                        llm_signal = 'BEAR'
-                        final_confidence = weighted_confidence
-                        print(f"[DEBUG] BEAR 선택: {weighted_sell:.1f} >= {weighted_buy:.1f}")
-                        
-                    # 최종 결과 출력
-                    deep_duration = (datetime.now() - deep_start).total_seconds()
-                    print(f"[가중치 합산] 7b({quick_buy:.1f}×{model_weights['7b']}) + 14b({deep_buy:.1f}×{model_weights['14b']}) = BUY:{weighted_buy:.1f}")
-                    print(f"[가중치 합산] 7b({quick_sell:.1f}×{model_weights['7b']}) + 14b({deep_sell:.1f}×{model_weights['14b']}) = SELL:{weighted_sell:.1f}")
-                    print(f"[KIS] 최종 결과: {llm_signal} (신뢰도 {final_confidence:.1f}%, {deep_duration:.1f}초)")
-                    print(f"[DEBUG] NEUTRAL 제거 확인: {llm_signal} (NEUTRAL 아님)")
-                    
-                    self.last_deep_analysis_time = current_time
-                else:
-                    # 14b 분석 없이 7b만 사용
-                    if quick_buy > quick_sell:
-                        llm_signal = 'BULL'
-                        final_confidence = quick_confidence
-                    else:
-                        llm_signal = 'BEAR'
-                        final_confidence = quick_confidence
-                    print(f"[KIS] 7b만 사용: {llm_signal} (신뢰도 {final_confidence:.1f}%)")
-
-                    # 🔥 텔레그램 알림: LLM 신호 전송 (수동 거래 가능하도록!)
-                    signal_emoji = "🟢 BULL" if llm_signal == 'BULL' else "🔴 BEAR"  # NEUTRAL 제거
-                    target_symbol = "SOXL (3X 롱)" if llm_signal == 'BULL' else "SOXS (3X 숏)"  # NEUTRAL 제거
-
-                    self.telegram.send_message(
-                        f"<b>[KIS LLM 신호]</b> {signal_emoji}\n\n"
-                        f"<b>추천 종목:</b> {target_symbol}\n"
-                        f"<b>추세:</b> {trend}\n"
-                        f"<b>SOXL 가격:</b> ${soxl_price:.2f}\n"
-                        f"<b>현재 포지션:</b> {self.current_position if self.current_position else '없음'}\n\n"
-                        f"<i>💡 자동매매 시도 중... 실패 시 수동 거래 필요</i>\n"
-                        f"시간: {datetime.now().strftime('%H:%M:%S')}",
-                        priority="important"
-                    )
-
-                else:
-                    # 메인 분석이 없으면 7b 모니터 신호 사용 (디버깅 추가)
-                    print(f"[DEBUG] 14b 분석 없음 - 7b만 사용")
-                    print(f"[DEBUG] 7b 분석 조건:")
-                    print(f"  - need_deep_analysis: {need_deep_analysis}")
-                    print(f"  - soxl_price: {soxl_price}")
-                    print(f"  - 마지막 분석 시간: {self.last_deep_analysis_time}")
-                    print(f"  - 현재 시간: {current_time}")
-                    print(f"  - 분석 간격: {self.DEEP_ANALYSIS_INTERVAL}초")
-                    print(f"[DEBUG] 7b 신호 값:")
-                    print(f"  - quick_buy: {quick_buy}")
-                    print(f"  - quick_sell: {quick_sell}")
-                    print(f"  - quick_confidence: {quick_confidence}")
-                    
-                    # 7b 신호만으로 결정 (NEUTRAL 제거)
-                    if quick_buy > quick_sell:
-                        llm_signal = 'BULL'
-                        final_confidence = quick_confidence
-                        print(f"[DEBUG] 7b BULL 선택: {quick_buy} > {quick_sell}")
-                    else:
-                        llm_signal = 'BEAR'
-                        final_confidence = quick_confidence
-                        print(f"[DEBUG] 7b BEAR 선택: {quick_sell} >= {quick_buy}")
-                    
-                    print(f"[DEBUG] 7b만 사용 결과: {llm_signal} (신뢰도 {final_confidence:.1f}%)")
-                    print(f"[DEBUG] NEUTRAL 제거 확인: {llm_signal} (NEUTRAL 아님)")
-                    
-                    if soxl_price > 0:
-                        mins_until_deep = int((self.DEEP_ANALYSIS_INTERVAL - (current_time - self.last_deep_analysis_time)) / 60)
-                        print(f"[{datetime.now().strftime('%H:%M:%S')}]  14b 분석까지 {mins_until_deep}분 대기 (7b 신호 사용)")
+                self.telegram.send_message(
+                    f"<b>[KIS LLM 신호]</b> {signal_emoji}\n\n"
+                    f"<b>추천 종목:</b> {target_symbol}\n"
+                    f"<b>추세:</b> {trend}\n"
+                    f"<b>SOXL 가격:</b> ${soxl_price:.2f}\n"
+                    f"<b>현재 포지션:</b> {self.current_position if self.current_position else '없음'}\n\n"
+                    f"<i>💡 자동매매 시도 중... 실패 시 수동 거래 필요</i>\n"
+                    f"시간: {datetime.now().strftime('%H:%M:%S')}",
+                    priority="important"
+                )
 
                 self.last_llm_signal = llm_signal
                 print(f"[{datetime.now().strftime('%H:%M:%S')}] [TARGET] 최종 신호: {llm_signal}")
@@ -1165,13 +1014,7 @@ class ExplosiveKISTrader:
                 print(f"  LLM 신호: {llm_signal}")
                 print(f"  포지션: {self.current_position if self.current_position else '없음'}")
                 print(f"  잔고: ${current_balance:,.2f} ({balance_pct:+.2f}%)")
-                
-                # 디버깅: 가중치 시스템 상태 출력
-                print(f"\n[디버깅] 가중치 시스템 상태:")
-                print(f"  quick_buy: {quick_buy}, quick_sell: {quick_sell}")
-                print(f"  deep_buy: {deep_buy if 'deep_buy' in locals() else 'N/A'}, deep_sell: {deep_sell if 'deep_sell' in locals() else 'N/A'}")
-                print(f"  weighted_buy: {weighted_buy if 'weighted_buy' in locals() else 'N/A'}, weighted_sell: {weighted_sell if 'weighted_sell' in locals() else 'N/A'}")
-                print(f"  최종 신호: {llm_signal} (NEUTRAL 제거됨)")
+                print(f"  앙상블 시스템: 가중치 기반 BULL/BEAR 결정 (NEUTRAL 제거)")
 
                 # 장 마감 체크 (주말/주중 구분)
                 if soxl_price == 0:
@@ -1199,11 +1042,27 @@ class ExplosiveKISTrader:
     def get_llm_signal_7b(self, price: float, trend: str) -> str:
         """7b LLM 빠른 분석"""
         try:
-            # 간단한 프롬프트로 빠른 분석
-            prompt = f"SOXL 현재가: ${price:.2f}, 추세: {trend}\n반도체 3배 레버리지 ETF 거래 신호를 BULL/BEAR/NEUTRAL로 답하세요."
+            # 학습 전략 로드
+            try:
+                learned_strategies = generate_learned_strategies()
+            except Exception as e:
+                print(f"[WARN] 학습 전략 생성 실패: {e}")
+                learned_strategies = "학습 데이터 없음 - 초기 전략 사용"
             
-            # 7b 모델로 빠른 분석 (포트 11435)
-            response = self.analyzer.analyze_market_simple(prompt)
+            # 간단한 프롬프트로 빠른 분석
+            prompt = f"""
+[KIS 학습 전략]
+{learned_strategies}
+
+[현재 시장 상황]
+SOXL 현재가: ${price:.2f}
+추세: {trend}
+
+위 학습 전략을 참고하여 반도체 3배 레버리지 ETF 거래 신호를 BULL/BEAR/NEUTRAL로 답하세요.
+"""
+            
+            # 7b 모델로 빠른 분석 (realtime_monitor 사용)
+            response = self.realtime_monitor.analyze_market_simple(prompt)
             
             if 'BULL' in response.upper():
                 return 'BULL'
@@ -1215,20 +1074,32 @@ class ExplosiveKISTrader:
             return 'NEUTRAL'
     
     def get_llm_signal_14b(self, price: float, trend: str) -> str:
-        """14b LLM 깊은 분석"""
+        """7b LLM 깊은 분석 (실제로는 7b 사용, 함수명만 14b)"""
         try:
+            # 학습 전략 로드
+            try:
+                learned_strategies = generate_learned_strategies()
+            except Exception as e:
+                print(f"[WARN] 학습 전략 생성 실패: {e}")
+                learned_strategies = "학습 데이터 없음 - 초기 전략 사용"
+            
             # 상세한 프롬프트로 깊은 분석
             prompt = f"""
-SOXL (반도체 3배 레버리지 ETF) 분석:
+[KIS 학습 전략]
+{learned_strategies}
+
+[SOXL (반도체 3배 레버리지 ETF) 분석]
 - 현재가: ${price:.2f}
 - 추세: {trend}
 - 가격 히스토리: {self.price_history[-5:] if len(self.price_history) >= 5 else 'N/A'}
+- 현재 포지션: {self.current_position if self.current_position else 'NONE'}
+- 보유 시간: {(datetime.now() - self.entry_time).total_seconds() / 3600:.1f if self.entry_time else 0}시간 (목표: 10시간)
 
-3배 레버리지 특성을 고려하여 거래 신호를 BULL/BEAR/NEUTRAL로 답하세요.
+위 학습 전략을 참고하여 3배 레버리지 특성을 고려한 거래 신호를 BULL/BEAR/NEUTRAL로 답하세요.
 """
             
-            # 14b 모델로 깊은 분석 (포트 11436)
-            response = self.analyzer.analyze_market_simple(prompt)
+            # 7b 모델로 깊은 분석 (main_analyzer 사용)
+            response = self.main_analyzer.analyze_market_simple(prompt)
             
             if 'BULL' in response.upper():
                 return 'BULL'
