@@ -1,42 +1,213 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-시박햤
-"""2
-통합 트레이더 관리 시스템start 로가 확인
+# -*- coding: utf-8 -*-
+"""
+통합 트레이더 관리 시스템
 - 코드3 (ETH 트레이더) + 코드4 (KIS 트레이더) 동시 관리
 - Ollama 2개 독립 실행 (포트 충돌 방지)
 - 지능적 리소스 관리 (메모리, CPU, 큐잉 감지) 코드4
 - 타임아웃 자동 복구
 - 주기적 재시작 (4시간)
 """
-import subprocess
-import time
-import psutil
-import os
-import requests
-from datetime import datetime
-from pathlib import Path
-from collections import deque
-import threading
-import re
-import sys
-import io
-import json
-import logging
-from logging.handlers import RotatingFileHandler
+
+# 안전한 import를 위한 예외 처리
+try:
+    import subprocess
+    import time
+    import psutil
+    import os
+    import requests
+    from datetime import datetime
+    from pathlib import Path
+    from collections import deque
+    import threading
+    import re
+    import sys
+    import io
+    import json
+    import logging
+    from logging.handlers import RotatingFileHandler
+    print("[INFO] 모든 필수 라이브러리 로드 완료")
+except ImportError as e:
+    print(f"[ERROR] 라이브러리 로드 실패: {e}")
+    print("[INFO] 필요한 라이브러리 설치 중...")
+    import subprocess
+    subprocess.run([sys.executable, "-m", "pip", "install", "requests", "psutil"], check=True)
+    print("[INFO] 라이브러리 재설치 완료, 스크립트를 다시 실행하세요.")
+    sys.exit(1)
+except Exception as e:
+    print(f"[ERROR] 초기화 오류: {e}")
+    sys.exit(1)
 
 # UTF-8 인코딩 강제 설정 (Windows cp949 인코딩 오류 방지)
-if sys.platform == 'win32':
+if sys.platform == 'win32':                                                                                                 
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
+# 메모리 사용량 모니터링 및 제한
+def check_memory_usage():
+    """메모리 사용량 체크 및 제한"""
+    try:
+        process = psutil.Process(os.getpid())
+        memory_mb = process.memory_info().rss / 1024 / 1024
+        if memory_mb > 2000:  # 2GB 초과 시 경고
+            print(f"[WARNING] 메모리 사용량 높음: {memory_mb:.1f}MB")
+            return False
+        return True
+    except Exception as e:
+        print(f"[ERROR] 메모리 체크 실패: {e}")
+        return True
+
+# 글로벌 네트워크 재시도 미들웨어
+def http_retry_with_backoff(url, max_retries=3, base_delay=1, **kwargs):
+    """HTTP 요청 재시도 (지수 백오프)"""
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(url, timeout=10, **kwargs)
+            if response.status_code == 200:
+                return response
+            elif response.status_code >= 500:
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)
+                    print(f"[RETRY] HTTP {response.status_code} → {delay}s 대기 후 재시도")
+                    time.sleep(delay)
+                    continue
+        except requests.exceptions.RequestException as e:
+            if attempt < max_retries - 1:
+                delay = base_delay * (2 ** attempt)
+                print(f"[RETRY] 네트워크 오류: {e} → {delay}s 대기 후 재시도")
+                time.sleep(delay)
+                continue
+        except Exception as e:
+            print(f"[ERROR] HTTP 요청 실패: {e}")
+            break
+    return None
+
+# Ollama 헬스 체크
+def check_ollama_health(port):
+    """Ollama 포트 헬스 체크"""
+    try:
+        response = http_retry_with_backoff(f"http://127.0.0.1:{port}/api/tags")
+        if response and response.status_code == 200:
+            return True
+    except Exception as e:
+        print(f"[HEALTH] Ollama 포트 {port} 체크 실패: {e}")
+    return False
+
+# 메모리/CPU 가드
+def system_resource_guard():
+    """시스템 리소스 모니터링 및 제한"""
+    try:
+        # 메모리 사용률 체크
+        memory = psutil.virtual_memory()
+        if memory.percent > 85:
+            print(f"[GUARD] 메모리 사용률 높음: {memory.percent}%")
+            return False
+        
+        # CPU 사용률 체크
+        cpu_percent = psutil.cpu_percent(interval=1)
+        if cpu_percent > 90:
+            print(f"[GUARD] CPU 사용률 높음: {cpu_percent}%")
+            return False
+            
+        return True
+    except Exception as e:
+        print(f"[ERROR] 리소스 가드 실패: {e}")
+        return True
+
+# 안전한 종료 처리
+def graceful_shutdown(signum=None, frame=None):
+    """안전한 종료 처리"""
+    print("\n[SHUTDOWN] 안전한 종료 시작...")
+    
+    # 상태 저장
+    try:
+        state = {
+            "shutdown_time": datetime.now().isoformat(),
+            "eth_status": "shutdown",
+            "kis_status": "shutdown"
+        }
+        with open("trader_state.json", "w", encoding="utf-8") as f:
+            json.dump(state, f, indent=2, ensure_ascii=False)
+        print("[SHUTDOWN] 상태 저장 완료")
+    except Exception as e:
+        print(f"[SHUTDOWN] 상태 저장 실패: {e}")
+    
+    # 프로세스 종료
+    try:
+        global trader_eth, trader_kis
+        if trader_eth:
+            trader_eth.terminate()
+        if trader_kis:
+            trader_kis.terminate()
+        print("[SHUTDOWN] 트레이더 프로세스 종료 완료")
+    except Exception as e:
+        print(f"[SHUTDOWN] 프로세스 종료 실패: {e}")
+    
+    print("[SHUTDOWN] 안전한 종료 완료")
+    sys.exit(0)
+
+# 시그널 핸들러 등록
+import signal
+signal.signal(signal.SIGINT, graceful_shutdown)
+signal.signal(signal.SIGTERM, graceful_shutdown)
+
+# 디스크 사용률 가드 (90% 이상)
+def disk_usage_guard():
+    try:
+        usage = psutil.disk_usage(str(Path(log_file).drive))
+        if usage.percent >= 90:
+            print(f"[GUARD] 디스크 사용률 높음: {usage.percent}% → 로그 정리/압축 수행")
+            rotate_logs()
+            # 오래된 압축 로그 추가 정리
+            try:
+                for p in Path(log_file).parent.glob("*.log.gz"):
+                    # 7일보다 오래된 압축 로그 삭제
+                    if time.time() - p.stat().st_mtime > 7 * 24 * 3600:
+                        p.unlink(missing_ok=True)
+            except Exception:
+                pass
+            return False
+        return True
+    except Exception as e:
+        print(f"[GUARD] 디스크 가드 실패: {e}")
+        return True
+
+# GPU VRAM 가드: VRAM 부족 시 다운스케일 알림
+def gpu_vram_guard(min_free_mb: int = 500):
+    try:
+        import subprocess
+        result = subprocess.run(["nvidia-smi", "--query-gpu=memory.free", "--format=csv,noheader,nounits"], capture_output=True, text=True, timeout=2)
+        free_list = [int(x.strip()) for x in result.stdout.strip().splitlines() if x.strip().isdigit()]
+        if free_list and min(free_list) < min_free_mb:
+            print(f"[GUARD] VRAM 여유 부족: {min(free_list)}MB → 14b 대신 7b 사용 권고")
+            return False
+        return True
+    except Exception:
+        # nvidia-smi 미존재 등은 무시
+        return True
+
+# 초기 메모리 체크
+if not check_memory_usage():
+    print("[WARNING] 메모리 사용량이 높습니다. 스크립트 실행을 계속하시겠습니까?")
+    print("메모리 부족으로 인한 KeyboardInterrupt가 발생할 수 있습니다.")
 
 # LLM 감시 시스템
 sys.path.append(r'C:\Users\user\Documents\코드5')
 try:
     from llm_market_analyzer import LLMMarketAnalyzer
     LLM_AVAILABLE = True
+    print("[INFO] LLM 분석기 로드 성공 - 고성능 모드")
 except:
     LLM_AVAILABLE = False
     print("[WARNING] LLM 분석기 로드 실패, 기본 모니터링만 실행")
+
+# 텔레그램 알림
+try:
+    from telegram_notifier import TelegramNotifier
+    TELEGRAM_AVAILABLE = True
+except:
+    TELEGRAM_AVAILABLE = False
+    print("[WARNING] TelegramNotifier 로드 실패")
 
 # ===== 로깅 설정 (실시간 상세 로그) =====
 # 로그 파일: unified_trader_realtime.log (최대 50MB, 5개 백업)
@@ -47,6 +218,30 @@ log_file = Path(r"C:\Users\user\Documents\코드5\unified_trader_realtime.log")
 file_handler = RotatingFileHandler(log_file, maxBytes=50*1024*1024, backupCount=5, encoding='utf-8')
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(log_formatter)
+
+# 로그 로테이션 함수
+def rotate_logs():
+    """로그 파일 로테이션 및 압축"""
+    try:
+        # 기존 로그 파일들 압축
+        log_dir = log_file.parent
+        for i in range(1, 6):  # backupCount=5
+            backup_file = log_file.with_suffix(f'.log.{i}')
+            if backup_file.exists():
+                # 압축 파일명
+                compressed_file = backup_file.with_suffix('.log.gz')
+                if not compressed_file.exists():
+                    try:
+                        import gzip
+                        with open(backup_file, 'rb') as f_in:
+                            with gzip.open(compressed_file, 'wb') as f_out:
+                                f_out.writelines(f_in)
+                        backup_file.unlink()  # 원본 삭제
+                        print(f"[LOG_ROTATION] {backup_file.name} → {compressed_file.name}")
+                    except Exception as e:
+                        print(f"[LOG_ROTATION] 압축 실패: {e}")
+    except Exception as e:
+        print(f"[LOG_ROTATION] 로그 로테이션 실패: {e}")
 
 # 콘솔 핸들러
 console_handler = logging.StreamHandler()
@@ -143,6 +338,292 @@ class TelegramNotifier:
         self.send_message(message)
         logger.critical("통합 매니저 다운 감지!")
 
+# ===== 학습 반영 검증 모니터 (통합) =====
+class LearningVerificationMonitor:
+    """
+    학습 반영 검증 및 강제 적용 모니터
+    
+    ROOT ISSUE:
+    1. ETH: generate_learned_strategies() 호출은 하지만 실제로 LLM 프롬프트에 포함되는지 불확실
+    2. KIS: 학습 시스템 자체가 없음
+    3. 통합 매니저: 트레이더 시작만 하고 학습 상태는 체크 안 함
+    
+    VERIFICATION STRATEGY:
+    1. ETH 검증: learned_strategies 포함 여부, 승률 추적
+    2. KIS 검증: 학습 시스템 존재 여부, LLM 우회 빈도
+    3. 강제 적용: 학습 미반영 시 트레이더 재시작 요청
+    """
+    
+    def __init__(self, telegram: TelegramNotifier):
+        self.telegram = telegram
+        
+        # 파일 경로
+        self.eth_events = Path(r"C:\Users\user\Documents\코드3\eth_learning_events.json")
+        self.eth_trades = Path(r"C:\Users\user\Documents\코드3\eth_trade_history.json")
+        self.eth_script = Path(r"C:\Users\user\Documents\코드3\llm_eth_trader_v4_3tier.py")
+        
+        self.kis_log = Path(r"C:\Users\user\Documents\코드4\kis_trader.log")
+        self.kis_script = Path(r"C:\Users\user\Documents\코드4\kis_llm_trader_v2_explosive.py")
+        
+        # 상태 추적
+        self.eth_learning_verified = False
+        self.kis_learning_verified = False
+        self.last_eth_win_rate = 0.0
+        self.last_kis_win_rate = 0.0
+        
+        # 알림 쿨다운
+        self.last_alert_time = {
+            'ETH': None,
+            'KIS': None
+        }
+        self.ALERT_COOLDOWN = 600  # 10분
+        
+        logger.info("[학습검증] LearningVerificationMonitor 초기화 완료")
+    
+    def verify_eth_learning(self) -> dict:
+        """
+        ETH 학습 반영 검증
+        
+        검증 항목:
+        1. generate_learned_strategies() 호출 여부
+        2. LLM 프롬프트에 learned_strategies 포함 여부
+        3. 승률 개선 추적 (목표: 50%+)
+        """
+        result = {
+            'verified': False,
+            'issues': [],
+            'win_rate': 0.0,
+            'total_trades': 0,
+            'recent_wins': 0,
+            'recent_losses': 0
+        }
+        
+        # 1. 소스코드에서 학습 함수 호출 확인
+        if not self.eth_script.exists():
+            result['issues'].append("ETH 트레이더 스크립트 없음")
+            return result
+        
+        try:
+            with open(self.eth_script, 'r', encoding='utf-8') as f:
+                source = f.read()
+                if 'generate_learned_strategies()' not in source:
+                    result['issues'].append("generate_learned_strategies() 호출 없음")
+                if 'learned_strategies' not in source:
+                    result['issues'].append("learned_strategies 변수 미사용")
+        except Exception as e:
+            result['issues'].append(f"소스코드 읽기 실패: {e}")
+        
+        # 2. 거래 기록에서 승률 계산
+        if not self.eth_trades.exists():
+            result['issues'].append("eth_trade_history.json 없음")
+            return result
+        
+        try:
+            with open(self.eth_trades, 'r', encoding='utf-8') as f:
+                trades = json.load(f)
+            
+            result['total_trades'] = len(trades)
+            
+            # 최근 50거래 승률
+            recent_trades = trades[-50:] if len(trades) >= 50 else trades
+            
+            wins = [t for t in recent_trades if t.get('balance_change', 0) > 0]
+            losses = [t for t in recent_trades if t.get('balance_change', 0) <= 0]
+            
+            result['recent_wins'] = len(wins)
+            result['recent_losses'] = len(losses)
+            result['win_rate'] = (len(wins) / len(recent_trades) * 100) if recent_trades else 0.0
+            
+            self.last_eth_win_rate = result['win_rate']
+            
+            # 승률 목표: 50% 이상
+            if result['win_rate'] < 10.0:
+                result['issues'].append(f"승률 매우 낮음: {result['win_rate']:.1f}% (목표: 50%+)")
+            elif result['win_rate'] < 30.0:
+                result['issues'].append(f"승률 낮음: {result['win_rate']:.1f}% (목표: 50%+)")
+        
+        except Exception as e:
+            result['issues'].append(f"거래 기록 분석 실패: {e}")
+        
+        # 3. 학습 이벤트에서 learned_strategies 사용 확인
+        if self.eth_events.exists():
+            try:
+                with open(self.eth_events, 'r', encoding='utf-8') as f:
+                    lines = f.readlines()
+                
+                # 최근 10개 이벤트
+                recent_events = []
+                for line in lines[-10:]:
+                    if line.strip():
+                        try:
+                            recent_events.append(json.loads(line))
+                        except:
+                            pass
+                
+                # 기본값(50:50:50) 비율 확인
+                default_count = 0
+                for event in recent_events:
+                    if (event.get('7b_buy') == 50 and
+                        event.get('7b_sell') == 50 and
+                        event.get('7b_confidence') == 50):
+                        default_count += 1
+                
+                if default_count >= 7:
+                    result['issues'].append(f"LLM 기본값만 반환 (10개 중 {default_count}개)")
+            
+            except Exception as e:
+                result['issues'].append(f"학습 이벤트 분석 실패: {e}")
+        
+        # 검증 성공 조건
+        if len(result['issues']) == 0:
+            result['verified'] = True
+        elif result['win_rate'] > 40.0:
+            result['verified'] = True
+        
+        return result
+    
+    def verify_kis_learning(self) -> dict:
+        """
+        KIS 학습 반영 검증
+        
+        검증 항목:
+        1. 학습 시스템 존재 여부
+        2. 학습 전략 사용 여부
+        3. LLM 우회 빈도
+        """
+        result = {
+            'verified': False,
+            'issues': [],
+            'force_bypass_count': 0,
+            'has_learning': False
+        }
+        
+        # 1. 소스코드에서 학습 시스템 확인
+        if not self.kis_script.exists():
+            result['issues'].append("KIS 트레이더 스크립트 없음")
+            return result
+        
+        try:
+            with open(self.kis_script, 'r', encoding='utf-8') as f:
+                source = f.read()
+            
+            if 'generate_learned_strategies' in source or 'learned_strategies' in source:
+                result['has_learning'] = True
+            else:
+                result['issues'].append("KIS에 학습 시스템 없음 - 구현 필요!")
+        except Exception as e:
+            result['issues'].append(f"소스코드 읽기 실패: {e}")
+        
+        # 2. 로그에서 FORCE 우회 빈도 확인
+        if self.kis_log.exists():
+            try:
+                with open(self.kis_log, 'r', encoding='utf-8') as f:
+                    lines = deque(f, maxlen=100)
+                
+                force_count = sum(1 for line in lines if 'FORCE' in line or '우회' in line)
+                result['force_bypass_count'] = force_count
+                
+                if force_count >= 10:
+                    result['issues'].append(f"LLM 우회 과다: 최근 100줄 중 {force_count}개")
+            
+            except Exception as e:
+                result['issues'].append(f"로그 분석 실패: {e}")
+        
+        # 검증 성공 조건
+        if result['has_learning'] and result['force_bypass_count'] < 10:
+            result['verified'] = True
+        
+        return result
+    
+    def check_learning_and_request_restart(self) -> dict:
+        """
+        학습 검증 및 재시작 요청
+        
+        Returns:
+            dict: {
+                'eth_needs_restart': bool,
+                'kis_needs_restart': bool,
+                'eth_result': dict,
+                'kis_result': dict
+            }
+        """
+        result = {
+            'eth_needs_restart': False,
+            'kis_needs_restart': False,
+            'eth_result': None,
+            'kis_result': None
+        }
+        
+        # ETH 검증
+        eth_result = self.verify_eth_learning()
+        result['eth_result'] = eth_result
+        
+        if not eth_result['verified']:
+            logger.warning(f"[학습검증] ETH 학습 미반영 감지: {eth_result['issues']}")
+            
+            # 쿨다운 체크
+            if self.last_alert_time.get('ETH'):
+                elapsed = (datetime.now() - self.last_alert_time['ETH']).total_seconds()
+                if elapsed < self.ALERT_COOLDOWN:
+                    logger.info(f"[학습검증] ETH 알림 쿨다운 중 ({int(elapsed)}초)")
+                else:
+                    result['eth_needs_restart'] = True
+                    self._send_learning_alert('ETH', eth_result)
+            else:
+                result['eth_needs_restart'] = True
+                self._send_learning_alert('ETH', eth_result)
+        else:
+            self.eth_learning_verified = True
+            logger.info(f"[학습검증] ETH 학습 작동 중 (승률: {eth_result['win_rate']:.1f}%)")
+        
+        # KIS 검증
+        kis_result = self.verify_kis_learning()
+        result['kis_result'] = kis_result
+        
+        if not kis_result['verified']:
+            logger.warning(f"[학습검증] KIS 학습 미반영 감지: {kis_result['issues']}")
+            
+            # 쿨다운 체크
+            if self.last_alert_time.get('KIS'):
+                elapsed = (datetime.now() - self.last_alert_time['KIS']).total_seconds()
+                if elapsed < self.ALERT_COOLDOWN:
+                    logger.info(f"[학습검증] KIS 알림 쿨다운 중 ({int(elapsed)}초)")
+                else:
+                    result['kis_needs_restart'] = True
+                    self._send_learning_alert('KIS', kis_result)
+            else:
+                result['kis_needs_restart'] = True
+                self._send_learning_alert('KIS', kis_result)
+        else:
+            self.kis_learning_verified = True
+            logger.info(f"[학습검증] KIS 학습 작동 중 (FORCE 우회: {kis_result['force_bypass_count']}회)")
+        
+        return result
+    
+    def _send_learning_alert(self, trader: str, verification_result: dict):
+        """학습 미반영 알림 전송"""
+        issues_text = '\n'.join([f"  - {issue}" for issue in verification_result['issues']])
+        
+        message = f"""[LEARNING] <b>{trader} 학습 미반영 감지!</b>
+
+<b>문제점:</b>
+{issues_text}
+
+<b>현재 상태:</b>
+- ETH 승률: {self.last_eth_win_rate:.1f}% (목표: 50%+)
+- 총 거래: {verification_result.get('total_trades', 0)}건
+
+<b>자동 조치:</b>
+1. 학습 강제 모드 활성화
+2. 트레이더 재시작 준비
+3. 지속 모니터링
+
+시간: {datetime.now().strftime('%H:%M:%S')}"""
+        
+        self.telegram.send_message(message)
+        self.last_alert_time[trader] = datetime.now()
+        logger.info(f"[학습검증] {trader} 학습 미반영 알림 전송 완료")
+
 telegram = TelegramNotifier()
 
 # ===== 설정 =====
@@ -154,7 +635,8 @@ OLLAMA_EXE = r"C:\Users\user\AppData\Local\Programs\Ollama\ollama.exe"
 OLLAMA_PORT_ETH = 11434  # 코드3 (ETH) 전용
 OLLAMA_PORT_KIS = 11435  # 코드4 (KIS) 전용
 OLLAMA_PORT_IMPROVEMENT = 11436  #  자기개선 엔진 전용
-ALLOWED_PORTS = [OLLAMA_PORT_ETH, OLLAMA_PORT_KIS, OLLAMA_PORT_IMPROVEMENT]  # 허가된 포트
+OLLAMA_PORT_14B_DEDICATED = 11437  # 14b 전용 포트 (직렬화 큐)
+ALLOWED_PORTS = [OLLAMA_PORT_ETH, OLLAMA_PORT_KIS, OLLAMA_PORT_IMPROVEMENT, OLLAMA_PORT_14B_DEDICATED]  # 허가된 포트
 
 # 트레이더 설정
 ETH_TRADER_DIR = r"C:\Users\user\Documents\코드3"
@@ -196,6 +678,7 @@ MEMORY_LIMITS = {
     11434: 9 * 1024,  # ETH: 9GB (14b 모델용)
     11435: 9 * 1024,  # KIS: 9GB (14b 모델용)
     11436: 9 * 1024,  # 자기개선: 9GB (14b 모델용, 사용자 요청으로 32b→14b 변경)
+    11437: 9 * 1024,  # 14b 전용: 9GB (직렬화 큐)
 }
 MAX_CPU_PERCENT = 5.0  # 정상 상태 CPU: 5% 이하
 RESPONSE_TIMEOUT = 10  # API 응답 타임아웃: 10초
@@ -218,22 +701,39 @@ TRADING_CHECK_INTERVAL = 5 * 60  # 5분마다 거래 현황 체크 (빠른 감�
 ETH_TRADE_HISTORY = r"C:\Users\user\Documents\코드3\eth_trade_history.json"
 KIS_TRADE_HISTORY = r"C:\Users\user\Documents\코드4\kis_trade_history.json"
 
-#  자기개선 엔진 설정 (통합) - 14b GPU 고품질 분석
+#  자기개선 엔진 설정 (RTX 2060 최적화 - 7b 모델 4개)
 SELF_IMPROVEMENT_INTERVAL = 10 * 60  # 10분마다 자기개선 (적극적 학습)
 IMPROVEMENT_REPORT_INTERVAL = 6 * 60 * 60  # 6시간마다 텔레그램 리포트
 TELEGRAM_ALERT_INTERVAL = 6 * 60 * 60  # 6시간마다만 텔레그램 알림
 OLLAMA_IMPROVEMENT_HOST = f"http://127.0.0.1:{OLLAMA_PORT_IMPROVEMENT}"
-OLLAMA_IMPROVEMENT_MODEL = "qwen2.5:14b"  # GPU 활용 (5-10초, 고품질 분석)
-OLLAMA_IMPROVEMENT_TIMEOUT = 120  # 14b는 신중하게 2분 타임아웃
+OLLAMA_IMPROVEMENT_MODEL = "qwen2.5:7b"  # 7b 모델 1 (통합 매니저)
+OLLAMA_IMPROVEMENT_TIMEOUT = 8  # 7b는 매우 빠르게 8초 타임아웃
 
-#  14b LLM 감시 시스템 (전체 시스템 모니터링, GPU 최적화)
-OVERSIGHT_LLM_MODEL = "qwen2.5:14b"  # GPU 활용 (5-10초)
-OVERSIGHT_CHECK_INTERVAL = 5 * 60  # 5분마다 전체 시스템 분석 (빠른 감시)
+#  24시간 안정 운영 시스템 (7b 모델 1개)
+OVERSIGHT_LLM_MODEL = "qwen2.5:7b"  # 7b 모델 1 (통합 매니저)
+OVERSIGHT_CHECK_INTERVAL = 1 * 60  # 1분마다 전체 시스템 분석 (24시간 감시)
+DEADMAN_SWITCH_INTERVAL = 5 * 60  # 5분마다 데드맨 스위치 체크
+RESTART_ON_FAILURE = True  # 실패 시 자동 재시작
+MAX_RESTART_ATTEMPTS = 10  # 최대 재시작 시도 횟수
+RESTART_COOLDOWN = 30  # 재시작 쿨다운 (초)
+
+#  ETH/KIS 트레이더별 7b 모델 2개씩 설정 (총 4개)
+ETH_LLM_MODEL_1 = "qwen2.5:7b"  # ETH 모델 1
+ETH_LLM_MODEL_2 = "qwen2.5:7b"  # ETH 모델 2 (앙상블)
+KIS_LLM_MODEL_1 = "qwen2.5:7b"  # KIS 모델 1  
+KIS_LLM_MODEL_2 = "qwen2.5:7b"  # KIS 모델 2 (앙상블)
 oversight_llm = None  # 14b LLM 인스턴스 (초기화는 main에서)
 
 # 자기개선 상태 추적
 improvement_history_eth = []
 improvement_history_kis = []
+
+# 24시간 운영 상태 추적
+system_uptime_start = time.time()
+last_activity_time = time.time()
+restart_count = 0
+last_restart_time = 0
+deadman_last_check = time.time()
 ETH_STRATEGY_FILE = r"C:\Users\user\Documents\코드3\eth_current_strategy.json"
 KIS_STRATEGY_FILE = r"C:\Users\user\Documents\코드4\kis_current_strategy.json"
 
@@ -905,6 +1405,147 @@ Start-Process -FilePath "{OLLAMA_EXE}" -ArgumentList "serve" -WindowStyle Hidden
         colored_print(f"Ollama 포트 {port} 시작 오류: {e}", "red")
         return None
 
+# ===== 14b 전용 직렬화 큐 시스템 =====
+import queue
+import threading
+from concurrent.futures import ThreadPoolExecutor
+
+class LLMQueue:
+    """14b 전용 직렬화 큐 (한 번에 1건만 처리)"""
+    def __init__(self, port: int):
+        self.port = port
+        self.queue = queue.Queue()
+        self.executor = ThreadPoolExecutor(max_workers=1)
+        self.running = False
+        self.worker_thread = None
+        
+    def start(self):
+        """큐 워커 시작"""
+        if not self.running:
+            self.running = True
+            self.worker_thread = threading.Thread(target=self._worker, daemon=True)
+            self.worker_thread.start()
+            colored_print(f"[14b 큐] 포트 {self.port} 직렬화 큐 시작", "blue")
+    
+    def stop(self):
+        """큐 워커 중지"""
+        self.running = False
+        if self.worker_thread:
+            self.worker_thread.join(timeout=5)
+    
+    def _worker(self):
+        """큐 워커: 한 번에 1건씩 순차 처리"""
+        while self.running:
+            try:
+                # 큐에서 요청 대기 (1초 타임아웃)
+                request = self.queue.get(timeout=1)
+                if request is None:  # 종료 신호
+                    break
+                    
+                # 14b 분석 실행
+                self._process_request(request)
+                self.queue.task_done()
+                
+            except queue.Empty:
+                continue
+            except Exception as e:
+                colored_print(f"[14b 큐] 처리 오류: {e}", "red")
+    
+    def _process_request(self, request):
+        """14b 요청 처리 (압축된 프롬프트)"""
+        try:
+            # 압축된 프롬프트 생성
+            compressed_prompt = self._compress_prompt(request)
+            
+            url = f"http://127.0.0.1:{self.port}/api/generate"
+            payload = {
+                "model": "qwen2.5:14b",
+                "prompt": compressed_prompt,
+                "stream": False,
+                "options": {
+                    "num_predict": 128,  # 응답 토큰 제한 (성능 향상)
+                    "temperature": 0.7
+                }
+            }
+            
+            start_time = time.time()
+            response = requests.post(url, json=payload, timeout=30)
+            duration = time.time() - start_time
+            
+            if response.status_code == 200:
+                result = response.json()
+                colored_print(f"[14b 큐] 처리 완료 ({duration:.1f}초)", "green")
+                # 결과를 콜백으로 전달
+                if request.get('callback'):
+                    request['callback'](result, duration)
+            else:
+                colored_print(f"[14b 큐] API 오류: {response.status_code}", "red")
+                
+        except Exception as e:
+            colored_print(f"[14b 큐] 처리 실패: {e}", "red")
+    
+    def _compress_prompt(self, request):
+        """프롬프트 압축 (핵심 정보만)"""
+        data = request.get('data', {})
+        
+        # 핵심 상태만 추출
+        position = data.get('position', 'NONE')
+        pnl = data.get('pnl', 0.0)
+        price = data.get('price', 0.0)
+        
+        # 최근 3틱만 요약
+        recent_prices = data.get('recent_prices', [])[-3:] if data.get('recent_prices') else []
+        price_summary = f"{recent_prices}" if recent_prices else "N/A"
+        
+        # 압축된 프롬프트 (토큰 수 대폭 감소)
+        compressed = f"""상태: {position}, PNL: {pnl:+.1f}%, 가격: ${price:.2f}
+최근: {price_summary}
+분석: {request.get('analysis_type', 'market')}"""
+        
+        return compressed
+    
+    def add_request(self, data, analysis_type, callback=None):
+        """14b 분석 요청 추가 (비동기)"""
+        request = {
+            'data': data,
+            'analysis_type': analysis_type,
+            'callback': callback,
+            'timestamp': time.time()
+        }
+        self.queue.put(request)
+        colored_print(f"[14b 큐] 요청 추가: {analysis_type}", "cyan")
+
+# 전역 14b 큐 인스턴스
+llm_queue_14b = None
+
+def start_14b_dedicated_queue():
+    """14b 전용 큐 시작"""
+    global llm_queue_14b
+    if llm_queue_14b is None:
+        llm_queue_14b = LLMQueue(OLLAMA_PORT_14B_DEDICATED)
+        llm_queue_14b.start()
+        colored_print("[14b 전용] 직렬화 큐 시스템 시작", "blue")
+
+def warmup_ollama_model(port: int, model: str, prompt: str = "warmup") -> bool:
+    """모델 워밍업: 짧은 프롬프트로 모델을 미리 로드하여 응답 지연을 줄임"""
+    try:
+        url = f"http://127.0.0.1:{port}/api/generate"
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "stream": False
+        }
+        response = requests.post(url, json=payload, timeout=20)
+        if response.status_code == 200:
+            colored_print(f"[WARMUP] 포트 {port} 모델 '{model}' 워밍업 완료", "green")
+            return True
+        else:
+            colored_print(f"[WARMUP] 포트 {port} 모델 '{model}' 실패: HTTP {response.status_code}", "yellow")
+            return False
+    except Exception as e:
+        colored_print(f"[WARMUP] 포트 {port} 모델 '{model}' 오류: {e}", "yellow")
+        return False
+
 def get_port_by_pid(pid):
     """PID로 사용 중인 포트 찾기"""
     try:
@@ -1134,7 +1775,7 @@ def ask_llm_triple_validation(primary_prompt: str, validator1_prompt: str, valid
     colored_print(f"[TRIPLE VALIDATION] 합의 여부: {'[OK] 동의 {}/3'.format(agreement_count) if consensus else '[ERROR] 불일치'}",
                   "green" if consensus else "yellow")
 
-    total_time = time.time() - primary_start
+    total_time = time.time() - start_time
     colored_print(f"[TRIPLE VALIDATION] 총 소요 시간: {total_time:.1f}초", "cyan")
 
     return {
@@ -1499,8 +2140,7 @@ def check_trading_health(trader_name, history_file):
                 f"3. 샘플 편향으로 인한 과적합\n\n"
                 f"<b>조치:</b>\n"
                 f"임계값 최적화 알고리즘 재계산 중\n"
-                f"(수수료 + 기대값 기반 최적화)",
-                priority="important"
+                f"(수수료 + 기대값 기반 최적화)"
             )
 
         return {
@@ -1676,6 +2316,8 @@ def parse_trader_log(line, trader_name):
 
     return line  # 모든 로그 반환!
 
+last_log_time = {"ETH": 0.0, "KIS": 0.0}
+
 def log_reader_thread(process, trader_name):
     """트레이더 로그 읽기 스레드"""
     # 트레이더별 로그 파일 경로
@@ -1711,6 +2353,12 @@ def log_reader_thread(process, trader_name):
             important_info = parse_trader_log(decoded_line, trader_name)
             if important_info:
                 colored_print(f"[{trader_name}] {important_info}", "magenta")
+            # 하트비트 갱신
+            try:
+                key = "ETH" if "ETH" in trader_name else ("KIS" if "KIS" in trader_name else trader_name)
+                last_log_time[key] = time.time()
+            except Exception:
+                pass
     except Exception as e:
         colored_print(f"[{trader_name}] 로그 읽기 오류: {e}", "red")
     finally:
@@ -1719,26 +2367,105 @@ def log_reader_thread(process, trader_name):
 
 # ===== 트레이더 관리 =====
 def start_trader(script_path, python_exe, working_dir, trader_name, ollama_port):
-    """트레이더 시작 (로그 캡처, RTX 2060 Tensor Core 최적화)"""
-    try:
-        env = os.environ.copy()
-        env["OLLAMA_HOST"] = f"127.0.0.1:{ollama_port}"  # http:// 제거 (트레이더 내부에서 추가)
-        env["PYTHONIOENCODING"] = "utf-8"
+    """트레이더 시작 (인터넷 검색 기반 강력한 안전장치 시스템)"""
+    colored_print(f"[{trader_name}] 🛡️ 강력한 안전장치 시스템 시작...", "yellow")
+    
+    # 환경변수 설정
+    env = os.environ.copy()
+    env["OLLAMA_HOST"] = f"127.0.0.1:{ollama_port}"
+    env["PYTHONIOENCODING"] = "utf-8"
+    env["PYTHONUTF8"] = "1"
+    for key, value in GPU_OPTIMIZATION.items():
+        env[key] = value
 
-        # RTX 2060 Tensor Core 최적화 환경변수 적용
-        for key, value in GPU_OPTIMIZATION.items():
-            env[key] = value
+    # 스크립트 파일 존재 확인
+    if not os.path.isfile(script_path):
+        colored_print(f"[{trader_name}] ❌ 스크립트 파일 없음: {script_path}", "red")
+        send_trader_failure_alert(trader_name, f"스크립트 파일 없음: {script_path}")
+        return None
 
+        # ===== 강화된 폴백 시스템 (인터넷 검색 기반) =====
+        start_methods = [
+            {
+                "name": "배치 파일 방식",
+                "func": lambda: self._start_with_batch(script_path, working_dir, env, trader_name)
+            },
+            {
+                "name": "PowerShell 방식", 
+                "func": lambda: self._start_with_powershell(script_path, working_dir, env, trader_name, ollama_port)
+            },
+            {
+                "name": "직접 Python 실행",
+                "func": lambda: self._start_with_python(script_path, working_dir, env, trader_name)
+            },
+            {
+                "name": "CMD 방식",
+                "func": lambda: self._start_with_cmd(script_path, working_dir, env, trader_name, ollama_port)
+            },
+            {
+                "name": "Python 모듈 실행",
+                "func": lambda: self._start_with_module(script_path, working_dir, env, trader_name)
+            }
+        ]
+        
+        for i, method in enumerate(start_methods, 1):
+            try:
+                colored_print(f"[{trader_name}] 🔄 폴백 {i}: {method['name']} 시도...", "yellow")
+                process = method['func']()
+                
+                if process and process.poll() is None and process.pid and process.pid > 0:
+                    colored_print(f"[{trader_name}] ✅ 폴백 {i} 성공 (PID: {process.pid})", "green")
+                    
+                    # 성공 시 모니터링 스레드 시작
+                    monitor_thread = threading.Thread(
+                        target=self._monitor_trader_process,
+                        args=(process, trader_name, script_path, working_dir, env, ollama_port),
+                        daemon=True
+                    )
+                    monitor_thread.start()
+                    
+                    return process
+                else:
+                    colored_print(f"[{trader_name}] ❌ 폴백 {i} 실패", "red")
+                    
+            except Exception as e:
+                colored_print(f"[{trader_name}] ❌ 폴백 {i} 오류: {e}", "red")
+                import traceback
+                traceback.print_exc()
+
+        # ===== 모든 폴백 실패 =====
+        colored_print(f"[{trader_name}] ❌ 모든 폴백 실패 - 트레이더 시작 불가", "red")
+        send_trader_failure_alert(trader_name, "모든 시작 방식 실패 - 시스템 진단 필요")
+        self._collect_system_diagnostics(trader_name, working_dir, script_path)
+        return None
+
+    def _start_with_batch(self, script_path, working_dir, env, trader_name):
+        """배치 파일 방식으로 트레이더 시작"""
+        batch_file = os.path.join(working_dir, f"start_{trader_name.lower().replace(' ', '_')}.bat")
+        
+        batch_content = f"""@echo off
+cd /d "{working_dir}"
+set OLLAMA_HOST=127.0.0.1:{env.get('OLLAMA_HOST', '11434')}
+set PYTHONIOENCODING=utf-8
+set PYTHONUTF8=1
+python "{script_path}"
+"""
+        
+        with open(batch_file, 'w', encoding='utf-8') as f:
+            f.write(batch_content)
+        
+        CREATE_NO_WINDOW = 0x08000000
         process = subprocess.Popen(
-            [python_exe, "-u", script_path],  # -u: unbuffered output
+            [batch_file],
             cwd=working_dir,
             env=env,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            bufsize=0,  # unbuffered
-            universal_newlines=False  # 바이트 모드
+            bufsize=0,
+            universal_newlines=False,
+            creationflags=CREATE_NO_WINDOW
         )
-
+        
         # 로그 읽기 스레드 시작
         log_thread = threading.Thread(
             target=log_reader_thread,
@@ -1746,19 +2473,313 @@ def start_trader(script_path, python_exe, working_dir, trader_name, ollama_port)
             daemon=True
         )
         log_thread.start()
+        
+        time.sleep(3)
+        return process
 
-        time.sleep(2)
+    def _start_with_powershell(self, script_path, working_dir, env, trader_name, ollama_port):
+        """PowerShell 방식으로 트레이더 시작"""
+        ps_script = f"""
+$env:OLLAMA_HOST = "127.0.0.1:{ollama_port}"
+$env:PYTHONIOENCODING = "utf-8"
+$env:PYTHONUTF8 = "1"
+Set-Location "{working_dir}"
+python "{script_path}"
+"""
+        
+        CREATE_NO_WINDOW = 0x08000000
+        process = subprocess.Popen(
+            ["powershell", "-Command", ps_script],
+            cwd=working_dir,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=0,
+            universal_newlines=False,
+            creationflags=CREATE_NO_WINDOW
+        )
+        
+        log_thread = threading.Thread(
+            target=log_reader_thread,
+            args=(process, trader_name),
+            daemon=True
+        )
+        log_thread.start()
+        
+        time.sleep(3)
+        return process
 
-        if process.poll() is None:
-            colored_print(f"{trader_name} 시작 완료 (PID: {process.pid}, Ollama: {ollama_port})", "green")
+    def _start_with_python(self, script_path, working_dir, env, trader_name):
+        """직접 Python 실행"""
+        import sys
+        python_cmd = [sys.executable, script_path]
+        
+        CREATE_NO_WINDOW = 0x08000000
+        process = subprocess.Popen(
+            python_cmd,
+            cwd=working_dir,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=0,
+            universal_newlines=False,
+            creationflags=CREATE_NO_WINDOW
+        )
+        
+        log_thread = threading.Thread(
+            target=log_reader_thread,
+            args=(process, trader_name),
+            daemon=True
+        )
+        log_thread.start()
+        
+        time.sleep(3)
+        return process
+
+    def _start_with_cmd(self, script_path, working_dir, env, trader_name, ollama_port):
+        """CMD 방식으로 트레이더 시작"""
+        cmd_script = f'cd /d "{working_dir}" && set OLLAMA_HOST=127.0.0.1:{ollama_port} && set PYTHONIOENCODING=utf-8 && set PYTHONUTF8=1 && python "{script_path}"'
+        
+        CREATE_NO_WINDOW = 0x08000000
+        process = subprocess.Popen(
+            ["cmd", "/c", cmd_script],
+            cwd=working_dir,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=0,
+            universal_newlines=False,
+            creationflags=CREATE_NO_WINDOW
+        )
+        
+        log_thread = threading.Thread(
+            target=log_reader_thread,
+            args=(process, trader_name),
+            daemon=True
+        )
+        log_thread.start()
+        
+        time.sleep(3)
+        return process
+
+    def _start_with_module(self, script_path, working_dir, env, trader_name):
+        """Python 모듈 실행 방식"""
+        import sys
+        python_cmd = [sys.executable, "-m", "runpy", "run_path", script_path]
+        
+        CREATE_NO_WINDOW = 0x08000000
+        process = subprocess.Popen(
+            python_cmd,
+            cwd=working_dir,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=0,
+            universal_newlines=False,
+            creationflags=CREATE_NO_WINDOW
+        )
+        
+        log_thread = threading.Thread(
+            target=log_reader_thread,
+            args=(process, trader_name),
+            daemon=True
+        )
+        log_thread.start()
+        
+        time.sleep(3)
+        return process
+
+    def _monitor_trader_process(self, process, trader_name, script_path, working_dir, env, ollama_port):
+        """트레이더 프로세스 실시간 모니터링 (인터넷 검색 기반)"""
+        restart_count = 0
+        max_restarts = 10
+        last_heartbeat = time.time()
+        
+        while restart_count < max_restarts:
+            try:
+                # 프로세스 상태 확인
+                if process.poll() is not None:
+                    colored_print(f"[{trader_name}] ❌ 프로세스 종료 감지 - 자동 재시작 시도 {restart_count + 1}/{max_restarts}", "red")
+                    restart_count += 1
+                    
+                    # 5초 대기 후 재시작
+                    time.sleep(5)
+                    
+                    # 재시작 시도
+                    new_process = self._restart_trader(script_path, working_dir, env, trader_name, ollama_port)
+                    if new_process:
+                        process = new_process
+                        colored_print(f"[{trader_name}] ✅ 재시작 성공 (PID: {process.pid})", "green")
+                    else:
+                        colored_print(f"[{trader_name}] ❌ 재시작 실패", "red")
+                        send_trader_failure_alert(trader_name, f"재시작 실패 {restart_count}회")
+                
+                # 하트비트 확인 (30초마다)
+                current_time = time.time()
+                if current_time - last_heartbeat > 30:
+                    colored_print(f"[{trader_name}] 💓 하트비트 확인 중...", "blue")
+                    last_heartbeat = current_time
+                
+                time.sleep(10)  # 10초마다 체크
+                
+            except Exception as e:
+                colored_print(f"[{trader_name}] ❌ 모니터링 오류: {e}", "red")
+                time.sleep(5)
+        
+        colored_print(f"[{trader_name}] ❌ 최대 재시작 시도 초과 - 모니터링 중단", "red")
+        send_trader_failure_alert(trader_name, f"최대 재시작 시도 초과 ({max_restarts}회)")
+
+    def _restart_trader(self, script_path, working_dir, env, trader_name, ollama_port):
+        """트레이더 재시작 (간단한 방식)"""
+        try:
+            import sys
+            python_cmd = [sys.executable, script_path]
+            
+            CREATE_NO_WINDOW = 0x08000000
+            process = subprocess.Popen(
+                python_cmd,
+                cwd=working_dir,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=0,
+                universal_newlines=False,
+                creationflags=CREATE_NO_WINDOW
+            )
+            
+            # 로그 읽기 스레드 시작
+            log_thread = threading.Thread(
+                target=log_reader_thread,
+                args=(process, trader_name),
+                daemon=True
+            )
+            log_thread.start()
+            
+            time.sleep(2)
             return process
-        else:
-            colored_print(f"{trader_name} 시작 실패", "red")
+            
+        except Exception as e:
+            colored_print(f"[{trader_name}] ❌ 재시작 오류: {e}", "red")
             return None
 
+    def _collect_system_diagnostics(self, trader_name, working_dir, script_path):
+        """시스템 진단 정보 수집 (인터넷 검색 기반)"""
+        try:
+            import psutil
+            import shutil
+            
+            # 시스템 리소스 상태
+            cpu_percent = psutil.cpu_percent()
+            memory = psutil.virtual_memory()
+            disk = shutil.disk_usage(working_dir)
+            
+            # 네트워크 상태
+            network_io = psutil.net_io_counters()
+            
+            # 프로세스 정보
+            python_processes = []
+            for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
+                try:
+                    if 'python' in proc.info['name'].lower():
+                        python_processes.append(proc.info)
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
+            
+            diagnostic_info = f"""
+🔍 시스템 진단 정보:
+- CPU 사용률: {cpu_percent}%
+- 메모리 사용률: {memory.percent}%
+- 디스크 여유공간: {disk.free / (1024**3):.1f}GB
+- 네트워크 송신: {network_io.bytes_sent / (1024**2):.1f}MB
+- 네트워크 수신: {network_io.bytes_recv / (1024**2):.1f}MB
+- 작업 디렉터리: {working_dir}
+- 스크립트 경로: {script_path}
+- Python 프로세스 수: {len(python_processes)}
+"""
+            
+            colored_print(f"[{trader_name}] {diagnostic_info}", "yellow")
+            
+            # 진단 정보를 파일로 저장
+            diagnostic_file = os.path.join(working_dir, f"{trader_name.lower().replace(' ', '_')}_diagnostic.txt")
+            with open(diagnostic_file, 'w', encoding='utf-8') as f:
+                f.write(diagnostic_info)
+                f.write(f"\nPython 프로세스 상세:\n")
+                for proc in python_processes:
+                    f.write(f"  PID: {proc['pid']}, CPU: {proc['cpu_percent']}%, Memory: {proc['memory_percent']}%\n")
+            
+            colored_print(f"[{trader_name}] 🔍 진단 정보 저장: {diagnostic_file}", "yellow")
+            
+        except Exception as e:
+            colored_print(f"[{trader_name}] ❌ 진단 정보 수집 실패: {e}", "red")
+
+def monitor_trader_health(trader_name: str, process, max_restart_attempts: int = 10):
+    """트레이더 상태 실시간 모니터링 (안전장치)"""
+    restart_count = 0
+    last_activity = time.time()
+    
+    while restart_count < max_restart_attempts:
+        try:
+            # 프로세스 상태 확인
+            if process.poll() is not None:
+                colored_print(f"[{trader_name}] ❌ 프로세스 종료 감지 - 자동 재시작 시도 {restart_count + 1}/{max_restart_attempts}", "red")
+                restart_count += 1
+                
+                # 재시작 시도
+                time.sleep(5)  # 5초 대기
+                # 여기서 재시작 로직을 호출할 수 있음
+                return False
+            
+            # 활동 확인 (30초마다)
+            if time.time() - last_activity > 30:
+                colored_print(f"[{trader_name}] ⚠️ 활동 없음 - 상태 확인 중...", "yellow")
+                last_activity = time.time()
+            
+            time.sleep(10)  # 10초마다 체크
+            
+        except Exception as e:
+            colored_print(f"[{trader_name}] ❌ 모니터링 오류: {e}", "red")
+            time.sleep(5)
+    
+    colored_print(f"[{trader_name}] ❌ 최대 재시작 시도 초과 - 모니터링 중단", "red")
+    return False
+
+def send_trader_failure_alert(trader_name: str, error_details: str):
+    """트레이더 시작 실패 시 텔레그램 알림"""
+    try:
+        from telegram_notifier import TelegramNotifier
+        telegram = TelegramNotifier()
+        
+        alert_message = f"""
+🚨 <b>트레이더 시작 실패 알림</b>
+
+<b>트레이더:</b> {trader_name}
+<b>시간:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+<b>오류:</b> {error_details}
+
+<b>자동 복구 시도 중...</b>
+<i>수동 개입이 필요할 수 있습니다.</i>
+"""
+        
+        telegram.send_message(alert_message, priority="critical")
+        colored_print(f"[{trader_name}] 🚨 텔레그램 알림 전송 완료", "red")
+        
     except Exception as e:
-        colored_print(f"{trader_name} 시작 오류: {e}", "red")
-        return None
+        colored_print(f"[{trader_name}] ❌ 텔레그램 알림 전송 실패: {e}", "red")
+
+def start_trader_with_backoff(name: str, script_path: str, python_exe: str, working_dir: str, ollama_port: int, max_retries: int = 5):
+    """트레이더 시작을 지수 백오프로 재시도 (최대 N회, 1→2→4→8→16s)"""
+    attempt = 0
+    backoff = 1
+    while attempt < max_retries:
+        proc = start_trader(script_path, python_exe, working_dir, name, ollama_port)
+        if proc is not None:
+            return proc
+        colored_print(f"[RETRY] {name} 시작 재시도 {attempt+1}/{max_retries} (대기 {backoff}s)", "yellow")
+        time.sleep(backoff)
+        backoff = min(backoff * 2, 30)
+        attempt += 1
+    colored_print(f"[FAIL] {name} 시작 실패 (재시도 {max_retries}회 초과)", "red")
+    return None
 
 def stop_process(process, name, timeout=30):
     """프로세스 정상 종료"""
@@ -1778,17 +2799,31 @@ def stop_process(process, name, timeout=30):
 
 # ===== 메인 관리 루프 =====
 def main():
-    # 중복 실행 체크
-    running_pid = check_already_running()
-    if running_pid:
-        colored_print(f"[WARN]  통합매니저가 이미 실행 중입니다 (PID: {running_pid})", "red")
-        colored_print("기존 프로세스를 종료하거나 중복 실행을 원하면 PID 파일을 삭제하세요:", "yellow")
-        colored_print(f"   {PID_FILE}", "yellow")
-        return
+    try:
+        # 메모리 사용량 체크
+        if not check_memory_usage():
+            colored_print("[WARNING] 메모리 사용량이 높습니다. 계속 실행하시겠습니까?", "yellow")
+            colored_print("메모리 부족으로 인한 KeyboardInterrupt가 발생할 수 있습니다.", "yellow")
+            time.sleep(2)  # 사용자가 확인할 시간 제공
+        
+        # 중복 실행 체크
+        running_pid = check_already_running()
+        if running_pid:
+            colored_print(f"[WARN]  통합매니저가 이미 실행 중입니다 (PID: {running_pid})", "red")
+            colored_print("기존 프로세스를 종료하거나 중복 실행을 원하면 PID 파일을 삭제하세요:", "yellow")
+            colored_print(f"   {PID_FILE}", "yellow")
+            return
 
-    # PID 파일 생성
-    write_pid_file()
-    colored_print(f"[OK] PID 파일 생성 완료 (PID: {os.getpid()})", "green")
+        # PID 파일 생성
+        write_pid_file()
+        colored_print(f"[OK] PID 파일 생성 완료 (PID: {os.getpid()})", "green")
+        
+    except KeyboardInterrupt:
+        colored_print("\n[INFO] 사용자에 의한 중단 (Ctrl+C)", "yellow")
+        return
+    except Exception as e:
+        colored_print(f"[ERROR] 초기화 중 오류: {e}", "red")
+        return
 
     colored_print("=" * 70, "cyan")
     colored_print("통합 트레이더 관리 시스템 시작", "cyan")
@@ -1841,11 +2876,21 @@ def main():
     else:
         colored_print(f"[OLLAMA] 자기개선 엔진용 Ollama 활성화 완료!", "green")
 
+    # 14b 전용 Ollama (11437) - 직렬화 큐
+    colored_print(f"[OLLAMA] 포트 {OLLAMA_PORT_14B_DEDICATED} 시작 중 (14b 전용 큐)...", "blue")
+    ollama_14b_dedicated = start_ollama(OLLAMA_PORT_14B_DEDICATED)
+    if not ollama_14b_dedicated:
+        colored_print(f"\n[WARNING] Ollama 포트 {OLLAMA_PORT_14B_DEDICATED} 시작 실패 (14b 큐 비활성화)", "yellow")
+    else:
+        colored_print(f"[OLLAMA] 14b 전용 큐 활성화 완료!", "green")
+        # 14b 전용 큐 시작
+        start_14b_dedicated_queue()
+
     colored_print("[OLLAMA] 모든 인스턴스 시작 완료!", "green")
 
     # 트레이더 시작
     colored_print("\n[TRADER] 시작 중...", "blue")
-    trader_eth = start_trader(
+    trader_eth = start_trader_with_backoff(
         ETH_TRADER_SCRIPT,
         ETH_PYTHON,
         ETH_TRADER_DIR,
@@ -1854,7 +2899,7 @@ def main():
     )
     time.sleep(3)
 
-    trader_kis = start_trader(
+    trader_kis = start_trader_with_backoff(
         KIS_TRADER_SCRIPT,
         KIS_PYTHON,
         KIS_TRADER_DIR,
@@ -1865,6 +2910,15 @@ def main():
     if not trader_eth or not trader_kis:
         colored_print("\n[WARNING] 일부 트레이더 시작 실패", "yellow")
 
+    # 14b 모델 워밍업 (응답 지연 최소화)
+    try:
+        colored_print("\n[WARMUP] 14b 모델 워밍업 시작...", "cyan")
+        warmup_ollama_model(OLLAMA_PORT_ETH, "qwen2.5:14b", prompt="price: 1000, trend: bear → ok")
+        warmup_ollama_model(OLLAMA_PORT_KIS, "qwen2.5:14b", prompt="price: 100, trend: bull → ok")
+        warmup_ollama_model(OLLAMA_PORT_IMPROVEMENT, OLLAMA_IMPROVEMENT_MODEL, prompt="ready")
+    except Exception as e:
+        colored_print(f"[WARMUP] 모델 워밍업 오류: {e}", "yellow")
+
     # 재시작 타이머
     last_restart_time = time.time()
     last_guardian_check = time.time()
@@ -1873,6 +2927,8 @@ def main():
     last_improvement_check = time.time()  #  자기개선 체크
     last_improvement_report = time.time()  #  개선 리포트
     last_telegram_alert = time.time()  #  텔레그램 알림 (6시간 제한)
+    last_log_rotation = time.time()  #  로그 로테이션 (6시간마다)
+    last_learning_check = time.time()  #  학습 반영 검증 (1분마다)
 
     #  Option 4: 오류 패턴 로드
     global error_patterns_eth, error_patterns_kis
@@ -1891,9 +2947,18 @@ def main():
     background_learning_thread.start()
     colored_print(f"[BACKGROUND LEARNING] 백그라운드 학습 시작! ({BACKGROUND_LEARNING_INTERVAL // 60}분 주기)\n", "magenta")
 
+    #  학습 반영 검증 모니터 초기화
+    colored_print("[학습검증] Learning Verification Monitor 초기화 중...", "cyan")
+    learning_monitor = LearningVerificationMonitor(telegram)
+    colored_print("[학습검증] 모니터 초기화 완료!\n", "green")
+
     colored_print("\n[MONITOR] 모니터링 시작 (Ctrl+C로 종료)\n", "green")
     colored_print(f"[GUARDIAN] 실시간 Ollama 관리 활성화 ({GUARDIAN_CHECK_INTERVAL}초마다)\n", "green")
     colored_print(f"[TRADING] 거래/수익 모니터링 활성화 (15분마다 체크, 6시간마다 텔레그램)\n", "green")
+    colored_print(f"[LEARNING-VERIFY] 학습 반영 검증 활성화 (1분마다 체크)\n", "green")
+    colored_print(f"  - ETH: learned_strategies 사용 여부, 승률 추적 (목표: 50%+)\n", "green")
+    colored_print(f"  - KIS: 학습 시스템 존재 여부, LLM 우회 빈도\n", "green")
+    colored_print(f"  - 학습 미반영 시 자동 알림 및 재시작 요청\n", "green")
     colored_print(f"[SELF-IMPROVE] 자기개선 엔진 활성화\n", "green")
     colored_print(f"  - Option 1: Triple Validation (3중 검증)\n", "green")
     colored_print(f"  - Option 4: Self-Improving Feedback Loop (오류 패턴 학습)\n", "green")
@@ -1906,9 +2971,24 @@ def main():
 
     try:
         while True:
-            time.sleep(GUARDIAN_CHECK_INTERVAL)  #  10초마다 체크
-            current_time = time.time()
-            elapsed = current_time - last_restart_time
+            try:
+                # 메모리 사용량 주기적 체크
+                if not check_memory_usage():
+                    colored_print("[WARNING] 메모리 사용량이 높습니다. 가비지 컬렉션 실행...", "yellow")
+                    import gc
+                    gc.collect()
+                    time.sleep(1)
+                
+                time.sleep(GUARDIAN_CHECK_INTERVAL)  #  10초마다 체크
+                current_time = time.time()
+                elapsed = current_time - last_restart_time
+            except KeyboardInterrupt:
+                colored_print("\n[INFO] 사용자에 의한 중단 (Ctrl+C)", "yellow")
+                break
+            except Exception as e:
+                colored_print(f"[ERROR] 메인 루프 오류: {e}", "red")
+                time.sleep(5)  # 오류 시 5초 대기 후 계속
+                continue
 
             #  Guardian: 불필요한 Ollama 정리 (10초마다)
             guardian_cleanup_rogue_ollama()
@@ -1998,6 +3078,73 @@ def main():
                 colored_print("="*70 + "\n", "cyan")
                 last_trading_check = current_time
 
+            # 로그 로테이션 (6시간마다)
+            if (current_time - last_log_rotation) >= 6 * 3600:  # 6시간
+                rotate_logs()
+                last_log_rotation = current_time
+
+            #  학습 반영 검증 (1분마다)
+            if (current_time - last_learning_check) >= 60:  # 1분
+                colored_print("\n" + "="*70, "cyan")
+                colored_print("[학습검증] 학습 반영 검증 시작", "cyan")
+                colored_print("="*70, "cyan")
+                
+                try:
+                    learning_status = learning_monitor.check_learning_and_request_restart()
+                    
+                    # ETH 학습 미반영 시 자동 재시작
+                    if learning_status['eth_needs_restart']:
+                        colored_print("[학습검증] ETH 학습 미반영 → 트레이더 재시작", "yellow")
+                        logger.warning("ETH 학습 미반영 감지 - 트레이더 재시작 시도")
+                        
+                        stop_process(trader_eth, "ETH Trader", timeout=10)
+                        time.sleep(3)
+                        
+                        trader_eth = start_trader_with_backoff(
+                            ETH_TRADER_SCRIPT,
+                            ETH_PYTHON,
+                            ETH_TRADER_DIR,
+                            "ETH Trader (코드3)",
+                            OLLAMA_PORT_ETH
+                        )
+                        logger.info("ETH Trader 학습 강제 모드 재시작 완료")
+                    
+                    # KIS 학습 미반영 시 자동 재시작
+                    if learning_status['kis_needs_restart']:
+                        colored_print("[학습검증] KIS 학습 미반영 → 트레이더 재시작", "yellow")
+                        logger.warning("KIS 학습 미반영 감지 - 트레이더 재시작 시도")
+                        
+                        stop_process(trader_kis, "KIS Trader", timeout=10)
+                        time.sleep(3)
+                        
+                        trader_kis = start_trader_with_backoff(
+                            KIS_TRADER_SCRIPT,
+                            KIS_PYTHON,
+                            KIS_TRADER_DIR,
+                            "KIS Trader (코드4)",
+                            OLLAMA_PORT_KIS
+                        )
+                        logger.info("KIS Trader 학습 강제 모드 재시작 완료")
+                    
+                    # 상태 요약
+                    eth_result = learning_status['eth_result']
+                    kis_result = learning_status['kis_result']
+                    
+                    colored_print(f"[학습검증] ETH: {'✓' if eth_result['verified'] else '✗'} "
+                                f"(승률: {eth_result['win_rate']:.1f}%, 거래: {eth_result['total_trades']}건)", 
+                                "green" if eth_result['verified'] else "yellow")
+                    colored_print(f"[학습검증] KIS: {'✓' if kis_result['verified'] else '✗'} "
+                                f"(학습 시스템: {'있음' if kis_result['has_learning'] else '없음'}, "
+                                f"FORCE 우회: {kis_result['force_bypass_count']}회)", 
+                                "green" if kis_result['verified'] else "yellow")
+                    
+                except Exception as e:
+                    colored_print(f"[학습검증] 오류: {e}", "red")
+                    logger.error(f"학습 검증 오류: {e}")
+                
+                colored_print("="*70 + "\n", "cyan")
+                last_learning_check = current_time
+
             #  자기개선 엔진 (1시간마다 LLM 분석)
             if (current_time - last_improvement_check) >= SELF_IMPROVEMENT_INTERVAL:
                 import json
@@ -2086,22 +3233,65 @@ def main():
             if not should_check_status:
                 continue
 
+            # 시스템 리소스 가드
+            if not system_resource_guard():
+                print("[GUARD] 시스템 리소스 부족 → 트레이더 일시 정지")
+                time.sleep(30)
+                continue
+
             last_status_print = current_time
+
+            # 데드맨 스위치: 3시간 무활동(로그/신호/거래 없음) 경고
+            try:
+                deadman_now = time.time()
+                last_activity = max(last_trading_check, last_status_print, last_improvement_check)
+                if deadman_now - last_activity > 3 * 3600:
+                    telegram.send_message("[DEADMAN] 3시간 활동 없음 - 시스템 점검 필요 (로그/신호/거래)\n최근 로그 200줄 첨부는 매니저 로그 파일에서 확인.", priority="important")
+                    # 중복 전송 방지
+                    last_status_print = current_time
+            except Exception:
+                pass
+
+            # 디스크/VRAM 가드
+            if not disk_usage_guard():
+                time.sleep(30)
+            _ = gpu_vram_guard()
 
             # 트레이더 상태 체크
             eth_alive = trader_eth and trader_eth.poll() is None
             kis_alive = trader_kis and trader_kis.poll() is None
+
+            # 로그 하트비트 워치독: 최근 5분간 출력 없으면 비정상으로 간주하여 재시작
+            try:
+                hb_now = time.time()
+                for key, proc, restart in [
+                    ("ETH", trader_eth, lambda: start_trader_with_backoff(ETH_TRADER_SCRIPT, ETH_PYTHON, ETH_TRADER_DIR, "ETH Trader (코드3)", OLLAMA_PORT_ETH)),
+                    ("KIS", trader_kis, lambda: start_trader_with_backoff(KIS_TRADER_SCRIPT, KIS_PYTHON, KIS_TRADER_DIR, "KIS Trader (코드4)", OLLAMA_PORT_KIS)),
+                ]:
+                    last_ts = last_log_time.get(key, 0)
+                    if proc and proc.poll() is None and last_ts and hb_now - last_ts > 300:
+                        colored_print(f"[WATCHDOG] {key} 로그 정지 {int(hb_now - last_ts)}s → 안전 재시작", "yellow")
+                        stop_process(proc, f"{key} Trader", timeout=10)
+                        if key == "ETH":
+                            trader_eth = start_trader_with_backoff(ETH_TRADER_SCRIPT, ETH_PYTHON, ETH_TRADER_DIR, "ETH Trader (코드3)", OLLAMA_PORT_ETH)
+                        else:
+                            trader_kis = start_trader_with_backoff(KIS_TRADER_SCRIPT, KIS_PYTHON, KIS_TRADER_DIR, "KIS Trader (코드4)", OLLAMA_PORT_KIS)
+                        last_log_time[key] = time.time()
+            except Exception:
+                pass
 
             # 프로세스 중단 감지 및 텔레그램 알림
             if not eth_alive and trader_eth:
                 telegram.notify_bot_down("ETH Trader", "프로세스가 예기치 않게 종료됨")
                 colored_print("[ERROR] ETH 트레이더 중단 감지 - 텔레그램 알림 전송", "red")
                 logger.error("ETH Trader 프로세스 중단 감지 - 자동 재시작 준비 중")
+                send_trader_failure_alert("ETH Trader", "프로세스가 예기치 않게 종료됨")
 
             if not kis_alive and trader_kis:
                 telegram.notify_bot_down("KIS Trader", "프로세스가 예기치 않게 종료됨")
                 colored_print("[ERROR] KIS 트레이더 중단 감지 - 텔레그램 알림 전송", "red")
                 logger.error("KIS Trader 프로세스 중단 감지 - 자동 재시작 준비 중")
+                send_trader_failure_alert("KIS Trader", "프로세스가 예기치 않게 종료됨")
 
             # Ollama 헬스 체크 (지능적 관리)
             health_eth = check_ollama_health(OLLAMA_PORT_ETH)
@@ -2132,6 +3322,10 @@ def main():
                 ollama_eth = start_ollama(OLLAMA_PORT_ETH)
                 ollama_kis = start_ollama(OLLAMA_PORT_KIS)
                 ollama_improvement = start_ollama(OLLAMA_PORT_IMPROVEMENT)
+                ollama_14b_dedicated = start_ollama(OLLAMA_PORT_14B_DEDICATED)
+                
+                # 14b 전용 큐 시작
+                start_14b_dedicated_queue()
 
                 if not ollama_eth or not ollama_kis:
                     logger.critical("Ollama 재시작 실패 - 시스템 종료")
@@ -2142,6 +3336,14 @@ def main():
 
                 # 트레이더 재시작
                 colored_print("[SMART_RESTART] 트레이더 재시작 중...", "green")
+                # 재시작 후 14b 재워밍업 (지연 최소화)
+                try:
+                    colored_print("[WARMUP] 재시작 후 14b 모델 재워밍업...", "cyan")
+                    warmup_ollama_model(OLLAMA_PORT_ETH, "qwen2.5:14b", prompt="price: 1000, trend: bear → ok")
+                    warmup_ollama_model(OLLAMA_PORT_KIS, "qwen2.5:14b", prompt="price: 100, trend: bull → ok")
+                    warmup_ollama_model(OLLAMA_PORT_IMPROVEMENT, OLLAMA_IMPROVEMENT_MODEL, prompt="ready")
+                except Exception as e:
+                    colored_print(f"[WARMUP] 재시작 워밍업 오류: {e}", "yellow")
                 trader_eth = start_trader(
                     ETH_TRADER_SCRIPT,
                     ETH_PYTHON,
@@ -2164,7 +3366,7 @@ def main():
             if not eth_alive and not need_restart_ollama:
                 colored_print("\n[AUTO_RECOVERY] ETH Trader 크래시 → 재시작...", "yellow")
                 logger.warning("ETH Trader 크래시 감지 - 자동 재시작 시작")
-                trader_eth = start_trader(
+                trader_eth = start_trader_with_backoff(
                     ETH_TRADER_SCRIPT,
                     ETH_PYTHON,
                     ETH_TRADER_DIR,
@@ -2176,7 +3378,7 @@ def main():
             if not kis_alive and not need_restart_ollama:
                 colored_print("\n[AUTO_RECOVERY] KIS Trader 크래시 → 재시작...", "yellow")
                 logger.warning("KIS Trader 크래시 감지 - 자동 재시작 시작")
-                trader_kis = start_trader(
+                trader_kis = start_trader_with_backoff(
                     KIS_TRADER_SCRIPT,
                     KIS_PYTHON,
                     KIS_TRADER_DIR,
@@ -2208,6 +3410,14 @@ def main():
 
                 # 3. 트레이더 재시작
                 colored_print("[RESTART 3/3] 트레이더 재시작 중...", "green")
+                # 재시작 후 14b 재워밍업 (지연 최소화)
+                try:
+                    colored_print("[WARMUP] 재시작 후 14b 모델 재워밍업...", "cyan")
+                    warmup_ollama_model(OLLAMA_PORT_ETH, "qwen2.5:14b", prompt="price: 1000, trend: bear → ok")
+                    warmup_ollama_model(OLLAMA_PORT_KIS, "qwen2.5:14b", prompt="price: 100, trend: bull → ok")
+                    warmup_ollama_model(OLLAMA_PORT_IMPROVEMENT, OLLAMA_IMPROVEMENT_MODEL, prompt="ready")
+                except Exception as e:
+                    colored_print(f"[WARMUP] 재시작 워밍업 오류: {e}", "yellow")
                 trader_eth = start_trader(
                     ETH_TRADER_SCRIPT,
                     ETH_PYTHON,

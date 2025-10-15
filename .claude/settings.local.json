@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+<<<<<<< HEAD
       "Read(//c/Users/user/Documents/코드5/**)",
       "Bash(curl -X POST \"https://api.telegram.org/bot7819173403:AAEwBNh6etqyWvh-GivLDrTJb8b_ho2ju-U/sendMessage\" -d \"chat_id=7805944420\" -d \"text=테스트 메시지 from Claude Code\" -d \"parse_mode=HTML\")",
       "Bash(python -c \"\nimport requests\nbot_token = ''7819173403:AAEwBNh6etqyWvh-GivLDrTJb8b_ho2ju-U''\nchat_id = ''7805944420''\nurl = f''https://api.telegram.org/bot{bot_token}/sendMessage''\npayload = {''chat_id'': chat_id, ''text'': ''Claude Code 테스트 메시지입니다'', ''parse_mode'': ''HTML''}\nresponse = requests.post(url, data=payload, timeout=5)\nprint(f''Status: {response.status_code}'')\nprint(f''Response: {response.text}'')\n\")",
@@ -22,6 +23,10 @@
       "WebFetch(domain:apiportal.koreainvestment.com)",
       "Bash(cat:*)",
       "Bash(timeout 240 python soxl_timeframe_backtest.py)"
+=======
+      "Bash(\"C:\\Users\\user\\PycharmProjects\\PythonProject\\.venv\\Scripts\\python.exe\" \"C:\\Users\\user\\Documents\\코드3\\pattern_reinforcement_learning.py\")",
+      "Bash(git push:*)"
+>>>>>>> 0db74f775b7467e2b8278eb84e54466dba707b3e
     ],
     "deny": [],
     "ask": []

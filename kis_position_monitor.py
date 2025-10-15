@@ -309,7 +309,23 @@ def main():
                             msg += f"손익: {pnl:.2f}%\n"
                             msg += f"손실: ${pos['pnl_usd']:.2f}\n"
                             msg += f"진입: ${pos['entry_price']:.2f} → ${pos['current_price']:.2f}\n\n"
-                            msg += f" 즉시 확인 필요!"
+                            msg += f"⚠️ <b>즉시 조치 필요!</b>\n\n"
+
+                            # 거래소별 손절 가이드
+                            if exchange == 'KIS':
+                                msg += f"<b> 수동 손절 방법:</b>\n"
+                                msg += f"1. 한국투자증권 앱 실행\n"
+                                msg += f"2. {symbol} 전량 매도 (시장가)\n"
+                                msg += f"3. 자동매매 재시작 대기\n\n"
+                            else:  # Bybit
+                                msg += f"<b> 수동 손절 방법:</b>\n"
+                                msg += f"1. Bybit 앱 실행\n"
+                                msg += f"2. 포지션 탭에서 {symbol} 선택\n"
+                                msg += f"3. Close 버튼으로 전량 청산\n\n"
+
+                            msg += f"<i> 자동매매가 작동하지 않았습니다.\n"
+                            msg += f"더 큰 손실 방지를 위해 수동 청산하세요.</i>"
+
                             send_telegram(msg)
                             last_alert_time[alert_key] = current_time
                             print(f"   긴급 알림 전송! [{exchange}] {symbol}")

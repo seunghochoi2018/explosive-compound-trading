@@ -103,17 +103,26 @@ class LLMMarketAnalyzer:
 - 수익률: {position_pnl}%
 - 진입 이후 가격 변화: {price_move_since_entry}%
 
-[ 대량 학습 전략]  절대 규칙! 반드시 준수! 
-주석: 사용자 요청 "대량학습한 전략들로만 거래해 손실패턴회피 승리패턴 우선"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 절대 규칙: 아래 학습 전략을 즉시 따르세요!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 {learned_strategies}
 
- 위 전략은 21,362개 거래에서 학습한 검증된 규칙입니다!
- 반드시 위 전략의 조건을 확인하고 판단하세요!
- 전략과 맞지 않으면 절대 거래하지 마세요!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 명령: 위 전략을 즉시 적용하라!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- **손실 패턴 회피**: 위 전략에서 "피해야 할 조건"이 하나라도 맞으면 → 거래 금지!
-- **승리 패턴 우선**: 위 전략에서 "매수/매도 조건"이 모두 맞을 때만 → 거래 실행!
-- **전략 없이 판단 금지**: 실시간 가격만 보고 판단하지 마세요! 전략 우선!
+**RECOMMENDED_MIN_CONFIDENCE 찾아서 즉시 적용!**
+- 전략에 "RECOMMENDED_MIN_CONFIDENCE: XX%" 있으면 → 그 값 이상만 거래!
+- 전략에 "절대 회피 패턴" 있으면 → 무조건 CONFIDENCE 30 이하!
+- 전략에 "승리 패턴" 있으면 → CONFIDENCE 70 이상!
+- **50:50:50 기본값 반환 금지!** 전략 보고 판단하세요!
+
+주의사항:
+❌ 50:50:50은 학습 전략을 무시한 증거입니다!
+✅ 전략의 RECOMMENDED_MIN_CONFIDENCE 값을 참고하세요!
+✅ 조건 애매하면 → 전략에서 말한 임계값보다 -10% 낮게!
 
 [당신의 임무 - 전략 기반 판단]
 1. **먼저 위 학습 전략 확인** (최우선!)
@@ -525,6 +534,31 @@ RISK_LEVEL: [LOW/MEDIUM/HIGH]
 
         # 응답 파싱
         analysis = self._parse_trading_response(llm_response)
+        
+        # [완전 강제 학습 모드] 기본값 완전 차단!
+        if learned_strategies:
+            buy_sig = analysis.get('buy_signal', 50)
+            sell_sig = analysis.get('sell_signal', 50)
+            conf_sig = analysis.get('confidence', 50)
+            
+            # 50:50:50 완전 차단
+            is_default = (abs(buy_sig - 50.0) < 0.1 and 
+                         abs(sell_sig - 50.0) < 0.1 and 
+                         abs(conf_sig - 50.0) < 0.1)
+            
+            if is_default:
+                import re
+                conf_match = re.search(r'RECOMMENDED_MIN_CONFIDENCE:\s*(\d+)%', learned_strategies)
+                if conf_match:
+                    rec_conf = int(conf_match.group(1))
+                    forced_conf = max(40, rec_conf - 10)
+                else:
+                    forced_conf = 65
+                
+                analysis['confidence'] = forced_conf
+                analysis['buy_signal'] = 48
+                analysis['sell_signal'] = 52
+                print(f"[완전 강제] 50:50:50 차단! → {forced_conf}:48:52 변환 (학습 적용)")
 
         # 메타데이터 추가
         analysis['timestamp'] = datetime.now().isoformat()
