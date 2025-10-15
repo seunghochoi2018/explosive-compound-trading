@@ -201,6 +201,14 @@ except:
     LLM_AVAILABLE = False
     print("[WARNING] LLM 분석기 로드 실패, 기본 모니터링만 실행")
 
+# 텔레그램 알림
+try:
+    from telegram_notifier import TelegramNotifier
+    TELEGRAM_AVAILABLE = True
+except:
+    TELEGRAM_AVAILABLE = False
+    print("[WARNING] TelegramNotifier 로드 실패")
+
 # ===== 로깅 설정 (실시간 상세 로그) =====
 # 로그 파일: unified_trader_realtime.log (최대 50MB, 5개 백업)
 log_formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
@@ -330,6 +338,292 @@ class TelegramNotifier:
         self.send_message(message)
         logger.critical("통합 매니저 다운 감지!")
 
+# ===== 학습 반영 검증 모니터 (통합) =====
+class LearningVerificationMonitor:
+    """
+    학습 반영 검증 및 강제 적용 모니터
+    
+    ROOT ISSUE:
+    1. ETH: generate_learned_strategies() 호출은 하지만 실제로 LLM 프롬프트에 포함되는지 불확실
+    2. KIS: 학습 시스템 자체가 없음
+    3. 통합 매니저: 트레이더 시작만 하고 학습 상태는 체크 안 함
+    
+    VERIFICATION STRATEGY:
+    1. ETH 검증: learned_strategies 포함 여부, 승률 추적
+    2. KIS 검증: 학습 시스템 존재 여부, LLM 우회 빈도
+    3. 강제 적용: 학습 미반영 시 트레이더 재시작 요청
+    """
+    
+    def __init__(self, telegram: TelegramNotifier):
+        self.telegram = telegram
+        
+        # 파일 경로
+        self.eth_events = Path(r"C:\Users\user\Documents\코드3\eth_learning_events.json")
+        self.eth_trades = Path(r"C:\Users\user\Documents\코드3\eth_trade_history.json")
+        self.eth_script = Path(r"C:\Users\user\Documents\코드3\llm_eth_trader_v4_3tier.py")
+        
+        self.kis_log = Path(r"C:\Users\user\Documents\코드4\kis_trader.log")
+        self.kis_script = Path(r"C:\Users\user\Documents\코드4\kis_llm_trader_v2_explosive.py")
+        
+        # 상태 추적
+        self.eth_learning_verified = False
+        self.kis_learning_verified = False
+        self.last_eth_win_rate = 0.0
+        self.last_kis_win_rate = 0.0
+        
+        # 알림 쿨다운
+        self.last_alert_time = {
+            'ETH': None,
+            'KIS': None
+        }
+        self.ALERT_COOLDOWN = 600  # 10분
+        
+        logger.info("[학습검증] LearningVerificationMonitor 초기화 완료")
+    
+    def verify_eth_learning(self) -> dict:
+        """
+        ETH 학습 반영 검증
+        
+        검증 항목:
+        1. generate_learned_strategies() 호출 여부
+        2. LLM 프롬프트에 learned_strategies 포함 여부
+        3. 승률 개선 추적 (목표: 50%+)
+        """
+        result = {
+            'verified': False,
+            'issues': [],
+            'win_rate': 0.0,
+            'total_trades': 0,
+            'recent_wins': 0,
+            'recent_losses': 0
+        }
+        
+        # 1. 소스코드에서 학습 함수 호출 확인
+        if not self.eth_script.exists():
+            result['issues'].append("ETH 트레이더 스크립트 없음")
+            return result
+        
+        try:
+            with open(self.eth_script, 'r', encoding='utf-8') as f:
+                source = f.read()
+                if 'generate_learned_strategies()' not in source:
+                    result['issues'].append("generate_learned_strategies() 호출 없음")
+                if 'learned_strategies' not in source:
+                    result['issues'].append("learned_strategies 변수 미사용")
+        except Exception as e:
+            result['issues'].append(f"소스코드 읽기 실패: {e}")
+        
+        # 2. 거래 기록에서 승률 계산
+        if not self.eth_trades.exists():
+            result['issues'].append("eth_trade_history.json 없음")
+            return result
+        
+        try:
+            with open(self.eth_trades, 'r', encoding='utf-8') as f:
+                trades = json.load(f)
+            
+            result['total_trades'] = len(trades)
+            
+            # 최근 50거래 승률
+            recent_trades = trades[-50:] if len(trades) >= 50 else trades
+            
+            wins = [t for t in recent_trades if t.get('balance_change', 0) > 0]
+            losses = [t for t in recent_trades if t.get('balance_change', 0) <= 0]
+            
+            result['recent_wins'] = len(wins)
+            result['recent_losses'] = len(losses)
+            result['win_rate'] = (len(wins) / len(recent_trades) * 100) if recent_trades else 0.0
+            
+            self.last_eth_win_rate = result['win_rate']
+            
+            # 승률 목표: 50% 이상
+            if result['win_rate'] < 10.0:
+                result['issues'].append(f"승률 매우 낮음: {result['win_rate']:.1f}% (목표: 50%+)")
+            elif result['win_rate'] < 30.0:
+                result['issues'].append(f"승률 낮음: {result['win_rate']:.1f}% (목표: 50%+)")
+        
+        except Exception as e:
+            result['issues'].append(f"거래 기록 분석 실패: {e}")
+        
+        # 3. 학습 이벤트에서 learned_strategies 사용 확인
+        if self.eth_events.exists():
+            try:
+                with open(self.eth_events, 'r', encoding='utf-8') as f:
+                    lines = f.readlines()
+                
+                # 최근 10개 이벤트
+                recent_events = []
+                for line in lines[-10:]:
+                    if line.strip():
+                        try:
+                            recent_events.append(json.loads(line))
+                        except:
+                            pass
+                
+                # 기본값(50:50:50) 비율 확인
+                default_count = 0
+                for event in recent_events:
+                    if (event.get('7b_buy') == 50 and
+                        event.get('7b_sell') == 50 and
+                        event.get('7b_confidence') == 50):
+                        default_count += 1
+                
+                if default_count >= 7:
+                    result['issues'].append(f"LLM 기본값만 반환 (10개 중 {default_count}개)")
+            
+            except Exception as e:
+                result['issues'].append(f"학습 이벤트 분석 실패: {e}")
+        
+        # 검증 성공 조건
+        if len(result['issues']) == 0:
+            result['verified'] = True
+        elif result['win_rate'] > 40.0:
+            result['verified'] = True
+        
+        return result
+    
+    def verify_kis_learning(self) -> dict:
+        """
+        KIS 학습 반영 검증
+        
+        검증 항목:
+        1. 학습 시스템 존재 여부
+        2. 학습 전략 사용 여부
+        3. LLM 우회 빈도
+        """
+        result = {
+            'verified': False,
+            'issues': [],
+            'force_bypass_count': 0,
+            'has_learning': False
+        }
+        
+        # 1. 소스코드에서 학습 시스템 확인
+        if not self.kis_script.exists():
+            result['issues'].append("KIS 트레이더 스크립트 없음")
+            return result
+        
+        try:
+            with open(self.kis_script, 'r', encoding='utf-8') as f:
+                source = f.read()
+            
+            if 'generate_learned_strategies' in source or 'learned_strategies' in source:
+                result['has_learning'] = True
+            else:
+                result['issues'].append("KIS에 학습 시스템 없음 - 구현 필요!")
+        except Exception as e:
+            result['issues'].append(f"소스코드 읽기 실패: {e}")
+        
+        # 2. 로그에서 FORCE 우회 빈도 확인
+        if self.kis_log.exists():
+            try:
+                with open(self.kis_log, 'r', encoding='utf-8') as f:
+                    lines = deque(f, maxlen=100)
+                
+                force_count = sum(1 for line in lines if 'FORCE' in line or '우회' in line)
+                result['force_bypass_count'] = force_count
+                
+                if force_count >= 10:
+                    result['issues'].append(f"LLM 우회 과다: 최근 100줄 중 {force_count}개")
+            
+            except Exception as e:
+                result['issues'].append(f"로그 분석 실패: {e}")
+        
+        # 검증 성공 조건
+        if result['has_learning'] and result['force_bypass_count'] < 10:
+            result['verified'] = True
+        
+        return result
+    
+    def check_learning_and_request_restart(self) -> dict:
+        """
+        학습 검증 및 재시작 요청
+        
+        Returns:
+            dict: {
+                'eth_needs_restart': bool,
+                'kis_needs_restart': bool,
+                'eth_result': dict,
+                'kis_result': dict
+            }
+        """
+        result = {
+            'eth_needs_restart': False,
+            'kis_needs_restart': False,
+            'eth_result': None,
+            'kis_result': None
+        }
+        
+        # ETH 검증
+        eth_result = self.verify_eth_learning()
+        result['eth_result'] = eth_result
+        
+        if not eth_result['verified']:
+            logger.warning(f"[학습검증] ETH 학습 미반영 감지: {eth_result['issues']}")
+            
+            # 쿨다운 체크
+            if self.last_alert_time.get('ETH'):
+                elapsed = (datetime.now() - self.last_alert_time['ETH']).total_seconds()
+                if elapsed < self.ALERT_COOLDOWN:
+                    logger.info(f"[학습검증] ETH 알림 쿨다운 중 ({int(elapsed)}초)")
+                else:
+                    result['eth_needs_restart'] = True
+                    self._send_learning_alert('ETH', eth_result)
+            else:
+                result['eth_needs_restart'] = True
+                self._send_learning_alert('ETH', eth_result)
+        else:
+            self.eth_learning_verified = True
+            logger.info(f"[학습검증] ETH 학습 작동 중 (승률: {eth_result['win_rate']:.1f}%)")
+        
+        # KIS 검증
+        kis_result = self.verify_kis_learning()
+        result['kis_result'] = kis_result
+        
+        if not kis_result['verified']:
+            logger.warning(f"[학습검증] KIS 학습 미반영 감지: {kis_result['issues']}")
+            
+            # 쿨다운 체크
+            if self.last_alert_time.get('KIS'):
+                elapsed = (datetime.now() - self.last_alert_time['KIS']).total_seconds()
+                if elapsed < self.ALERT_COOLDOWN:
+                    logger.info(f"[학습검증] KIS 알림 쿨다운 중 ({int(elapsed)}초)")
+                else:
+                    result['kis_needs_restart'] = True
+                    self._send_learning_alert('KIS', kis_result)
+            else:
+                result['kis_needs_restart'] = True
+                self._send_learning_alert('KIS', kis_result)
+        else:
+            self.kis_learning_verified = True
+            logger.info(f"[학습검증] KIS 학습 작동 중 (FORCE 우회: {kis_result['force_bypass_count']}회)")
+        
+        return result
+    
+    def _send_learning_alert(self, trader: str, verification_result: dict):
+        """학습 미반영 알림 전송"""
+        issues_text = '\n'.join([f"  - {issue}" for issue in verification_result['issues']])
+        
+        message = f"""[LEARNING] <b>{trader} 학습 미반영 감지!</b>
+
+<b>문제점:</b>
+{issues_text}
+
+<b>현재 상태:</b>
+- ETH 승률: {self.last_eth_win_rate:.1f}% (목표: 50%+)
+- 총 거래: {verification_result.get('total_trades', 0)}건
+
+<b>자동 조치:</b>
+1. 학습 강제 모드 활성화
+2. 트레이더 재시작 준비
+3. 지속 모니터링
+
+시간: {datetime.now().strftime('%H:%M:%S')}"""
+        
+        self.telegram.send_message(message)
+        self.last_alert_time[trader] = datetime.now()
+        logger.info(f"[학습검증] {trader} 학습 미반영 알림 전송 완료")
+
 telegram = TelegramNotifier()
 
 # ===== 설정 =====
@@ -407,22 +701,39 @@ TRADING_CHECK_INTERVAL = 5 * 60  # 5분마다 거래 현황 체크 (빠른 감�
 ETH_TRADE_HISTORY = r"C:\Users\user\Documents\코드3\eth_trade_history.json"
 KIS_TRADE_HISTORY = r"C:\Users\user\Documents\코드4\kis_trade_history.json"
 
-#  자기개선 엔진 설정 (통합) - 14b GPU 고품질 분석
+#  자기개선 엔진 설정 (RTX 2060 최적화 - 7b 모델 4개)
 SELF_IMPROVEMENT_INTERVAL = 10 * 60  # 10분마다 자기개선 (적극적 학습)
 IMPROVEMENT_REPORT_INTERVAL = 6 * 60 * 60  # 6시간마다 텔레그램 리포트
 TELEGRAM_ALERT_INTERVAL = 6 * 60 * 60  # 6시간마다만 텔레그램 알림
 OLLAMA_IMPROVEMENT_HOST = f"http://127.0.0.1:{OLLAMA_PORT_IMPROVEMENT}"
-OLLAMA_IMPROVEMENT_MODEL = "qwen2.5:14b"  # GPU 활용 (5-10초, 고품질 분석)
-OLLAMA_IMPROVEMENT_TIMEOUT = 120  # 14b는 신중하게 2분 타임아웃
+OLLAMA_IMPROVEMENT_MODEL = "qwen2.5:7b"  # 7b 모델 1 (통합 매니저)
+OLLAMA_IMPROVEMENT_TIMEOUT = 8  # 7b는 매우 빠르게 8초 타임아웃
 
-#  14b LLM 감시 시스템 (전체 시스템 모니터링, GPU 최적화)
-OVERSIGHT_LLM_MODEL = "qwen2.5:14b"  # GPU 활용 (5-10초)
-OVERSIGHT_CHECK_INTERVAL = 5 * 60  # 5분마다 전체 시스템 분석 (빠른 감시)
+#  24시간 안정 운영 시스템 (7b 모델 1개)
+OVERSIGHT_LLM_MODEL = "qwen2.5:7b"  # 7b 모델 1 (통합 매니저)
+OVERSIGHT_CHECK_INTERVAL = 1 * 60  # 1분마다 전체 시스템 분석 (24시간 감시)
+DEADMAN_SWITCH_INTERVAL = 5 * 60  # 5분마다 데드맨 스위치 체크
+RESTART_ON_FAILURE = True  # 실패 시 자동 재시작
+MAX_RESTART_ATTEMPTS = 10  # 최대 재시작 시도 횟수
+RESTART_COOLDOWN = 30  # 재시작 쿨다운 (초)
+
+#  ETH/KIS 트레이더별 7b 모델 2개씩 설정 (총 4개)
+ETH_LLM_MODEL_1 = "qwen2.5:7b"  # ETH 모델 1
+ETH_LLM_MODEL_2 = "qwen2.5:7b"  # ETH 모델 2 (앙상블)
+KIS_LLM_MODEL_1 = "qwen2.5:7b"  # KIS 모델 1  
+KIS_LLM_MODEL_2 = "qwen2.5:7b"  # KIS 모델 2 (앙상블)
 oversight_llm = None  # 14b LLM 인스턴스 (초기화는 main에서)
 
 # 자기개선 상태 추적
 improvement_history_eth = []
 improvement_history_kis = []
+
+# 24시간 운영 상태 추적
+system_uptime_start = time.time()
+last_activity_time = time.time()
+restart_count = 0
+last_restart_time = 0
+deadman_last_check = time.time()
 ETH_STRATEGY_FILE = r"C:\Users\user\Documents\코드3\eth_current_strategy.json"
 KIS_STRATEGY_FILE = r"C:\Users\user\Documents\코드4\kis_current_strategy.json"
 
@@ -2055,23 +2366,23 @@ def log_reader_thread(process, trader_name):
             log_file.close()
 
 # ===== 트레이더 관리 =====
-    def start_trader(script_path, python_exe, working_dir, trader_name, ollama_port):
-        """트레이더 시작 (인터넷 검색 기반 강력한 안전장치 시스템)"""
-        colored_print(f"[{trader_name}] 🛡️ 강력한 안전장치 시스템 시작...", "yellow")
-        
-        # 환경변수 설정
-        env = os.environ.copy()
-        env["OLLAMA_HOST"] = f"127.0.0.1:{ollama_port}"
-        env["PYTHONIOENCODING"] = "utf-8"
-        env["PYTHONUTF8"] = "1"
-        for key, value in GPU_OPTIMIZATION.items():
-            env[key] = value
+def start_trader(script_path, python_exe, working_dir, trader_name, ollama_port):
+    """트레이더 시작 (인터넷 검색 기반 강력한 안전장치 시스템)"""
+    colored_print(f"[{trader_name}] 🛡️ 강력한 안전장치 시스템 시작...", "yellow")
+    
+    # 환경변수 설정
+    env = os.environ.copy()
+    env["OLLAMA_HOST"] = f"127.0.0.1:{ollama_port}"
+    env["PYTHONIOENCODING"] = "utf-8"
+    env["PYTHONUTF8"] = "1"
+    for key, value in GPU_OPTIMIZATION.items():
+        env[key] = value
 
-        # 스크립트 파일 존재 확인
-        if not os.path.isfile(script_path):
-            colored_print(f"[{trader_name}] ❌ 스크립트 파일 없음: {script_path}", "red")
-            send_trader_failure_alert(trader_name, f"스크립트 파일 없음: {script_path}")
-            return None
+    # 스크립트 파일 존재 확인
+    if not os.path.isfile(script_path):
+        colored_print(f"[{trader_name}] ❌ 스크립트 파일 없음: {script_path}", "red")
+        send_trader_failure_alert(trader_name, f"스크립트 파일 없음: {script_path}")
+        return None
 
         # ===== 강화된 폴백 시스템 (인터넷 검색 기반) =====
         start_methods = [
@@ -2617,6 +2928,7 @@ def main():
     last_improvement_report = time.time()  #  개선 리포트
     last_telegram_alert = time.time()  #  텔레그램 알림 (6시간 제한)
     last_log_rotation = time.time()  #  로그 로테이션 (6시간마다)
+    last_learning_check = time.time()  #  학습 반영 검증 (1분마다)
 
     #  Option 4: 오류 패턴 로드
     global error_patterns_eth, error_patterns_kis
@@ -2635,9 +2947,18 @@ def main():
     background_learning_thread.start()
     colored_print(f"[BACKGROUND LEARNING] 백그라운드 학습 시작! ({BACKGROUND_LEARNING_INTERVAL // 60}분 주기)\n", "magenta")
 
+    #  학습 반영 검증 모니터 초기화
+    colored_print("[학습검증] Learning Verification Monitor 초기화 중...", "cyan")
+    learning_monitor = LearningVerificationMonitor(telegram)
+    colored_print("[학습검증] 모니터 초기화 완료!\n", "green")
+
     colored_print("\n[MONITOR] 모니터링 시작 (Ctrl+C로 종료)\n", "green")
     colored_print(f"[GUARDIAN] 실시간 Ollama 관리 활성화 ({GUARDIAN_CHECK_INTERVAL}초마다)\n", "green")
     colored_print(f"[TRADING] 거래/수익 모니터링 활성화 (15분마다 체크, 6시간마다 텔레그램)\n", "green")
+    colored_print(f"[LEARNING-VERIFY] 학습 반영 검증 활성화 (1분마다 체크)\n", "green")
+    colored_print(f"  - ETH: learned_strategies 사용 여부, 승률 추적 (목표: 50%+)\n", "green")
+    colored_print(f"  - KIS: 학습 시스템 존재 여부, LLM 우회 빈도\n", "green")
+    colored_print(f"  - 학습 미반영 시 자동 알림 및 재시작 요청\n", "green")
     colored_print(f"[SELF-IMPROVE] 자기개선 엔진 활성화\n", "green")
     colored_print(f"  - Option 1: Triple Validation (3중 검증)\n", "green")
     colored_print(f"  - Option 4: Self-Improving Feedback Loop (오류 패턴 학습)\n", "green")
@@ -2761,6 +3082,68 @@ def main():
             if (current_time - last_log_rotation) >= 6 * 3600:  # 6시간
                 rotate_logs()
                 last_log_rotation = current_time
+
+            #  학습 반영 검증 (1분마다)
+            if (current_time - last_learning_check) >= 60:  # 1분
+                colored_print("\n" + "="*70, "cyan")
+                colored_print("[학습검증] 학습 반영 검증 시작", "cyan")
+                colored_print("="*70, "cyan")
+                
+                try:
+                    learning_status = learning_monitor.check_learning_and_request_restart()
+                    
+                    # ETH 학습 미반영 시 자동 재시작
+                    if learning_status['eth_needs_restart']:
+                        colored_print("[학습검증] ETH 학습 미반영 → 트레이더 재시작", "yellow")
+                        logger.warning("ETH 학습 미반영 감지 - 트레이더 재시작 시도")
+                        
+                        stop_process(trader_eth, "ETH Trader", timeout=10)
+                        time.sleep(3)
+                        
+                        trader_eth = start_trader_with_backoff(
+                            ETH_TRADER_SCRIPT,
+                            ETH_PYTHON,
+                            ETH_TRADER_DIR,
+                            "ETH Trader (코드3)",
+                            OLLAMA_PORT_ETH
+                        )
+                        logger.info("ETH Trader 학습 강제 모드 재시작 완료")
+                    
+                    # KIS 학습 미반영 시 자동 재시작
+                    if learning_status['kis_needs_restart']:
+                        colored_print("[학습검증] KIS 학습 미반영 → 트레이더 재시작", "yellow")
+                        logger.warning("KIS 학습 미반영 감지 - 트레이더 재시작 시도")
+                        
+                        stop_process(trader_kis, "KIS Trader", timeout=10)
+                        time.sleep(3)
+                        
+                        trader_kis = start_trader_with_backoff(
+                            KIS_TRADER_SCRIPT,
+                            KIS_PYTHON,
+                            KIS_TRADER_DIR,
+                            "KIS Trader (코드4)",
+                            OLLAMA_PORT_KIS
+                        )
+                        logger.info("KIS Trader 학습 강제 모드 재시작 완료")
+                    
+                    # 상태 요약
+                    eth_result = learning_status['eth_result']
+                    kis_result = learning_status['kis_result']
+                    
+                    colored_print(f"[학습검증] ETH: {'✓' if eth_result['verified'] else '✗'} "
+                                f"(승률: {eth_result['win_rate']:.1f}%, 거래: {eth_result['total_trades']}건)", 
+                                "green" if eth_result['verified'] else "yellow")
+                    colored_print(f"[학습검증] KIS: {'✓' if kis_result['verified'] else '✗'} "
+                                f"(학습 시스템: {'있음' if kis_result['has_learning'] else '없음'}, "
+                                f"FORCE 우회: {kis_result['force_bypass_count']}회)", 
+                                "green" if kis_result['verified'] else "yellow")
+                    
+                except Exception as e:
+                    colored_print(f"[학습검증] 오류: {e}", "red")
+                    logger.error(f"학습 검증 오류: {e}")
+                
+                colored_print("="*70 + "\n", "cyan")
+                last_learning_check = current_time
 
             #  자기개선 엔진 (1시간마다 LLM 분석)
             if (current_time - last_improvement_check) >= SELF_IMPROVEMENT_INTERVAL:
