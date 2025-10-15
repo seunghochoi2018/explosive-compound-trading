@@ -1,9 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(\"C:\\Users\\user\\PycharmProjects\\PythonProject\\.venv\\Scripts\\python.exe\" \"C:\\Users\\user\\Documents\\코드5\\check_eth_status.py\")",
-      "Bash(\"C:\\Users\\user\\PycharmProjects\\PythonProject\\.venv\\Scripts\\python.exe\" \"C:\\Users\\user\\Documents\\코드3\\generate_learned_strategies.py\")",
-      "Bash(\"C:\\Users\\user\\PycharmProjects\\PythonProject\\.venv\\Scripts\\python.exe\" -c \"import json; data = json.load(open(r''C:\\Users\\user\\Documents\\코드3\\eth_trade_history.json'', encoding=''utf-8'')); print(f''Total: {len(data)}''); recent = data[-20:]; wins = [t for t in recent if t.get(''balance_change'', 0) > 0]; print(f''Recent 20: Wins={len(wins)}, Losses={20-len(wins)}, Win Rate={len(wins)/20*100:.1f}%''); total_change = sum(t.get(''balance_change'', 0) for t in recent); print(f''Total Balance Change: {total_change:+.6f} ETH'')\")"
+      "Bash(\"C:\\Users\\user\\PycharmProjects\\PythonProject\\.venv\\Scripts\\python.exe\" \"C:\\Users\\user\\Documents\\코드3\\pattern_reinforcement_learning.py\")",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
