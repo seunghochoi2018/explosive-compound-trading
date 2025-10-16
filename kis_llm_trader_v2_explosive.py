@@ -148,12 +148,12 @@ class ExplosiveKISTrader:
         self.initial_balance = self.get_usd_balance()
         print(f"\n[초기 잔고] ${self.initial_balance:,.2f}")
 
-        # 📝 페이퍼 트레이딩 모드 (가상 거래로 검증)
+        # 📝 페이퍼 트레이딩 모드 (빠른 검증)
         self.paper_trading_mode = True  # 처음엔 가상 거래
         self.paper_trades = []
         self.paper_balance = self.initial_balance
-        self.PAPER_TRADE_REQUIRED = 100  # 100거래 필요
-        self.PAPER_WIN_RATE_THRESHOLD = 0.60  # 승률 60% 달성 시 실거래 전환
+        self.PAPER_TRADE_REQUIRED = 10  # 10회로 단축
+        self.PAPER_WIN_RATE_THRESHOLD = 0.60  # 승률 60% 유지
         print(f"\n[페이퍼 트레이딩] 가상 거래 모드 시작")
         print(f"  목표: {self.PAPER_TRADE_REQUIRED}거래, 승률 {self.PAPER_WIN_RATE_THRESHOLD*100:.0f}% 달성")
         print(f"  달성 시 → 실거래 자동 전환")

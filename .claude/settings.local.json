@@ -27,7 +27,14 @@
       "WebSearch",
       "Read(//c/Users/user/Documents/코드4/**)",
       "Bash(awk:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(python3:*)",
+      "Bash(start python llm_eth_trader_v4_3tier.py:*)",
+      "Bash(timeout 10 tail:*)",
+      "Read(//c/Users/user/Documents/**)",
+      "Bash(start python auto_liquidate_soxs.py)",
+      "Bash(timeout:*)",
+      "Bash(start python unified_trader_manager.py)"
     ],
     "deny": [],
     "ask": []
