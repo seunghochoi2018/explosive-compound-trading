@@ -9,7 +9,9 @@
       "Bash(start python integrated_runner.py)",
       "Bash(test:*)",
       "Bash(cat:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git push)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []
