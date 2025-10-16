@@ -1,0 +1,59 @@
+{
+  "제목": "해외주식 매도 API EGW00356 오류 문의 (TR: JTTT1006U)",
+  "발생_일시": "2025-10-16 23:51:25",
+  "계정_정보": {
+    "계좌번호_앞8자리": "43113014",
+    "AppKey_앞10자리": "PSi3RlRt3D...",
+    "환경": "실전투자 (https://openapi.koreainvestment.com:9443)"
+  },
+  "요청_정보": {
+    "TR_ID": "JTTT1006U",
+    "종목코드": "A980680 (SOXS)",
+    "주문_수량": "1주",
+    "주문_가격": "$3.93",
+    "주문_구분": "지정가 (ORD_DVSN=00)",
+    "매도_구분": "SLL_TYPE=00"
+  },
+  "요청_헤더": {
+    "tr_id": "JTTT1006U",
+    "custtype": "P",
+    "content-type": "application/json; charset=utf-8",
+    "tr_cont": "N",
+    "tr_cont_key": "",
+    "기타": "authorization, appkey, appsecret 포함"
+  },
+  "요청_바디": {
+    "CANO": "43113014",
+    "ACNT_PRDT_CD": "01",
+    "OVRS_EXCG_CD": "NASD",
+    "PDNO": "A980680",
+    "ORD_QTY": "1",
+    "OVRS_ORD_UNPR": "3.93",
+    "ORD_SVR_DVSN_CD": "0",
+    "SLL_TYPE": "00",
+    "ORD_DVSN": "00"
+  },
+  "오류_정보": {
+    "오류_코드": "EGW00356",
+    "오류_메시지": "타겟 서버가 올바르지 않습니다. API 문서를 확인하세요 (타겟 서버 : 입력한 TR ID의 제일 첫 문자)",
+    "HTTP_상태": 500
+  },
+  "추가_정보": {
+    "시도한_해결방법": [
+      "SLL_TYPE, ORD_DVSN 파라미터 추가",
+      "PDNO를 A980680 (고유코드) 사용",
+      "custtype 헤더 추가",
+      "tr_cont, tr_cont_key 헤더 추가",
+      "시장가 주문 시도 (ORD_DVSN=01)",
+      "헤더/Body에 타임스탬프 필드 추가 시도"
+    ],
+    "잔고_조회_API": "정상 작동 (TTTS3012R)",
+    "해외주식_거래권한": "있음 (잔고 조회 성공)",
+    "USD_잔고": "$0.00",
+    "문의사항": [
+      "EGW00356 에러의 정확한 원인",
+      "해외주식 주문 API의 정확한 필수 필드",
+      "타임스탬프 관련 필드의 정확한 위치와 형식"
+    ]
+  }
+}
