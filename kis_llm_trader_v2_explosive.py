@@ -104,6 +104,7 @@ class ExplosiveKISTrader:
         self.load_trade_history()
 
         # ETH와 동일한 로직 적용
+        self.MIN_HOLDING_TIME = 5 * 60  # 5분 (최소 의무 보유)
         self.MAX_HOLDING_TIME = 60 * 60  # 60분 (ETH와 동일)
         self.DYNAMIC_STOP_LOSS = -2.0  # -2% (ETH와 동일)
         
@@ -1353,6 +1354,21 @@ SOXL 현재가: ${price:.2f}
         if not self.current_position:
             print("[ERROR] 청산할 포지션이 없음")
             return
+
+        # ⏰ 최소 보유시간 체크 (5분 의무)
+        if self.entry_time:
+            holding_time = (datetime.now() - self.entry_time).total_seconds()
+            if holding_time < self.MIN_HOLDING_TIME:
+                # 긴급 상황 예외 처리
+                emergency_reasons = ["STOP_LOSS_SAFETY", "SUDDEN_DROP_SAFETY", "MAX_HOLD_TIME_SAFETY"]
+                is_emergency = any(emergency in reason for emergency in emergency_reasons)
+
+                if not is_emergency:
+                    print(f"[MIN HOLD] 최소 보유시간 미달 ({holding_time/60:.1f}분 < {self.MIN_HOLDING_TIME/60:.0f}분) - 청산 보류")
+                    print(f"[MIN HOLD] 사유: {reason} (긴급 아님)")
+                    return
+                else:
+                    print(f"[MIN HOLD] ⚠️ 긴급 상황 - 최소 보유시간 무시: {reason}")
 
         # 📝 페이퍼 트레이딩 모드: 가상 청산
         if self.paper_trading_mode:

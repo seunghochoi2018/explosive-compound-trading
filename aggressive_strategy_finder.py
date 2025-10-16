@@ -23,6 +23,10 @@ class StrategyFinder:
         self.strategy_history = []
         self.test_counter = 0
 
+        # 학습 모델 파일
+        self.model_file = 'strategy_learning_model.json'
+        self.load_learned_model()
+
         # 전략 파라미터 범위
         self.param_space = {
             'timeframe': ['1h', '4h', '1d'],  # 매매 주기
@@ -320,6 +324,14 @@ class StrategyFinder:
         if results:
             best = max(results, key=lambda x: x['score'])
 
+            # 히스토리 저장
+            self.strategy_history.append({
+                'test_num': self.test_counter,
+                'timestamp': datetime.now().isoformat(),
+                'best_score': best['score'],
+                'symbol': best['symbol']
+            })
+
             if best['score'] > self.best_performance:
                 self.best_performance = best['score']
                 self.best_strategy = best
@@ -342,6 +354,10 @@ class StrategyFinder:
 
         self.test_counter += 1
 
+        # 주기적 모델 저장 (100회마다)
+        if self.test_counter % 100 == 0:
+            self.save_learned_model()
+
     def save_best_strategy(self):
         """최고 전략 저장"""
         try:
@@ -355,6 +371,41 @@ class StrategyFinder:
                 }, f, indent=2, ensure_ascii=False)
         except Exception as e:
             print(f"저장 오류: {e}")
+
+    def save_learned_model(self):
+        """학습 모델 주기적 저장 (전략 히스토리)"""
+        try:
+            with open(self.model_file, 'w', encoding='utf-8') as f:
+                json.dump({
+                    'timestamp': datetime.now().isoformat(),
+                    'test_counter': self.test_counter,
+                    'best_performance': self.best_performance,
+                    'best_strategy': self.best_strategy,
+                    'recent_tests': self.strategy_history[-1000:]  # 최근 1000개만 저장
+                }, f, indent=2, ensure_ascii=False)
+            print(f"[모델 저장] 테스트 #{self.test_counter} - {datetime.now().strftime('%H:%M:%S')}")
+        except Exception as e:
+            print(f"[모델 저장 오류] {e}")
+
+    def load_learned_model(self):
+        """학습 모델 로드 (시작 시)"""
+        try:
+            with open(self.model_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                self.test_counter = data.get('test_counter', 0)
+                self.best_performance = data.get('best_performance', -999)
+                self.best_strategy = data.get('best_strategy')
+                self.strategy_history = data.get('recent_tests', [])
+
+                print(f"\n[모델 로드 성공]")
+                print(f"  이전 테스트: {self.test_counter}회")
+                print(f"  최고 점수: {self.best_performance:.4f}")
+                if self.best_strategy:
+                    print(f"  최고 전략: {self.best_strategy['symbol']} - {self.best_strategy['performance']['total_return']*100:.2f}%")
+        except FileNotFoundError:
+            print(f"[모델 로드] 새로운 학습 시작 (기존 모델 없음)")
+        except Exception as e:
+            print(f"[모델 로드 오류] {e}")
 
     async def run_continuous_search(self, symbols):
         """지속적으로 전략 탐색 (1초마다)"""
