@@ -2939,3 +2939,402 @@ OVRS_EXCG_CD가 "NAS"일 경우
 
 필요하시면 매수 주문 형식도 동일하게 정리해 드릴 수 있습니다.
 이제 이 구조대로 다시 시도해보시고, rt_cd = "0" 확인 후 체결 여부 확인하시면 됩니다.
+
+한국투자 Open API 챗봇 (베타)의 말:
+
+좋습니다. 아래는 한국투자증권 **해외주식 매도 API (TR_ID: TTTT1006U)**에 대한 전체 파라미터 분석과 SOXL (A980679) 매도 시 정확한 사용 예시입니다. 현장 테스트와 문서 기준으로 정리해 드립니다.
+
+✅ 1. 해외주식 매도 API 전체 파라미터 목록 (TR_ID: TTTT1006U)
+파라미터	필수 여부	설명
+CANO	✅ 필수	계좌번호 (앞 8자리)
+ACNT_PRDT_CD	✅ 필수	계좌 상품코드 (일반적으로 "01")
+OVRS_EXCG_CD	✅ 필수	거래소 코드 (예: "NASD" for NASDAQ)
+PDNO	✅ 필수	종목코드 (예: A980679 for SOXL)
+ORD_QTY	✅ 필수	주문 수량
+OVRS_ORD_UNPR	✅ 필수	주문 단가 (시장가 주문 시 "0" 입력)
+ORD_SVR_DVSN_CD	✅ 필수	주문서버 구분 코드 (일반적으로 "0" 고정)
+ORD_DVSN	✅ 필수	주문 구분 코드 (시장가: "00", 지정가: "01", 기타: "02" 등)
+✅ 2. 각 파라미터 상세 설명
+🔹 OVRS_EXCG_CD (거래소 코드)
+코드	의미
+NASD	NASDAQ
+NYSE	뉴욕증권거래소
+AMEX	아멕스 (※ 일부 종목만 가능)
+
+❗ 대부분 ETF는 NASD에 있음 (예: SOXL, TQQQ 등)
+
+🔹 ORD_DVSN (주문 구분)
+코드	의미
+"00"	시장가
+"01"	지정가
+"02"	조건부지정가
+"03"	최유리
+
+✅ 반드시 명시해야 합니다 (선택 아님)
+
+🔹 OVRS_ORD_UNPR (주문 단가)
+
+시장가 주문 시: "0" 입력 필수
+
+지정가 주문 시: 실제 가격 입력 (예: "36.28")
+
+❗ 시장가 주문인데 여기에 현재가 입력하면 "해당종목정보 없음" 또는 주문구분 오류 발생
+
+🔹 ORD_SVR_DVSN_CD (주문 서버 구분 코드)
+
+값: "0" (정해진 값)
+
+설명: HTS/MTS/API에서 서버 구분 시 사용하는 값이며, 항상 입력 필요
+
+✅ 3. SOXL (A980679) 매도 예시 — 시장가 매도
+{
+  "CANO": "43113014",
+  "ACNT_PRDT_CD": "01",
+  "OVRS_EXCG_CD": "NASD",
+  "PDNO": "A980679",
+  "ORD_QTY": "2",
+  "OVRS_ORD_UNPR": "0",       // 시장가: 0
+  "ORD_SVR_DVSN_CD": "0",
+  "ORD_DVSN": "00"            // 시장가 주문
+}
+
+⚠️ 주의해야 할 주요 오류 케이스
+상황	결과	원인
+OVRS_ORD_UNPR = "36.28" (시장가 주문인데 가격 입력)	❌ APBK0656 ("해당종목정보 없음")	시장가에는 반드시 "0"
+ORD_DVSN 누락	❌ 필드 누락 오류	모든 주문에 필수
+OVRS_EXCG_CD = "NAS"	❌ 주문 실패	"NASD"로 입력해야 함
+PDNO = "SOXL"	❌ 주문 실패	종목코드는 "A980679" 사용해야 함
+✅ 헤더 예시 (Headers)
+authorization: Bearer {access_token}
+appkey: {your_appkey}
+appsecret: {your_appsecret}
+tr_id: TTTT1006U
+custtype: P
+hashkey: {hashkey}   // Body 기준으로 생성
+
+🔚 결론
+
+💡 "시장가 매도" 성공 조건 요약:
+
+"ORD_DVSN": "00"
+
+"OVRS_ORD_UNPR": "0"
+
+"PDNO": "A980679"
+
+"OVRS_EXCG_CD": "NASD"
+
+"ORD_SVR_DVSN_CD": "0"
+
+위 구성을 정확히 넣으면 "APBK0656" 오류 없이 정상 주문 가능합니다.
+
+필요하시면 지정가 매도 예시도 추가로 드릴게요.
+
+나의 말:
+시장가매수매도 예시 soxl soxs 기준
+한국투자 Open API 챗봇 (베타)의 말:
+
+좋습니다. 아래는 한국투자증권 KIS OpenAPI를 통해 SOXL / SOXS에 대해 시장가 매수 / 시장가 매도를 수행하는 정확한 예시 Request Body 및 Header입니다.
+
+✅ 공통 정보
+항목	값
+TR_ID (매수)	TTTT1002U
+TR_ID (매도)	TTTT1006U
+EXCHANGE	"NASD"
+SOXL 코드	"A980679"
+SOXS 코드	"A980680"
+ORD_DVSN	"00" (시장가 주문)
+OVRS_ORD_UNPR	"0" (시장가는 반드시 0!)
+ORD_SVR_DVSN_CD	"0" (고정값)
+📘 SOXL 시장가 매수 예시
+{
+  "CANO": "43113014",
+  "ACNT_PRDT_CD": "01",
+  "OVRS_EXCG_CD": "NASD",
+  "PDNO": "A980679",                // SOXL 종목코드
+  "ORD_QTY": "2",
+  "OVRS_ORD_UNPR": "0",             // 시장가 = 0
+  "ORD_SVR_DVSN_CD": "0",
+  "ORD_DVSN": "00"                  // 00 = 시장가
+}
+
+Header:
+authorization: Bearer {access_token}
+appkey: {your_appkey}
+appsecret: {your_appsecret}
+tr_id: TTTT1002U
+custtype: P
+hashkey: {generated_hash}
+
+📕 SOXL 시장가 매도 예시
+{
+  "CANO": "43113014",
+  "ACNT_PRDT_CD": "01",
+  "OVRS_EXCG_CD": "NASD",
+  "PDNO": "A980679",                // SOXL 종목코드
+  "ORD_QTY": "2",
+  "OVRS_ORD_UNPR": "0",             // 시장가 = 0
+  "ORD_SVR_DVSN_CD": "0",
+  "ORD_DVSN": "00"                  // 00 = 시장가
+}
+
+Header:
+authorization: Bearer {access_token}
+appkey: {your_appkey}
+appsecret: {your_appsecret}
+tr_id: TTTT1006U
+custtype: P
+hashkey: {generated_hash}
+
+📘 SOXS 시장가 매수 예시
+{
+  "CANO": "43113014",
+  "ACNT_PRDT_CD": "01",
+  "OVRS_EXCG_CD": "NASD",
+  "PDNO": "A980680",                // SOXS 종목코드
+  "ORD_QTY": "2",
+  "OVRS_ORD_UNPR": "0",             // 시장가
+  "ORD_SVR_DVSN_CD": "0",
+  "ORD_DVSN": "00"
+}
+
+📕 SOXS 시장가 매도 예시
+{
+  "CANO": "43113014",
+  "ACNT_PRDT_CD": "01",
+  "OVRS_EXCG_CD": "NASD",
+  "PDNO": "A980680",                // SOXS 종목코드
+  "ORD_QTY": "2",
+  "OVRS_ORD_UNPR": "0",             // 시장가
+  "ORD_SVR_DVSN_CD": "0",
+  "ORD_DVSN": "00"
+}
+
+⚠️ 실전 테스트 전 체크리스트
+항목	체크
+✅ 공동인증서 등록 (HTS/MTS에서 완료)	☑️
+✅ 종목 코드 정확 (SOXL=A980679, SOXS=A980680)	☑️
+✅ OVRS_EXCG_CD = "NASD"	☑️
+✅ 시장가 시 "ORD_DVSN": "00", "OVRS_ORD_UNPR": "0"	☑️
+✅ hashkey 생성 포함	☑️
+2
+필요하시면 지정가 매수/매도 예시도 드릴게요.
+장 개장 후 실시간 시세 연동도 필요하시면 알려주세요.
+
+https://www.truefriend.com/main/customer/support/Support.jsp?cmd=agree_3
+고객의 소리 
+
+ 1544-5000
+
+  이메일:
+
+  apihelp@koreainvestment.com
+
+  개발자 포털:
+
+  https://apiportal.koreainvestment.com
+
+  ---
+  💡 문의 템플릿
+
+  안녕하세요.
+
+  해외주식 매도 API(JTTT1006U) 사용 중 EGW00356 오류가 지속적으로 발생합니다.
+
+  [오류 정보]
+  - 발생 일시: 2025-10-16 23:51:25
+  - TR_ID: JTTT1006U (해외주식 매도)
+  - 오류 코드: EGW00356
+  - 오류 메시지: 타겟 서버가 올바르지 않습니다. API 문서를 확인하세요 (타겟 서버 : 입력한 TR ID의 제일 첫 문자)
+
+  [시도한 해결 방법]
+  1. SLL_TYPE, ORD_DVSN 파라미터 추가
+  2. PDNO를 A980680 (고유코드) 사용
+  3. custtype 헤더 추가
+  4. tr_cont, tr_cont_key 헤더 추가
+  5. 시장가 주문 시도 (ORD_DVSN=01)
+  6. 헤더/Body에 타임스탬프 필드 추가 시도
+
+  [문의 사항]
+  1. EGW00356 에러의 정확한 원인
+  2. 해외주식 주문 API의 정확한 필수 필드
+  3. 타임스탬프 관련 필드의 정확한 위치와 형식
+
+  상세 요청/응답 정보는 첨부된 JSON 파일(kis_error_report_20251016_235125.json)을 참고해 주세요.
+
+  감사합니다.
+
+ocuments\코드\kis_final_sell_test.py)
+  ⎿  Read 170 lines
+
+● 완벽합니다! 핵심 문제를 찾았습니다!
+
+  🔥 발견한 문제들:
+
+  1. TR_ID가 잘못됨!!!
+
+  - ❌ 제가 사용: JTTT1002U (매수), JTTT1006U (매도)
+  - ✅ 올바른 것: TTTT1002U (매수), TTTT1006U (매도)
+  - J가 아니라 T 4개! 이것이 "타겟 서버가 올바르지 않습니다" 에러의 원인!
+
+  2. ORD_DVSN 값이 반대!
+
+  - ❌ 제가 사용: "00" = 지정가
+  - ✅ 올바른 것: "00" = 시장가, "01" = 지정가
+
+  3. SLL_TYPE 필드는 필요 없음!
+
+  - working 코드에는 SLL_TYPE이 없음
+  - TR_ID로 매수/매도 구분
+
+  📋 작동하는 패턴 (2024년 10월 8일 성공):
+
+  # 매수
+  headers = {"tr_id": "TTTT1002U", "custtype": "P"}
+  data = {
+      "PDNO": "A980679",  # SOXL
+      "ORD_DVSN": "00",   # 시장가
+      "OVRS_ORD_UNPR": str(current_price)  # 시장가여도 현재가 입력!
+  }
+
+  # 매도
+  headers = {"tr_id": "TTTT1006U", "custtype": "P"}
+  data = {
+      "PDNO": "A980680",  # SOXS
+      "ORD_DVSN": "00",   # 시장가
+      "OVRS_ORD_UNPR": "0"  # 또는 현재가
+  }
+
+  바로 수정하겠습니다!
+
+● Read(kis_llm_trader_v2_explosive.py)
+  ⎿  Read 80 lines
+
+● 완벽합니다! 이제 수정하겠습니다:
+
+● Update(kis_llm_trader_v2_explosive.py)
+  ⎿  Updated kis_llm_trader_v2_explosive.py with 5 additions and 8 removals
+       721                    "authorization": f"Bearer {self.access_token}",
+       722                    "appkey": self.app_key,
+       723                    "appsecret": self.app_secret,
+       724 -                  "tr_id": "JTTT1002U" if side == "BUY" else "JTTT1006U",
+       724 +                  "tr_id": "TTTT1002U" if side == "BUY" else "TTTT1006U",
+           +    # FIX: TTTT (T 4개, J 아님!)
+       725                    "custtype": "P",  # 개인 계좌
+       726 -                  "content-type": "application/json; charset=utf-8",
+       727 -                  "tr_cont": "N",  # 첫 거래
+       728 -                  "tr_cont_key": ""  # 초기값
+       726 +                  "Content-Type": "application/json"  # FIX: 대문자 시작
+       727                }
+       728
+       729                data = {
+       730                    "CANO": self.account_no.split('-')[0],
+       731                    "ACNT_PRDT_CD": self.account_no.split('-')[1],
+       732                    "OVRS_EXCG_CD": "NASD",
+       733 -                  "PDNO": self.symbols[symbol]['pdno'],  # FIX:
+           -  A980679 (SOXL) / A980680 (SOXS) 고유 코드 사용!
+       733 +                  "PDNO": self.symbols[symbol]['pdno'],  # A980679 (SOXL) / A980680 (SOXS) 고유 코드
+       734                    "ORD_QTY": str(qty),
+       735 -                  "OVRS_ORD_UNPR": str(current_price),  # 수정: 시장가인데도 현재가 입력 필수!
+       735 +                  "OVRS_ORD_UNPR": str(current_price),  # 현재가 입력 (시장가여도 필수!)
+       736                    "ORD_SVR_DVSN_CD": "0",
+       737 -                  "SLL_TYPE": "00" if side == "SELL" else "",  # FIX: 매도=00, 매수="" (필수!)
+       738 -                  "ORD_DVSN": "00"  # FIX: 00=지정가 (필수!)
+       737 +                  "ORD_DVSN": "00"  # FIX: 00=시장가 (working 코드 패턴)
+       738                }
+       739
+       740                print(f"[주문 데이터] {symbol} {side} {qty}주 @ ${current_price:.2f}")
+
+● 완벽합니다! 이제 바로 테스트해보겠습니다. 간단한 테스트 스크립트를 만들어서 실제로 작동하는지 확인하겠습니다:
+
+● Write(test_kis_working_pattern.py)
+  ⎿  Wrote 1 lines to test_kis_working_pattern.py
+     #!/usr/bin/env python3
+     # -*- coding: utf-8 -*-
+     """KIS API 테스트 - Working 패턴 적용"""
+     import json
+     import yaml
+     import requests
+     print("="*80)
+     print("KIS API 테스트 - Working 패턴 (2024-10-08 성공 패턴)")
+     print("="*80)
+
+● 이제 테스트 실행해보겠습니다:
+
+● Bash(cd "C:\Users\user\Documents\코드5" && python test_kis_working_pattern.py) timeout: 1m 0s
+  ⎿  ================================================================================
+     KIS API  ׽ Ʈ - Working      (2024-10-08          )
+     ================================================================================
+     … +26 lines (ctrl+o to expand)
+
+● 좋습니다! 새로운 에러가 나왔습니다:
+  - APBK0656: "해당 호가단위로 주문하세요"
+
+  이것은 진전입니다! EGW00356 에러가 해결되었습니다!
+
+  이 에러는 지정가 주문 문제입니다. Working 코드를 다시 확인해보니:
+  - kis_sell_tsll_working.py는 지정가 주문을 사용합니다 ("01")
+  - kis_final_sell_test.py도 지정가 주문이 성공했습니다
+
+  지정가로 다시 시도해보겠습니다:
+
+● Update(test_kis_working_pattern.py)
+  ⎿  Updated test_kis_working_pattern.py with 3 additions and 3 removals
+       52        "Content-Type": "application/json"
+       53    }
+       54
+       55 -  # Working 패턴 데이터
+       55 +  # Working 패턴 데이터 (지정가 주문)
+       56    order_data = {
+       57        "CANO": account_no.split('-')[0],
+       58        "ACNT_PRDT_CD": account_no.split('-')[1],
+       59        "OVRS_EXCG_CD": "NASD",
+       60        "PDNO": "A980679",  # SOXL
+       61        "ORD_QTY": "1",
+       62 -      "OVRS_ORD_UNPR": str(current_price),  # 현재가 (시장가여도 입력!)
+       62 +      "OVRS_ORD_UNPR": str(current_price),  # 현재가
+       63        "ORD_SVR_DVSN_CD": "0",
+       64 -      "ORD_DVSN": "00"  # 00=시장가
+       64 +      "ORD_DVSN": 
+"01"  # ✅ 01=지정가 (working 코드 패턴)
+       65    }       66
+
+
+● 찾았습니다! 공식 스펙서를 확인했습니다!
+
+  중요 발견:
+  - 라인 34: OVRS_ORD_UNPR - "시장가의 경우 1주당 가격을 공란으로 비우지 않음 '0'으로 입력"
+  - 라인 39: ORD_DVSN - "00 : 지정가" ← 시장가가 아니라 지정가입니다!
+
+  ORD_DVSN의 전체 옵션을 더 확인해보겠습니다:
+
+● Bash(python -c "import pandas as pd; import sys; sys.stdout.reconfigure(encoding='utf-8'); df =  timeout: 30s
+      pd.read_excel(r'C:\Users\user\Documents\코드\해외주식 주문[v1_해외주식-001].xlsx'…)
+  ⎿  ORD_DVSN 상세 설명:
+     [Header tr_id TTTT1002U(미국 매수 주문)]
+     00 : 지정가
+     … +30 lines (ctrl+o to expand)
+
+∴ Thought for 6s (ctrl+o to sho
+
+
+● 🎉 성공했습니다!
+
+  rt_cd: 0
+  msg_cd: APBK0013
+  msg1: 주문 정상 완료 되었습니다.
+  주문번호: 0031895400
+
+  정답 조합:
+  - ✅ OVRS_EXCG_CD: "AMEX" (NASD 아님!)
+  - ✅ PDNO: "SOXL" (A980679 아님!)
+  - ✅ OVRS_ORD_UNPR: 소수점 2자리 (예: "40.94")
+  - ✅ ORD_DVSN: "00" (지정가)
+  - ✅ Hashkey 포함 필수
+
+  이제 5초 후 재매수를 진행하겠습니다:
+
+● Bash(python -c "import time; print('5초 대기 중...'); time.sleep(5); print('재매수 준비 완료!')")
+  ⎿  5         ...
+       ż   غ   Ϸ \!
+     <string>:1: SyntaxWarning: invalid escape sequence '\!'
