@@ -628,7 +628,7 @@ telegram = TelegramNotifier()
 
 # ===== 설정 =====
 RESTART_INTERVAL = 4 * 60 * 60  # 4시간 (초 단위)
-GUARDIAN_CHECK_INTERVAL = 10  #  실시간 Ollama 체크: 10초마다
+GUARDIAN_CHECK_INTERVAL = 5  #  실시간 Ollama 체크: 5초마다 (최대 빈도)
 
 # Ollama 설정
 OLLAMA_EXE = r"C:\Users\user\AppData\Local\Programs\Ollama\ollama.exe"
@@ -2384,6 +2384,42 @@ def start_trader(script_path, python_exe, working_dir, trader_name, ollama_port)
         send_trader_failure_alert(trader_name, f"스크립트 파일 없음: {script_path}")
         return None
 
+    # ===== 간단한 Python 실행 =====
+    try:
+        CREATE_NO_WINDOW = 0x08000000
+        process = subprocess.Popen(
+            [python_exe, script_path],
+            cwd=working_dir,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=0,
+            universal_newlines=False,
+            creationflags=CREATE_NO_WINDOW
+        )
+
+        # 로그 읽기 스레드 시작
+        log_thread = threading.Thread(
+            target=log_reader_thread,
+            args=(process, trader_name),
+            daemon=True
+        )
+        log_thread.start()
+
+        time.sleep(3)
+
+        if process.poll() is None:
+            colored_print(f"[{trader_name}] ✅ 트레이더 시작 성공 (PID: {process.pid})", "green")
+            return process
+        else:
+            colored_print(f"[{trader_name}] ❌ 프로세스 즉시 종료됨", "red")
+            return None
+    except Exception as e:
+        colored_print(f"[{trader_name}] ❌ 트레이더 시작 실패: {e}", "red")
+        return None
+
+    # 아래 코드는 미사용 (삭제 예정)
+    if False:
         # ===== 강화된 폴백 시스템 (인터넷 검색 기반) =====
         start_methods = [
             {
@@ -2969,17 +3005,27 @@ def main():
     colored_print(f"  - Triple Validation 합의율 {int(CONFIDENCE_THRESHOLD*100)}% 이상만 통과\n", "magenta")
     colored_print(f"  - 검증 완료된 전략은 즉시 실전 적용!\n", "magenta")
 
+    # 헬스비트 파일 경로
+    HEARTBEAT_FILE = Path(__file__).parent / ".manager_heartbeat.txt"
+
     try:
         while True:
             try:
+                # 헬스비트 갱신 (Watchdog이 감시)
+                try:
+                    with open(HEARTBEAT_FILE, 'w') as f:
+                        f.write(str(time.time()))
+                except Exception:
+                    pass  # 헬스비트 실패는 무시
+
                 # 메모리 사용량 주기적 체크
                 if not check_memory_usage():
                     colored_print("[WARNING] 메모리 사용량이 높습니다. 가비지 컬렉션 실행...", "yellow")
                     import gc
                     gc.collect()
                     time.sleep(1)
-                
-                time.sleep(GUARDIAN_CHECK_INTERVAL)  #  10초마다 체크
+
+                time.sleep(GUARDIAN_CHECK_INTERVAL)  #  5초마다 체크
                 current_time = time.time()
                 elapsed = current_time - last_restart_time
             except KeyboardInterrupt:

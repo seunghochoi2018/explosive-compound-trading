@@ -13,13 +13,15 @@ from datetime import datetime
 from pathlib import Path
 
 # 설정
-MANAGER_SCRIPT = r"C:\Users\user\Documents\코드5\unified_trader_manager.py"
+MANAGER_SCRIPT = r"C:\Users\user\Documents\코드5\unified_trader_manager 연습.py"
 MANAGER_PYTHON = r"C:\Users\user\AppData\Local\Programs\Python\Python311\python.exe"
-PID_FILE = Path(r"C:\Users\user\Documents\코드5\.unified_manager.pid")
-CHECK_INTERVAL = 60  # 1분마다 체크
+PID_FILE = Path(r"C:\Users\user\Documents\코드5\.unified_trader_manager.pid")
+HEARTBEAT_FILE = Path(r"C:\Users\user\Documents\코드5\.manager_heartbeat.txt")
+CHECK_INTERVAL = 30  # 30초마다 체크 (빠른 감지)
+HEARTBEAT_TIMEOUT = 60  # 1분간 헬스비트 없으면 크래시로 판단
 
 # 텔레그램
-TELEGRAM_BOT_TOKEN = "7819173403:AAEwBNh6etqyWvh-GivLDrTJb8b_ho2ju-U"
+TELEGRAM_BOT_TOKEN = "7819173403:AAEwBNh6eKSPX3K79Lj87p5-h4CdmshfIBw"
 TELEGRAM_CHAT_ID = "7805944420"
 
 def send_telegram(message: str):
@@ -37,11 +39,11 @@ def send_telegram(message: str):
         print(f"[ERROR] 텔레그램 전송 실패: {e}")
         return False
 
-def is_manager_running() -> bool:
-    """통합 매니저가 실행 중인지 확인"""
+def is_manager_running() -> tuple[bool, str]:
+    """통합 매니저가 실행 중인지 확인 (헬스비트 포함)"""
     # 1. PID 파일 체크
     if not PID_FILE.exists():
-        return False
+        return False, "PID 파일 없음"
 
     try:
         with open(PID_FILE, 'r') as f:
@@ -49,20 +51,28 @@ def is_manager_running() -> bool:
 
         # 2. PID가 실제로 실행 중인지 확인
         if not psutil.pid_exists(pid):
-            return False
+            return False, f"프로세스 없음 (PID: {pid})"
 
         # 3. 프로세스 정보 확인
         proc = psutil.Process(pid)
         cmdline = ' '.join(proc.cmdline())
 
         # unified_trader_manager 프로세스인지 확인
-        if 'unified_trader_manager' in cmdline:
-            return True
+        if 'unified_trader_manager' not in cmdline:
+            return False, "프로세스 불일치"
 
-    except (ValueError, FileNotFoundError, psutil.NoSuchProcess, psutil.AccessDenied):
-        pass
+        # 4. 헬스비트 체크
+        if HEARTBEAT_FILE.exists():
+            heartbeat_age = time.time() - HEARTBEAT_FILE.stat().st_mtime
+            if heartbeat_age > HEARTBEAT_TIMEOUT:
+                return False, f"헬스비트 타임아웃 ({int(heartbeat_age)}초)"
+        else:
+            return False, "헬스비트 파일 없음"
 
-    return False
+        return True, "정상"
+
+    except (ValueError, FileNotFoundError, psutil.NoSuchProcess, psutil.AccessDenied) as e:
+        return False, f"오류: {e}"
 
 def start_manager():
     """통합 매니저 시작"""
@@ -80,11 +90,12 @@ def start_manager():
         time.sleep(10)
 
         # 시작 확인
-        if is_manager_running():
+        running, status = is_manager_running()
+        if running:
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ 통합 매니저 시작 완료")
             return True
         else:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✗ 통합 매니저 시작 실패")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✗ 통합 매니저 시작 실패: {status}")
             return False
 
     except Exception as e:
@@ -113,7 +124,9 @@ def main():
         try:
             current_time = time.time()
 
-            if is_manager_running():
+            running, status = is_manager_running()
+
+            if running:
                 # 정상 실행 중
                 if down_count > 0:
                     # 복구됨
@@ -124,25 +137,26 @@ def main():
                     )
                     down_count = 0
 
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ 통합 매니저 정상 실행 중")
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ 통합 매니저 정상 ({status})")
 
             else:
                 # 다운 감지
                 down_count += 1
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✗ 통합 매니저 다운 감지 ({down_count}회)")
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✗ 통합 매니저 다운 감지 ({down_count}회) - {status}")
 
                 # 1분 이상 경과 시 알림 (중복 방지)
                 if current_time - last_alert_time > 60:
                     send_telegram(
                         f"[CRITICAL] <b>통합 매니저 다운!</b>\n\n"
+                        f"<b>원인:</b> {status}\n"
                         f"<b>감지 횟수:</b> {down_count}회\n"
                         f"<b>시간:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
                         f"⚠️ 즉시 확인 필요! 자동 재시작 시도 중..."
                     )
                     last_alert_time = current_time
 
-                # 3회 연속 다운 감지 시 재시작 시도
-                if down_count >= 3:
+                # 2회 연속 다운 감지 시 재시작 시도 (빠른 복구)
+                if down_count >= 2:
                     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] [RESTART] 자동 재시작 시도...")
 
                     if start_manager():
