@@ -162,7 +162,9 @@ class TelegramNotifier:
             disable_notification: 무음 알림 여부
             priority: 메시지 우선순위
                 - "routine": 일반 상태 알림 (6시간마다만 전송)
+                - "normal": 페이퍼 트레이딩 등 (1시간마다만 전송)
                 - "important": 거래/이슈 알림 (항상 전송)
+                - "critical": 긴급 알림 (항상 전송)
                 - "emergency": 긴급 알림 (항상 전송)
 
         Returns:
@@ -177,6 +179,11 @@ class TelegramNotifier:
                     print(f"[텔레그램] 일반 알림 생략 (다음 전송까지: {(self.routine_notification_interval - (current_time - self.last_routine_notification_time))/3600:.1f}시간)")
                     return True
                 self.last_routine_notification_time = current_time
+
+            elif priority == "normal":
+                # normal 알림은 생략 (페이퍼 트레이딩 진행상황 등 너무 자주 옴)
+                print(f"[텔레그램] normal 알림 생략 (중요한 알림만)")
+                return True
 
             # 중복 메시지 체크 (긴급 알림은 중복 체크 안 함)
             if priority != "emergency" and message in self.recent_messages:
