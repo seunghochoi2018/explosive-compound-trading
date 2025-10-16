@@ -24,7 +24,10 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:apiportal.koreainvestment.com)",
-      "WebSearch"
+      "WebSearch",
+      "Read(//c/Users/user/Documents/코드4/**)",
+      "Bash(awk:*)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []
