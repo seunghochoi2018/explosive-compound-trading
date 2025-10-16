@@ -1,0 +1,29 @@
+{
+  "timestamp": "2025-10-17T01:37:54.861173",
+  "score": 0.6299770594218361,
+  "symbol": "ETHUSD",
+  "strategy": {
+    "timeframe": "1h",
+    "rsi_period": 7,
+    "rsi_oversold": 20,
+    "rsi_overbought": 80,
+    "macd_fast": 12,
+    "macd_slow": 26,
+    "bb_period": 20,
+    "bb_std": 1.5,
+    "volume_threshold": 1.2,
+    "stop_loss": 0.05,
+    "take_profit": 0.08,
+    "position_size": 0.5,
+    "trend_ma_period": 100,
+    "entry_signals_required": 4
+  },
+  "performance": {
+    "total_return": 0.03156788952789575,
+    "win_rate": 1.0,
+    "total_trades": 2,
+    "sharpe_ratio": 1.5767495180533888,
+    "avg_win": 0.03141936955694999,
+    "avg_loss": 0
+  }
+}
