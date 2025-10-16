@@ -75,13 +75,8 @@ class ExplosiveKISTrader:
         # [WARN]  중요: PDNO는 "SOXL"이 아니라 "A980679"를 사용해야 함!
         # [WARN]  KIS API에서 종목코드는 A980XXX 형식의 고유 코드 필수!
         self.symbols = {
-<<<<<<< HEAD
             'SOXL': {'pdno': 'A980679', 'name': 'SOXL (반도체 3배 레버리지 롱)'},  # DIREXION DAILY SEMICONDUCTOR BULL 3X
             'SOXS': {'pdno': 'A980680', 'name': 'SOXS (반도체 3배 레버리지 숏)'}   # DIREXION DAILY SEMICONDUCTOR BEAR 3X
-=======
-            'SOXL': {'pdno': 'A980679', 'name': 'SOXL (3x semi bull)'},  # DIREXION DAILY SEMICONDUCTOR BULL 3X
-            'SOXS': {'pdno': 'A980680', 'name': 'SOXS (3x semi bear)'}   # DIREXION DAILY SEMICONDUCTOR BEAR 3X
->>>>>>> 0db74f775b7467e2b8278eb84e54466dba707b3e
         }
 
         # 상태
@@ -153,12 +148,26 @@ class ExplosiveKISTrader:
         self.initial_balance = self.get_usd_balance()
         print(f"\n[초기 잔고] ${self.initial_balance:,.2f}")
 
+        # 📝 페이퍼 트레이딩 모드 (가상 거래로 검증)
+        self.paper_trading_mode = True  # 처음엔 가상 거래
+        self.paper_trades = []
+        self.paper_balance = self.initial_balance
+        self.PAPER_TRADE_REQUIRED = 100  # 100거래 필요
+        self.PAPER_WIN_RATE_THRESHOLD = 0.60  # 승률 60% 달성 시 실거래 전환
+        print(f"\n[페이퍼 트레이딩] 가상 거래 모드 시작")
+        print(f"  목표: {self.PAPER_TRADE_REQUIRED}거래, 승률 {self.PAPER_WIN_RATE_THRESHOLD*100:.0f}% 달성")
+        print(f"  달성 시 → 실거래 자동 전환")
+
         # 텔레그램 알림 (6시간마다만)
+        mode_text = "📝 페이퍼 트레이딩 (가상)" if self.paper_trading_mode else "🚀 실거래 모드"
         self.telegram.send_message(
             f"[START] KIS GPU 최적화 트레이더 시작\n\n"
+            f"모드: {mode_text}\n"
             f"초기 잔고: ${self.initial_balance:,.2f}\n"
+            f"페이퍼 목표: {self.PAPER_TRADE_REQUIRED}거래, 승률 {self.PAPER_WIN_RATE_THRESHOLD*100:.0f}%\n"
             f"최대 보유: 10시간\n"
             f"동적 손절: {self.DYNAMIC_STOP_LOSS}%\n"
+            f"백테스팅: 60% 성공률 검증\n"
             f"7b 모니터 (GPU) + 14b 분석 (15분)\n"
             f"임계값 없음 - LLM 자율 판단\n"
             f"3배 레버리지 신중한 거래",
@@ -983,6 +992,15 @@ class ExplosiveKISTrader:
                 if llm_signal in ['BULL', 'BEAR']:
                     # 신뢰도 체크 (동적 임계값)
                     llm_confidence = 50  # 기본값 (실제로는 LLM에서 받아야 함)
+
+                    # 🔍 실거래 모드에서만 백테스팅 (페이퍼 모드는 백테스팅 불필요)
+                    if not self.paper_trading_mode:
+                        backtest_pass, backtest_rate = self.check_pattern_backtest(llm_signal, llm_confidence)
+                        if not backtest_pass:
+                            print(f"[백테스트 차단] {llm_signal} 패턴 성공률 {backtest_rate:.1f}% < 60%")
+                            time.sleep(300)  # 5분 대기 후 다음 사이클
+                            continue
+
                     if llm_confidence >= self.MIN_CONFIDENCE:
                         target_symbol = 'SOXL' if llm_signal == 'BULL' else 'SOXS'
                         
@@ -1217,10 +1235,20 @@ SOXL 현재가: ${price:.2f}
             return 'BULL'
 
     def open_position(self, symbol: str):
-        """포지션 진입 (자동매매)"""
+        """포지션 진입 (자동매매 또는 가상)"""
         print(f"\n[진입 신호] {symbol}")
 
         try:
+            # 📝 페이퍼 트레이딩 모드: 가상 진입
+            if self.paper_trading_mode:
+                current_price = self.get_current_price(symbol)
+                if current_price <= 0:
+                    return
+                balance = self.paper_balance
+                qty = int(balance * 0.95 / current_price) if balance > 0 else 1
+                self.paper_place_order(symbol, 'BUY', qty, current_price)
+                return
+
             # 정규장 게이트: 정규장 외 진입 차단
             if not self.is_us_regular_hours():
                 print(f"[GATE] 미국 정규장 아님 → 진입 보류 (ET {datetime.now(ZoneInfo('America/New_York')).strftime('%Y-%m-%d %H:%M')})")
@@ -1316,11 +1344,16 @@ SOXL 현재가: ${price:.2f}
             )
 
     def close_position(self, reason: str):
-        """포지션 청산 (자동매매)"""
+        """포지션 청산 (자동매매 또는 가상)"""
         print(f"\n[청산 신호] {self.current_position} (이유: {reason})")
 
         if not self.current_position:
             print("[ERROR] 청산할 포지션이 없음")
+            return
+
+        # 📝 페이퍼 트레이딩 모드: 가상 청산
+        if self.paper_trading_mode:
+            self.paper_close_position(reason)
             return
 
         try:
@@ -1457,6 +1490,162 @@ SOXL 현재가: ${price:.2f}
                 f"[ERROR] KIS 청산 오류\n{self.current_position}\n{str(e)[:200]}",
                 priority="important"
             )
+
+    def paper_place_order(self, symbol: str, side: str, qty: int, current_price: float = 0) -> bool:
+        """📝 페이퍼 트레이딩: 가상 진입"""
+        if current_price <= 0:
+            current_price = self.get_current_price(symbol)
+            if current_price <= 0:
+                return False
+
+        self.current_position = symbol
+        self.entry_price = current_price
+        self.entry_time = datetime.now()
+        self.entry_balance = self.paper_balance
+
+        # 텔레그램 알림
+        paper_count = len(self.paper_trades)
+        wins = len([t for t in self.paper_trades if t.get('pnl_pct', 0) > 0])
+        win_rate = (wins / paper_count * 100) if paper_count > 0 else 0
+
+        msg = (
+            f"📝 [가상 진입] {symbol} {side}\n"
+            f"진행: {paper_count}/{self.PAPER_TRADE_REQUIRED}\n"
+            f"승률: {win_rate:.1f}% (목표 {self.PAPER_WIN_RATE_THRESHOLD*100:.0f}%)\n"
+            f"가격: ${current_price:.2f}\n"
+            f"수량: {qty}주 (가상)\n"
+        )
+        self.telegram.send_message(msg, priority="normal")
+
+        print(f"[📝 가상 진입] {symbol} @ ${current_price:.2f}")
+        return True
+
+    def paper_close_position(self, reason: str) -> bool:
+        """📝 페이퍼 트레이딩: 가상 청산"""
+        if not self.current_position:
+            return False
+
+        symbol = self.current_position
+        current_price = self.get_current_price(symbol)
+        if current_price <= 0:
+            return False
+
+        # PNL 계산 (3배 레버리지)
+        if symbol == 'SOXL':
+            pnl = ((current_price - self.entry_price) / self.entry_price) * 100 * 3
+        else:  # SOXS
+            pnl = ((self.entry_price - current_price) / self.entry_price) * 100 * 3
+
+        holding_time = (datetime.now() - self.entry_time).total_seconds()
+
+        # 가상 잔고 변화 계산
+        pnl_amount = self.entry_balance * (pnl / 100)
+        self.paper_balance += pnl_amount
+
+        # 거래 기록
+        trade_record = {
+            'symbol': symbol,
+            'entry_price': self.entry_price,
+            'exit_price': current_price,
+            'pnl_pct': pnl,
+            'holding_time_sec': holding_time,
+            'reason': reason,
+            'balance_change': pnl_amount,
+            'paper_balance': self.paper_balance
+        }
+        self.paper_trades.append(trade_record)
+
+        # 통계
+        paper_count = len(self.paper_trades)
+        wins = len([t for t in self.paper_trades if t.get('pnl_pct', 0) > 0])
+        win_rate = (wins / paper_count * 100)
+
+        # 졸업 체크
+        if paper_count >= self.PAPER_TRADE_REQUIRED:
+            if win_rate >= self.PAPER_WIN_RATE_THRESHOLD * 100:
+                # 실거래 전환!
+                self.paper_trading_mode = False
+                graduate_msg = (
+                    f"🎓 [실거래 전환!]\n"
+                    f"페이퍼 거래: {paper_count}건\n"
+                    f"최종 승률: {win_rate:.1f}%\n"
+                    f"✅ 목표 달성!\n"
+                    f"🚀 실거래 모드로 전환합니다!"
+                )
+                self.telegram.send_message(graduate_msg, priority="critical")
+                print(f"\n{'='*60}\n{graduate_msg}\n{'='*60}")
+            else:
+                # 재시작
+                fail_msg = (
+                    f"❌ [페이퍼 실패]\n"
+                    f"거래: {paper_count}건\n"
+                    f"승률: {win_rate:.1f}% < {self.PAPER_WIN_RATE_THRESHOLD*100:.0f}%\n"
+                    f"🔄 처음부터 다시 시작합니다"
+                )
+                self.telegram.send_message(fail_msg, priority="important")
+                print(f"\n[페이퍼 실패] 재시작")
+                self.paper_trades = []
+                self.paper_balance = self.initial_balance
+        else:
+            # 진행 중
+            msg = (
+                f"📝 [가상 청산] {symbol}\n"
+                f"PNL: {pnl:+.2f}%\n"
+                f"진행: {paper_count}/{self.PAPER_TRADE_REQUIRED}\n"
+                f"승률: {win_rate:.1f}% (목표 {self.PAPER_WIN_RATE_THRESHOLD*100:.0f}%)\n"
+                f"이유: {reason}\n"
+            )
+            self.telegram.send_message(msg, priority="normal")
+
+        # 포지션 초기화
+        self.current_position = None
+        self.entry_price = 0
+        self.entry_time = None
+        self.entry_balance = None
+
+        print(f"[📝 가상 청산] {symbol} PNL: {pnl:+.2f}% ({paper_count}/{self.PAPER_TRADE_REQUIRED})")
+        return True
+
+    def check_pattern_backtest(self, signal: str, confidence: int) -> tuple:
+        """🔍 실시간 백테스팅: 과거 데이터에서 이 패턴의 성공률 확인"""
+        if len(self.all_trades) < 10:
+            return (True, 100.0)  # 데이터 부족 시 통과
+
+        # 유사 패턴 찾기 (최근 50거래)
+        similar_trades = [
+            t for t in self.all_trades[-50:]
+            if (
+                (signal == 'BULL' and t.get('symbol') == 'SOXL') or
+                (signal == 'BEAR' and t.get('symbol') == 'SOXS')
+            )
+        ]
+
+        if len(similar_trades) == 0:
+            return (True, 100.0)  # 패턴 없으면 통과
+
+        # 성공률 계산
+        total = len(similar_trades)
+        wins = len([t for t in similar_trades if t.get('balance_change', 0) > 0])
+        success_rate = (wins / total * 100)
+
+        # 60% 이상이면 통과
+        if success_rate >= 60.0:
+            print(f"[백테스트 통과] {signal} 패턴 성공률: {success_rate:.1f}% (샘플: {total}건)")
+            return (True, success_rate)
+        else:
+            # 차단
+            msg = (
+                f"🔍 [백테스트 차단]\n"
+                f"신호: {signal}\n"
+                f"과거 성공률: {success_rate:.1f}%\n"
+                f"목표: 60.0%\n"
+                f"샘플: {total}건\n"
+                f"⚠️ 이 패턴은 과거에 실패 多\n"
+                f"❌ 진입 차단"
+            )
+            self.telegram.send_message(msg, priority="normal")
+            print(f"[백테스트 차단] {signal} 성공률 {success_rate:.1f}% < 60%")
+            return (False, success_rate)
 
 if __name__ == "__main__":
     trader = ExplosiveKISTrader()
