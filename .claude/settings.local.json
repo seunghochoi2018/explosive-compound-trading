@@ -35,7 +35,11 @@
       "Bash(start python auto_liquidate_soxs.py)",
       "Bash(timeout:*)",
       "Bash(start python unified_trader_manager.py)",
-      "Bash(start python kis_llm_trader_v2_explosive.py)"
+      "Bash(start python kis_llm_trader_v2_explosive.py)",
+      "Bash(git stash:*)",
+      "Bash(git checkout:*)",
+      "Bash(git rebase:*)",
+      "Bash(start python adaptive_trader_manager.py)"
     ],
     "deny": [],
     "ask": []
