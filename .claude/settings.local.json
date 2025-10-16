@@ -34,7 +34,8 @@
       "Read(//c/Users/user/Documents/**)",
       "Bash(start python auto_liquidate_soxs.py)",
       "Bash(timeout:*)",
-      "Bash(start python unified_trader_manager.py)"
+      "Bash(start python unified_trader_manager.py)",
+      "Bash(start python kis_llm_trader_v2_explosive.py)"
     ],
     "deny": [],
     "ask": []
