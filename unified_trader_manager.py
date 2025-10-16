@@ -188,6 +188,9 @@ GPU_OPTIMIZATION = {
 last_no_trading_alert = {'ETH': 0, 'KIS': 0}  # 마지막 알림 시간 (timestamp)
 NO_TRADING_ALERT_COOLDOWN = 6 * 3600  # 6시간마다만 알림
 
+# 포지션 상태 추적 (중복 알림 방지)
+last_positions = {'ETH': None, 'KIS': None}  # 마지막 포지션 상태
+
 # ===== 리소스 모니터링 설정 =====
 # 포트별 메모리 제한 (사용자 설정)
 # 이유: 14b 모델은 6-8GB 사용, 9GB로 여유 있게 설정
@@ -1670,9 +1673,24 @@ def parse_trader_log(line, trader_name):
         if re.match(skip, line):
             return None
 
-    # 텔레그램 알림 (중요 이벤트만)
-    if any(keyword in line for keyword in ['TREND_CHANGE', '청산 완료', 'PYRAMID', '진입 완료']):
+    # 텔레그램 알림 (포지션 변경 시에만)
+    # 포지션 상태 파싱
+    current_position = None
+    trader_key = 'ETH' if 'ETH' in trader_name else 'KIS'
+
+    if '진입 완료' in line or 'POSITION' in line:
+        if 'LONG' in line or '롱' in line:
+            current_position = 'LONG'
+        elif 'SHORT' in line or '숏' in line:
+            current_position = 'SHORT'
+    elif '청산 완료' in line or 'CLOSE' in line:
+        current_position = 'NONE'
+
+    # 포지션이 변경된 경우에만 알림
+    if current_position and last_positions[trader_key] != current_position:
         telegram.notify_position_change(trader_name, "포지션 변경", line)
+        last_positions[trader_key] = current_position
+        logger.info(f"[POSITION] {trader_key} 포지션 변경: {last_positions[trader_key]} -> {current_position}")
 
     return line  # 모든 로그 반환!
 
