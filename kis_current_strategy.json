@@ -15,7 +15,7 @@
   "rsi_oversold": 30,
   "rsi_overbought": 70,
   "require_rsi_confirmation": true,
-  "min_confidence": 80,
+  "min_confidence": 85,
   "require_double_confirmation": true,
   "min_volume_ratio": 1.2
 }

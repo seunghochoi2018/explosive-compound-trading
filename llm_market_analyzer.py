@@ -629,6 +629,36 @@ RISK_LEVEL: [LOW/MEDIUM/HIGH]
 
         return self._parse_compound_response(llm_response)
 
+    def analyze_market_simple(self, prompt: str) -> str:
+        """
+        KIS 트레이더용 간단한 시장 분석 메서드
+
+        이 메서드는 kis_llm_trader_v2_explosive.py의 get_llm_signal_7b()와
+        get_llm_signal_14b()에서 호출됩니다.
+
+        Args:
+            prompt: 분석 프롬프트 (SOXL 가격/추세 정보 포함)
+
+        Returns:
+            LLM 응답 문자열 (BULL/BEAR/NEUTRAL 포함)
+        """
+        print(f"[LLM_SIMPLE] KIS 간단 분석 시작... (모델: {self.model_name})")
+
+        try:
+            # LLM에 직접 프롬프트 전달
+            response = self.query_llm(prompt, temperature=0.1)
+
+            if not response:
+                print("[WARN] LLM 응답 없음 - 기본값 NEUTRAL 반환")
+                return "NEUTRAL"
+
+            print(f"[LLM_SIMPLE] 분석 완료 (응답 길이: {len(response)} 글자)")
+            return response
+
+        except Exception as e:
+            print(f"[ERROR] analyze_market_simple() 실패: {e}")
+            return "NEUTRAL"
+
     def _calculate_ma_trend(self, prices: List[float]) -> str:
         """이동평균 추세 계산"""
         if len(prices) < 5:

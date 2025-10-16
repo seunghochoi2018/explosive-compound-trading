@@ -1,0 +1,62 @@
+{
+  "5m": {
+    "timeframe": "5m",
+    "timeframe_minutes": 5,
+    "total_trades": 313,
+    "wins": 91,
+    "losses": 222,
+    "win_rate": 29.073482428115017,
+    "total_return": -28.01425499469692,
+    "final_balance": 719.8574500530308,
+    "avg_win": 2.2276121962295896,
+    "avg_loss": -0.8879130134011965,
+    "avg_holding_time": 78.73801916932908,
+    "max_drawdown": -43.759754840176065,
+    "sharpe_ratio": -0.1470826355884245
+  },
+  "15m": {
+    "timeframe": "15m",
+    "timeframe_minutes": 15,
+    "total_trades": 183,
+    "wins": 74,
+    "losses": 109,
+    "win_rate": 40.43715846994536,
+    "total_return": 9.276636230053464,
+    "final_balance": 1092.7663623005346,
+    "avg_win": 2.4922014299375075,
+    "avg_loss": -1.3789349389654932,
+    "avg_holding_time": 144.8360655737705,
+    "max_drawdown": -15.543698399959146,
+    "sharpe_ratio": 0.13741375702167724
+  },
+  "30m": {
+    "timeframe": "30m",
+    "timeframe_minutes": 30,
+    "total_trades": 87,
+    "wins": 47,
+    "losses": 40,
+    "win_rate": 54.02298850574713,
+    "total_return": 1.4599787358870913,
+    "final_balance": 1014.5997873588709,
+    "avg_win": 1.9029945380158924,
+    "avg_loss": -1.9027218039792715,
+    "avg_holding_time": 182.41379310344828,
+    "max_drawdown": -14.471103735027096,
+    "sharpe_ratio": 0.08941713550506487
+  },
+  "1h": {
+    "timeframe": "1h",
+    "timeframe_minutes": 60,
+    "total_trades": 78,
+    "wins": 36,
+    "losses": 42,
+    "win_rate": 46.15384615384615,
+    "total_return": -12.489645943625693,
+    "final_balance": 875.1035405637431,
+    "avg_win": 1.781841859197201,
+    "avg_loss": -1.5848878059696023,
+    "avg_holding_time": 229.23076923076923,
+    "max_drawdown": -26.55984894113893,
+    "sharpe_ratio": -0.2236867319893428
+  }
+}
